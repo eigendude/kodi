@@ -378,6 +378,14 @@ drmModePlanePtr CDRMUtils::FindPlane(drmModePlaneResPtr resources, int crtc_inde
                 return plane;
               }
 
+              if (SupportsFormat(plane, DRM_FORMAT_XBGR8888))
+              {
+                CLog::Log(LOGDEBUG, "CDRMUtils::%s - found BGR video plane %u", __FUNCTION__, plane->plane_id);
+                drmModeFreeProperty(p);
+                drmModeFreeObjectProperties(props);
+                return plane;
+              }
+
               break;
             }
             case KODI_GUI_10_PLANE:
@@ -431,7 +439,12 @@ bool CDRMUtils::FindPlanes()
   {
     drmModeFreePlane(m_gui_plane->plane);
     m_gui_plane->plane = FindPlane(plane_resources, m_crtc_index, KODI_GUI_PLANE);
-    m_gui_plane->SetFormat(DRM_FORMAT_XRGB8888);
+
+    if (m_gui_plane->plane == nullptr)
+      return false;
+
+    if (SupportsFormat(m_gui_plane->plane, DRM_FORMAT_XRGB8888))
+      m_gui_plane->SetFormat(DRM_FORMAT_XRGB8888);
   }
 
   drmModeFreePlaneResources(plane_resources);
@@ -463,6 +476,8 @@ bool CDRMUtils::FindPlanes()
     CLog::Log(LOGDEBUG, "CDRMUtils::%s - no drm modifiers present for the gui plane", __FUNCTION__);
     m_gui_plane->modifiers_map.emplace(DRM_FORMAT_ARGB8888, std::vector<uint64_t>{DRM_FORMAT_MOD_LINEAR});
     m_gui_plane->modifiers_map.emplace(DRM_FORMAT_XRGB8888, std::vector<uint64_t>{DRM_FORMAT_MOD_LINEAR});
+    m_gui_plane->modifiers_map.emplace(DRM_FORMAT_ABGR8888, std::vector<uint64_t>{DRM_FORMAT_MOD_LINEAR});
+    m_gui_plane->modifiers_map.emplace(DRM_FORMAT_XBGR8888, std::vector<uint64_t>{DRM_FORMAT_MOD_LINEAR});
     m_gui_plane->modifiers_map.emplace(DRM_FORMAT_ARGB2101010, std::vector<uint64_t>{DRM_FORMAT_MOD_LINEAR});
     m_gui_plane->modifiers_map.emplace(DRM_FORMAT_XRGB2101010, std::vector<uint64_t>{DRM_FORMAT_MOD_LINEAR});
   }
