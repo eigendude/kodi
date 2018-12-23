@@ -524,7 +524,8 @@ bool CDRMUtils::OpenDrm(bool needConnector)
     "vc4",
     "virtio_gpu",
     "sun4i-drm",
-    "meson"
+    "meson",
+    "tilcdc",
   };
 
   for (auto module : modules)
