@@ -70,7 +70,7 @@ void CDRMAtomic::DrmAtomicCommit(int fb_id, int flags, bool rendered, bool video
     AddProperty(m_gui_plane, "CRTC_ID", 0);
   }
 
-  auto ret = drmModeAtomicCommit(m_fd, m_req, flags | DRM_MODE_ATOMIC_TEST_ONLY, nullptr);
+  auto ret = drmModeAtomicCommit(m_fd, m_req, DRM_MODE_ATOMIC_TEST_ONLY, nullptr);
   if (ret < 0)
   {
     CLog::Log(LOGERROR, "CDRMAtomic::%s - test commit failed: %s", __FUNCTION__, strerror(errno));
