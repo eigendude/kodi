@@ -1,4 +1,8 @@
 <addons>
+  <!-- Sundstrom Core -->
+  <addon optional="true">service.sundstrom.hud</addon>
+  <addon optional="true">skin.sundstrom.hud</addon>
+  <addon optional="true">resource.images.airquality.default</addon>
   <!-- Weather -->
   <addon optional="true">script.module.dateutil</addon>
   <addon optional="true">script.module.six</addon>
