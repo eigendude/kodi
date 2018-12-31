@@ -1,4 +1,8 @@
 <addons>
+  <!-- Sundstrom Core -->
+  <addon optional="true">service.sundstrom.hud</addon>
+  <addon optional="true">skin.sundstrom.hud</addon>
+  <addon optional="true">resource.images.airquality.default</addon>
   <addon>audioencoder.kodi.builtin.aac</addon>
   <addon>audioencoder.kodi.builtin.wma</addon>
   <addon>kodi.binary.global.audioengine</addon>
