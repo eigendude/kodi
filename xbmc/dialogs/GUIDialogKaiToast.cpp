@@ -80,7 +80,7 @@ void CGUIDialogKaiToast::AddToQueue(const std::string& aImageFile, const eMessag
   toast.messageTime = messageTime;
   toast.withSound = withSound;
 
-  m_notifications.push(toast);
+  //m_notifications.push(toast); //! @todo
 }
 
 bool CGUIDialogKaiToast::DoWork()
