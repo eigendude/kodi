@@ -92,6 +92,7 @@ std::shared_ptr<IAddon> CAddonBuilder::Build()
     case ADDON_SCRIPT_MODULE:
     case ADDON_SUBTITLE_MODULE:
     case ADDON_SCRIPT_WEATHER:
+    case ADDON_SCRIPT_AIR_QUALITY:
       return std::make_shared<CAddon>(std::move(m_addonInfo));
     case ADDON_WEB_INTERFACE:
       return CWebinterface::FromExtension(std::move(m_addonInfo), m_extPoint);
@@ -155,6 +156,7 @@ AddonPtr CAddonBuilder::FromProps(CAddonInfo addonInfo)
     case ADDON_SCRIPT_LIBRARY:
     case ADDON_SCRIPT_LYRICS:
     case ADDON_SCRIPT_WEATHER:
+    case ADDON_SCRIPT_AIR_QUALITY:
     case ADDON_SCRIPT_MODULE:
     case ADDON_SUBTITLE_MODULE:
       return AddonPtr(new CAddon(std::move(addonInfo)));

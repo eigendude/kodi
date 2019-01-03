@@ -34,6 +34,7 @@ static const TypeMapping types[] =
    {"xbmc.python.pluginsource",          ADDON_PLUGIN,              24005, "" },
    {"xbmc.python.script",                ADDON_SCRIPT,              24009, "" },
    {"xbmc.python.weather",               ADDON_SCRIPT_WEATHER,      24027, "DefaultAddonWeather.png" },
+   {"xbmc.python.airquality",            ADDON_SCRIPT_AIR_QUALITY,  0,     "DefaultAddonWeather.png" },
    {"xbmc.python.lyrics",                ADDON_SCRIPT_LYRICS,       24013, "DefaultAddonLyrics.png" },
    {"xbmc.python.library",               ADDON_SCRIPT_LIBRARY,      24081, "DefaultAddonHelper.png" },
    {"xbmc.python.module",                ADDON_SCRIPT_MODULE,       24082, "DefaultAddonLibrary.png" },

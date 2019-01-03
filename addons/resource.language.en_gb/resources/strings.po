@@ -21614,3 +21614,11 @@ msgstr ""
 msgctxt "#39116"
 msgid "Episode plot"
 msgstr ""
+
+#empty strings from id 39117 to 39199
+
+#. Title of the Air Quality window
+#: xbmc/addons/Skin.cpp
+msgctxt "#39200"
+msgid "Air Quality"
+msgstr ""
