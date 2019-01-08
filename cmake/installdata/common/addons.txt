@@ -40,3 +40,7 @@ addons/metadata.common.themoviedb.org/*
 addons/metadata.themoviedb.org/*
 addons/metadata.tvshows.themoviedb.org/*
 addons/kodi.vfs/*
+addons/script.module.dateutil/*
+addons/script.module.six/*
+addons/script.openweathermap.maps/*
+addons/weather.weatherbit.io/*
