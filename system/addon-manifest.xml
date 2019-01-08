@@ -23,9 +23,18 @@
   <addon>resource.language.en_gb</addon>
   <addon>screensaver.xbmc.builtin.black</addon>
   <addon>screensaver.xbmc.builtin.dim</addon>
+  <addon>script.module.certifi</addon>
+  <addon>script.module.chardet</addon>
+  <addon>script.module.dateutil</addon>
+  <addon>script.module.idna</addon>
   <addon>script.module.pil</addon>
   <addon>script.module.pycryptodome</addon>
+  <addon>script.module.requests</addon>
+  <addon>script.module.six</addon>
+  <addon>script.module.urllib3</addon>
+  <addon>script.openweathermap.maps</addon>
   <addon>skin.estuary</addon>
+  <addon>weather.weatherbit.io</addon>
   <addon>xbmc.addon</addon>
   <addon>xbmc.core</addon>
   <addon>xbmc.gui</addon>
