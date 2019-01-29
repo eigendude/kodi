@@ -647,7 +647,7 @@ bool CApplication::CreateGUI()
     // If OS has a screen saver, use it by default
     screensaverModeSetting->SetDefault("");
   }
-  else
+  else if (screensaverModeSetting->GetDefault() == "default")
   {
     // If OS has no screen saver, use Kodi one by default
     screensaverModeSetting->SetDefault("screensaver.xbmc.builtin.dim");
