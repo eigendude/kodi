@@ -8,8 +8,16 @@
 #
 
 #
-# Requires appdmg utility:
+# Requires appdmg utility.
 #
+# On Debian-based distros:
+#
+#   sudo apt install npm
+#   npm install -g appdmg
+#
+# On macOS:
+#
+#   brew install npm
 #   npm install -g appdmg
 #
 
@@ -22,10 +30,17 @@ VERSION="1.0-alpha3"
 
 DATE=`date +%Y%m%d`
 
-DMG_PATH="sundstrom-hud-${DATE}-${VERSION}-macos.dmg"
+OPEN_SOURCE_DMG_PATH="sundstrom-hud-${DATE}-${VERSION}-macos.dmg"
+PROPRIETARY_DMG_PATH="sundstrom-aclima-hud-${DATE}-${VERSION}-macos.dmg"
 
-if [ -f ${DMG_PATH} ]; then
-  rm ${DMG_PATH}
-fi
+for dmg_path in \
+  ${OPEN_SOURCE_DMG_PATH} \
+  ${PROPRIETARY_DMG_PATH} \
+; do
+  if [ -f ${dmg_path} ]; then
+    rm ${dmg_path}
+  fi
+done
 
-appdmg spec.json ${DMG_PATH}
+appdmg spec-opensource.json ${OPEN_SOURCE_DMG_PATH}
+appdmg spec-proprietary.json ${PROPRIETARY_DMG_PATH}

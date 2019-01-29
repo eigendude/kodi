@@ -1,0 +1,9 @@
+{
+  "title": "Sundstrom",
+  "background": "tools/darwin/packaging/media/osx/background/DiskImageBackgroundKodi.png",
+  "icon-size": 96,
+  "contents": [
+    { "x": 170, "y": 284, "type": "file", "path": "build-opensource/build/Release/Sundstrom.app" },
+    { "x": 448, "y": 284, "type": "link", "path": "/Applications" }
+  ]
+}
