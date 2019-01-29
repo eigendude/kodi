@@ -42,12 +42,12 @@
 			<depth>DepthBackground</depth>
 			<include>FullScreenDimensions</include>
 			<aspectratio>scale</aspectratio>
-			<fadetime>400</fadetime>
+			<fadetime>2000</fadetime>
 			<animation effect="zoom" center="auto" end="102,102" time="0" condition="Integer.IsGreater(System.StereoscopicMode,0)">conditional</animation>
 			<animation effect="fade" start="0" end="100" time="400">WindowOpen</animation>
 			<animation effect="fade" start="100" end="0" time="300">WindowClose</animation>
 			<animation effect="fade" time="400">VisibleChange</animation>
-			<imagepath background="true" colordiffuse="bg_overlay">$VAR[WeatherFanartVar]</imagepath>
+			<imagepath background="true">weather/backgrounds/</imagepath>
 			<visible>!Player.HasMedia</visible>
 		</control>
 		<control type="grouplist" id="2000">
@@ -161,14 +161,12 @@
 			<include content="WeatherWidget">
 				<param name="content_include" value="DailyItems" />
 				<param name="list_id" value="15100" />
-				<param name="widget_header" value="$LOCALIZE[31019]"/>
 				<param name="visible" value="!String.IsEmpty(Window(weather).Property(Daily.IsFetched))" />
 				<param name="width" value="258" />
 			</include>
 			<include content="WeatherWidget">
 				<param name="content_include" value="HourlyItems" />
 				<param name="list_id" value="15200" />
-				<param name="widget_header" value="$LOCALIZE[33036]"/>
 				<param name="visible" value="!String.IsEmpty(Window(weather).Property(Hourly.IsFetched))" />
 				<param name="width" value="258" />
 			</include>
@@ -198,10 +196,5 @@
 				<param name="ondown_id" value="20001" />
 			</include>
 		</control>
-		<include content="TopBar">
-			<param name="breadcrumbs_label" value="$LOCALIZE[8]$INFO[Window(Weather).Property(Location), / ]" />
-			<param name="sublabel" value="$INFO[Window(weather).Property(WeatherProvider)]" />
-		</include>
-		<include>BottomBar</include>
 	</controls>
 </window>
