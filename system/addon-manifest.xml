@@ -1,8 +1,6 @@
 <addons>
   <addon>audioencoder.kodi.builtin.aac</addon>
   <addon>audioencoder.kodi.builtin.wma</addon>
-  <addon>game.controller.default</addon>
-  <addon>game.controller.snes</addon>
   <addon>kodi.binary.global.audioengine</addon>
   <addon>kodi.binary.global.main</addon>
   <addon>kodi.binary.global.general</addon>
@@ -21,26 +19,13 @@
   <addon>kodi.binary.instance.videocodec</addon>
   <addon>kodi.binary.instance.visualization</addon>
   <addon>kodi.resource</addon>
-  <addon>metadata.album.universal</addon>
-  <addon>metadata.artists.universal</addon>
-  <addon>metadata.common.allmusic.com</addon>
-  <addon>metadata.common.fanart.tv</addon>
-  <addon>metadata.common.imdb.com</addon>
-  <addon>metadata.common.musicbrainz.org</addon>
-  <addon>metadata.common.theaudiodb.com</addon>
-  <addon>metadata.common.themoviedb.org</addon>
-  <addon>metadata.local</addon>
-  <addon>metadata.themoviedb.org</addon>
-  <addon>metadata.tvshows.themoviedb.org</addon>
   <addon>resource.images.weathericons.default</addon>
   <addon>resource.language.en_gb</addon>
-  <addon>resource.uisounds.kodi</addon>
   <addon>screensaver.xbmc.builtin.black</addon>
   <addon>screensaver.xbmc.builtin.dim</addon>
   <addon>script.module.pil</addon>
   <addon>script.module.pycryptodome</addon>
   <addon>skin.estuary</addon>
-  <addon>webinterface.default</addon>
   <addon>xbmc.addon</addon>
   <addon>xbmc.core</addon>
   <addon>xbmc.gui</addon>
