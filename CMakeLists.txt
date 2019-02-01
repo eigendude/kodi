@@ -42,10 +42,10 @@ include(ExternalProject)
 
 # general
 option(VERBOSE            "Enable verbose output?" OFF)
-option(ENABLE_DVDCSS      "Enable libdvdcss support?" ON)
+option(ENABLE_DVDCSS      "Enable libdvdcss support?" OFF)
 option(ENABLE_UPNP        "Enable UPnP support?" ON)
-option(ENABLE_AIRTUNES    "Enable AirTunes support?" ON)
-option(ENABLE_OPTICAL     "Enable optical support?" ON)
+option(ENABLE_AIRTUNES    "Enable AirTunes support?" OFF)
+option(ENABLE_OPTICAL     "Enable optical support?" OF)
 option(ENABLE_PYTHON      "Enable python support?" ON)
 # use ffmpeg from depends or system
 option(ENABLE_INTERNAL_FFMPEG "Enable internal ffmpeg?" OFF)
