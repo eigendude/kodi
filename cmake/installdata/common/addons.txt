@@ -18,7 +18,6 @@ addons/xbmc.metadata/*
 addons/xbmc.pvr/*
 addons/xbmc.python/*
 addons/xbmc.webinterface/*
-addons/repository.xbmc.org/*
 addons/webinterface.default/*
 addons/screensaver.xbmc.builtin.dim/*
 addons/screensaver.xbmc.builtin.black/*
@@ -28,7 +27,6 @@ addons/script.module.pysqlite/*
 addons/resource.language.en_gb/*
 addons/resource.uisounds.kodi/*
 addons/resource.images.weathericons.default/*
-addons/service.xbmc.versioncheck/*
 addons/metadata.local/*
 addons/metadata.album.universal/*
 addons/metadata.artists.universal/*
@@ -42,3 +40,7 @@ addons/metadata.common.themoviedb.org/*
 addons/metadata.themoviedb.org/*
 addons/metadata.tvshows.themoviedb.org/*
 addons/kodi.vfs/*
+addons/script.module.dateutil/*
+addons/script.module.six/*
+addons/script.openweathermap.maps/*
+addons/weather.weatherbit.io/*

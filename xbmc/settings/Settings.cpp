@@ -626,9 +626,9 @@ void CSettings::InitializeDefaults()
   std::shared_ptr<CSettingString> timezonecountry = std::static_pointer_cast<CSettingString>(GetSettingsManager()->GetSetting(CSettings::SETTING_LOCALE_TIMEZONECOUNTRY));
   std::shared_ptr<CSettingString> timezone = std::static_pointer_cast<CSettingString>(GetSettingsManager()->GetSetting(CSettings::SETTING_LOCALE_TIMEZONE));
 
-  if (timezonecountry->IsVisible())
+  if (timezonecountry->IsVisible() && timezonecountry->GetDefault() == "default")
     timezonecountry->SetDefault(g_timezone.GetCountryByTimezone(g_timezone.GetOSConfiguredTimezone()));
-  if (timezone->IsVisible())
+  if (timezone->IsVisible() && timezone->GetDefault() == "default")
     timezone->SetDefault(g_timezone.GetOSConfiguredTimezone());
 #endif // defined(TARGET_POSIX)
 

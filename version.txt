@@ -1,13 +1,13 @@
-APP_NAME Kodi
-COMPANY_NAME XBMC Foundation
-COPYRIGHT_YEARS 2005-2018
-WEBSITE http://kodi.tv
-VERSION_MAJOR 18
+APP_NAME Sundstrom
+COMPANY_NAME Aclima, Inc.
+COPYRIGHT_YEARS 2018-2019
+WEBSITE https://aclima.io
+VERSION_MAJOR 1
 VERSION_MINOR 0
-VERSION_TAG
-VERSION_CODE 18.0.0
-ADDON_API 18.0.0
-APP_PACKAGE org.xbmc.kodi
-PACKAGE_IDENTITY XBMCFoundation.Kodi
-PACKAGE_PUBLISHER C62BD90A-CDD8-477F-96C3-B25992247B97
-PACKAGE_DESCRIPTION Kodi is an open source (GPL) software media center for playing videos, music, pictures, games, and more.
+VERSION_TAG Alpha1
+VERSION_CODE 0.9.911
+ADDON_API 17.9.952
+APP_PACKAGE io.aclima.sundstrom
+PACKAGE_IDENTITY Aclima.Sundstrom
+PACKAGE_PUBLISHER A4D67BFF-3D53-4879-8218-128AE446E921
+PACKAGE_DESCRIPTION Sundström is an open source platform designed specifically for chemical sensing.
