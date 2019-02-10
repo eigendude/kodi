@@ -18,7 +18,7 @@ set -o pipefail
 set -o nounset
 
 # TODO: Get this from version.txt
-VERSION="1.0-alpha2"
+VERSION="1.0-alpha3"
 
 DATE=`date +%Y%m%d`
 
