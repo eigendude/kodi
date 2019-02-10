@@ -156,6 +156,11 @@
 						<param name="texture" value="icons/weather/sunset.png" />
 						<param name="header" value="$LOCALIZE[403]" />
 					</include>
+					<include content="WeatherIcon">
+						<param name="label" value="Network.IPAddress" />
+						<param name="texture" value="icons/settings.png" />
+						<param name="header" value="$LOCALIZE[150]" />
+					</include>
 				</control>
 			</control>
 			<include content="WeatherWidget">
