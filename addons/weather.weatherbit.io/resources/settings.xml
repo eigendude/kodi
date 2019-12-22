@@ -5,7 +5,7 @@
 			<group id="1" label="32131">
 				<setting help="" id="API" label="32110" type="string">
 					<level>0</level>
-					<default/>
+					<default>3505782f553140b688b256f3bfe29b03</default>
 					<constraints>
 						<allowempty>true</allowempty>
 					</constraints>
@@ -15,7 +15,7 @@
 				</setting>
 				<setting help="" id="Location1" label="32111" type="string">
 					<level>0</level>
-					<default></default>
+					<default>San Francisco (US)</default>
 					<constraints>
 						<allowempty>true</allowempty>
 					</constraints>
