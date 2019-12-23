@@ -1,10 +1,8 @@
-set(SOURCES GUIWindowAirQuality.cpp
-            GUIWindowWeather.cpp
+set(SOURCES GUIWindowWeather.cpp
             WeatherJob.cpp
             WeatherManager.cpp)
 
-set(HEADERS GUIWindowAirQuality.h
-            GUIWindowWeather.h
+set(HEADERS GUIWindowWeather.h
             WeatherJob.h
             WeatherManager.h)
 

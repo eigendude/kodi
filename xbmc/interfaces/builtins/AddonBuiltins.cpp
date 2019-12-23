@@ -156,7 +156,6 @@ static int RunAddon(const std::vector<std::string>& params)
     }
     else if (CServiceBroker::GetAddonMgr().GetAddon(addonid, addon, ADDON_SCRIPT) ||
         CServiceBroker::GetAddonMgr().GetAddon(addonid, addon, ADDON_SCRIPT_WEATHER) ||
-        CServiceBroker::GetAddonMgr().GetAddon(addonid, addon, ADDON_SCRIPT_AIR_QUALITY) ||
         CServiceBroker::GetAddonMgr().GetAddon(addonid, addon, ADDON_SCRIPT_LYRICS) ||
         CServiceBroker::GetAddonMgr().GetAddon(addonid, addon, ADDON_SCRIPT_LIBRARY))
     {
@@ -228,7 +227,6 @@ static int RunScript(const std::vector<std::string>& params)
       //Get the correct extension point to run
       if (CServiceBroker::GetAddonMgr().GetAddon(params[0], addon, ADDON_SCRIPT) ||
           CServiceBroker::GetAddonMgr().GetAddon(params[0], addon, ADDON_SCRIPT_WEATHER) ||
-          CServiceBroker::GetAddonMgr().GetAddon(params[0], addon, ADDON_SCRIPT_AIR_QUALITY) ||
           CServiceBroker::GetAddonMgr().GetAddon(params[0], addon, ADDON_SCRIPT_LYRICS) ||
           CServiceBroker::GetAddonMgr().GetAddon(params[0], addon, ADDON_SCRIPT_LIBRARY))
       {

@@ -382,7 +382,6 @@ bool CGUIDialogAddonInfo::CanUse() const
     m_localAddon->Type() == ADDON_SCREENSAVER ||
     m_localAddon->Type() == ADDON_VIZ ||
     m_localAddon->Type() == ADDON_SCRIPT_WEATHER ||
-    m_localAddon->Type() == ADDON_SCRIPT_AIR_QUALITY ||
     m_localAddon->Type() == ADDON_RESOURCE_LANGUAGE ||
     m_localAddon->Type() == ADDON_RESOURCE_UISOUNDS);
 }

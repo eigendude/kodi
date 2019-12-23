@@ -251,8 +251,6 @@ public:
   static const std::string SETTING_WEATHER_CURRENTLOCATION;
   static const std::string SETTING_WEATHER_ADDON;
   static const std::string SETTING_WEATHER_ADDONSETTINGS;
-  static const std::string SETTING_AIR_QUALITY_ADDON;
-  static const std::string SETTING_AIR_QUALITY_ADDONSETTINGS;
   static const std::string SETTING_SERVICES_DEVICENAME;
   static const std::string SETTING_SERVICES_DEVICEUUID;
   static const std::string SETTING_SERVICES_UPNP;
