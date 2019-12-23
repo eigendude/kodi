@@ -1,5 +1,6 @@
 media/*
 sounds/*
+system/keymaps/*
 system/library/*
 system/shaders/*
 system/settings/*

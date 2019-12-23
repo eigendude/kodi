@@ -324,8 +324,6 @@ bool CInputManager::Process(int windowId, float frameTime)
 
 bool CInputManager::OnEvent(XBMC_Event& newEvent)
 {
-  return true; //! @todo
-
   switch (newEvent.type)
   {
   case XBMC_KEYDOWN:
@@ -804,8 +802,6 @@ bool CInputManager::OnAction(const CAction& action)
 
 bool CInputManager::LoadKeymaps()
 {
-  return true; //! @todo
-
   bool bSuccess = false;
 
   if (m_buttonTranslator->Load())
