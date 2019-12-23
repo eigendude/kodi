@@ -674,6 +674,97 @@
 						<param name="scrollbar_id" value="15010"/>
 					</include>
 				</control>
+				<control type="group" id="18000">
+					<visible>String.IsEqual(Container(9000).ListItem.Property(id),airquality)</visible>
+					<include content="Visible_Right_Delayed">
+						<param name="id" value="airquality"/>
+					</include>
+					<control type="grouplist" id="18001">
+						<include>WidgetGroupListCommon</include>
+						<pagecontrol>18010</pagecontrol>
+						<control type="group" id="18678">
+							<description>Air quality info</description>
+							<left>68</left>
+							<right>70</right>
+							<top>102</top>
+							<height>300</height>
+							<visible>!String.IsEmpty(AirQuality.plugin)</visible>
+							<control type="image">
+								<bottom>90</bottom>
+								<width>100%</width>
+								<texture border="21">dialogs/dialog-bg.png</texture>
+							</control>
+							<control type="label">
+								<left>840</left>
+								<top>60</top>
+								<aligny>center</aligny>
+								<height>24</height>
+								<right>60</right>
+								<align>right</align>
+								<font>font30_title</font>
+								<label>$INFO[AirQuality.Location]</label>
+							</control>
+							<control type="label">
+								<left>840</left>
+								<top>120</top>
+								<aligny>center</aligny>
+								<height>24</height>
+								<right>60</right>
+								<align>right</align>
+								<font>font14</font>
+								<label>$INFO[AirQuality.Conditions,, ∙ ]$INFO[AirQuality.Temperature]</label>
+							</control>
+							<control type="grouplist">
+								<top>50</top>
+								<left>50</left>
+								<right>20</right>
+								<orientation>horizontal</orientation>
+								<align>left</align>
+								<itemgap>-110</itemgap>
+								<include content="WeatherIcon" condition="!String.IsEmpty(AirQuality.Plugin)">
+									<param name="label" value="Window(AirQuality).Property(Current.Wind)" />
+									<param name="texture" value="icons/weather/wind.png" />
+									<param name="header" value="404" />
+								</include>
+								<include content="WeatherIcon" condition="!String.IsEmpty(AirQuality.Plugin)">
+									<param name="label" value="Window(AirQuality).Property(Current.Humidity)" />
+									<param name="texture" value="icons/weather/humidity.png" />
+									<param name="header" value="406" />
+								</include>
+								<include content="WeatherIcon" condition="!String.IsEmpty(AirQuality.Plugin)">
+									<param name="label" value="Window(AirQuality).Property(Current.Pressure)" />
+									<param name="texture" value="icons/weather/rain.png" />
+									<param name="header" value="33021" />
+								</include>
+								<!--
+								TODO: Battery, diagnostics
+								-->
+							</control>
+						</control>
+						<include content="AirQualityWidget" condition="!String.IsEmpty(AirQuality.Plugin)">
+							<param name="content_include" value="PMItems" />
+							<param name="list_id" value="15200" />
+							<param name="widget_header" value="$LOCALIZE[31019]"/>
+							<param name="visible" value="!String.IsEmpty(Window(AirQuality).Property(IsFetched))" />
+						</include>
+						<include content="WeatherWidget" condition="!String.IsEmpty(AirQuality.Plugin)">
+							<param name="content_include" value="Modalities" />
+							<param name="list_id" value="15100" />
+							<param name="widget_header" value="$LOCALIZE[33036]"/>
+							<param name="visible" value="!String.IsEmpty(Window(AirQuality).Property(IsFetched))" />
+						</include>
+					</control>
+					<include content="ImageWidget" condition="String.IsEmpty(AirQuality.plugin)">
+						<param name="text_label" value="$LOCALIZE[31120]" />
+						<param name="button_label" value="$LOCALIZE[31121]" />
+						<param name="button_onclick" value="ActivateWindow(ServiceSettings,AirQuality)"/>
+						<param name="button_id" value="15300"/>
+						<param name="button2_onclick" value="Skin.SetBool(HomeMenuNoAirQualityButton)"/>
+					</include>
+					<include content="WidgetScrollbar" condition="Skin.HasSetting(touchmode)">
+						<param name="scrollbar_id" value="15010"/>
+					</include>
+				</control>
 				<control type="group" id="16000">
 					<visible>String.IsEqual(Container(9000).ListItem.Property(id),musicvideos)</visible>
 					<include content="Visible_Right_Delayed">
@@ -1002,6 +1093,14 @@
 							<thumb>icons/sidemenu/weather.png</thumb>
 							<property name="id">weather</property>
 							<visible>!Skin.HasSetting(HomeMenuNoWeatherButton)</visible>
+						</item>
+						<item>
+							<label>$LOCALIZE[39200]</label>
+							<onclick>ActivateWindow(AirQuality)</onclick>
+							<property name="menu_id">$NUMBER[18000]</property>
+							<thumb>icons/sidemenu/weather.png</thumb>
+							<property name="id">airquality</property>
+							<visible>!Skin.HasSetting(HomeMenuNoAirQualityButton)</visible>
 						</item>
 					</content>
 				</control>

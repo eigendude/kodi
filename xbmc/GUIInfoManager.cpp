@@ -1014,6 +1014,66 @@ const infomap weather[] =        {{ "isfetched",        WEATHER_IS_FETCHED },
                                   { "conditionsicon",   WEATHER_CONDITIONS_ICON }};
 
 /// \page modules__infolabels_boolean_conditions
+/// \subsection modules__infolabels_boolean_conditions_Weather Weather
+/// \table_start
+///   \table_h3{ Labels, Type, Description }
+///   \table_row3{   <b>`Weather.IsFetched`</b>,
+///                  \anchor Weather_IsFetched
+///                  _boolean_,
+///     @return **True** if the weather data has been downloaded.
+///     <p>
+///   }
+///   \table_row3{   <b>`Weather.Conditions`</b>,
+///                  \anchor Weather_Conditions
+///                  _string_,
+///     @return The current weather conditions as textual description.
+///     @note This is looked up in a background process.
+///     <p>
+///   }
+///   \table_row3{   <b>`Weather.ConditionsIcon`</b>,
+///                  \anchor Weather_ConditionsIcon
+///                  _string_,
+///     @return The current weather conditions as an icon.
+///     @note This is looked up in a background process.
+///     <p>
+///   }
+///   \table_row3{   <b>`Weather.Temperature`</b>,
+///                  \anchor Weather_Temperature
+///                  _string_,
+///     @return The current weather temperature.
+///     <p>
+///   }
+///   \table_row3{   <b>`Weather.Location`</b>,
+///                  \anchor Weather_Location
+///                  _string_,
+///     @return The city/town which the above two items are for.
+///     <p>
+///   }
+///   \table_row3{   <b>`Weather.Fanartcode`</b>,
+///                  \anchor Weather_fanartcode
+///                  _string_,
+///     @return The current weather fanartcode.
+///     <p>
+///   }
+///   \table_row3{   <b>`Weather.Plugin`</b>,
+///                  \anchor Weather_plugin
+///                  _string_,
+///     @return The current weather plugin.
+///     <p>
+///   }
+/// \table_end
+///
+/// -----------------------------------------------------------------------------
+const infomap air_quality[] = {
+  { "airisfetched",     WEATHER_IS_FETCHED },
+  { "conditions",       WEATHER_CONDITIONS_TEXT },         // labels from here
+  { "temperature",      WEATHER_TEMPERATURE },
+  { "location",         WEATHER_LOCATION },
+  { "fanartcode",       WEATHER_FANART_CODE },
+  { "plugin",           WEATHER_PLUGIN },
+  { "conditionsicon",   WEATHER_CONDITIONS_ICON }};
+
+/// \page modules__infolabels_boolean_conditions
 /// \subsection modules__infolabels_boolean_conditions_System System
 /// @todo some values are hardcoded in the middle of the code  - refactor to make it easier to track
 /// \table_start
@@ -6234,6 +6294,27 @@ const infomap skin_labels[] =    {{ "currenttheme",      SKIN_THEME },
 ///     i.e. 28.png
 ///     @skinning_v13 **[Infolabel Updated]** \link Window_Weather_Property `Window(Weather).Property(property)`\endlink
 ///     added `WeatherProviderLogo` property - weather provider logo (for weather addons that support it).
+///     <p>
+///   }
+///   \table_row3{   <b>`Window(AirQuality).Property(property)`</b>,
+///                  \anchor Window_Air_Quality_Property
+///                  _string_,
+///     @return The property for the air quality window.
+///     @param property - The requested property. The following are available:
+///        - @todo
+///        - Current.ConditionIcon
+///        - Day[0-6].OutlookIcon
+///        - Current.FanartCode
+///        - Day[0-6].FanartCode
+///        - WeatherProviderLogo
+///        - Daily.%i.OutlookIcon
+///        - 36Hour.%i.OutlookIcon
+///        - Weekend.%i.OutlookIcon
+///        - Hourly.%i.OutlookIcon
+///     @todo move to a future window document.
+///     <p><hr>
+///     @skinning_v19 **[Updated infolabel]** \link Window_Air_Qualitry_Property `Window(AirQuality).Property(property)`\endlink
+///     Added air quality window.
 ///     <p>
 ///   }
 /// \table_end

@@ -43,6 +43,7 @@
 #include "settings/windows/GUIWindowSettingsScreenCalibration.h"
 #include "programs/GUIWindowPrograms.h"
 #include "pictures/GUIWindowPictures.h"
+#include "weather/GUIWindowAirQuality.h"
 #include "weather/GUIWindowWeather.h"
 #include "windows/GUIWindowLoginScreen.h"
 #include "addons/GUIWindowAddonBrowser.h"
@@ -285,6 +286,7 @@ void CGUIWindowManager::CreateWindows()
   Add(new CGUIDialogVideoOSD);
   Add(new CGUIWindowScreensaver);
   Add(new CGUIWindowWeather);
+  Add(new CGUIWindowAirQuality);
   Add(new CGUIWindowStartup);
   Add(new CGUIWindowSplash);
 
@@ -403,6 +405,7 @@ bool CGUIWindowManager::DestroyWindows()
     DestroyWindow(WINDOW_PROGRAMS);
     DestroyWindow(WINDOW_PICTURES);
     DestroyWindow(WINDOW_WEATHER);
+    DestroyWindow(WINDOW_AIR_QUALITY);
     DestroyWindow(WINDOW_DIALOG_GAME_CONTROLLERS);
     DestroyWindow(WINDOW_GAMES);
     DestroyWindow(WINDOW_DIALOG_GAME_OSD);

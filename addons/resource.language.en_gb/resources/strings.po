@@ -21884,4 +21884,11 @@ msgstr ""
 #: system/settings/darwin_ios.xml
 msgctxt "#39118"
 msgid "Share debug log"
+
+#empty strings from id 39119 to 39199
+
+#. Title of the Air Quality window
+#: xbmc/addons/Skin.cpp
+msgctxt "#39200"
+msgid "Air Quality"
 msgstr ""
