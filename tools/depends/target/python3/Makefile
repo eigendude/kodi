@@ -22,9 +22,9 @@ endif
 CONFIGURE=./configure --prefix=$(PREFIX) \
   --disable-shared \
   --without-ensurepip \
-  --disable-framework --with-system-expat --with-system-ffi --with-pymalloc --enable-ipv6
+  --disable-framework --with-system-expat --with-system-ffi --without-pymalloc --enable-ipv6
 
-LIBDYLIB=$(PLATFORM)/libpython3.7m.a
+LIBDYLIB=$(PLATFORM)/libpython3.7.a
 
 all: .installed-$(PLATFORM)
 
@@ -64,7 +64,7 @@ endif
 	cd $(PLATFORM); $(CONFIGURE)
 
 $(LIBDYLIB): $(PLATFORM)
-	$(MAKE) -C $(PLATFORM) $(HOSTPLATFORM) PYTHON_FOR_BUILD=$(NATIVEPREFIX)/bin/python3 NATIVE_PGEN=$(NATIVEPREFIX)/bin/pgen CROSS_COMPILE_TARGET=yes libpython3.7m.a
+	$(MAKE) -C $(PLATFORM) $(HOSTPLATFORM) PYTHON_FOR_BUILD=$(NATIVEPREFIX)/bin/python3 NATIVE_PGEN=$(NATIVEPREFIX)/bin/pgen CROSS_COMPILE_TARGET=yes libpython3.7.a
 	touch $@
 
 .installed-$(PLATFORM): $(LIBDYLIB)
