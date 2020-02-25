@@ -28,6 +28,13 @@ DEPENDS += \
   spdlog \
   sqlite-modern-cpp \
 
+# Filecoin dependencies
+DEPENDS += \
+  cppcodec \
+  filecoin \
+  leveldb \
+  tinycbor \
+
 ifeq ($(ENABLE_GPLV3),yes)
   DEPENDS+=samba-gplv3 libcdio-gplv3
 else
@@ -132,6 +139,7 @@ protobuf: $(ZLIB)
 spdlog: libfmt
 sqlite-modern-cpp: sqlite3
 libp2p: boost boost-di gsl hat-trie openssl protobuf spdlog sqlite-modern-cpp
+filecoin: boost boost-di cppcodec gsl hat-trie leveldb libp2p openssl protobuf spdlog tinycbor
 
 .installed-$(PLATFORM): $(DEPENDS)
 	touch $@
