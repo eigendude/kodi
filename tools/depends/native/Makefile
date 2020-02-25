@@ -11,6 +11,7 @@ NATIVE= m4 gettext heimdal autoconf automake \
         libpng libjpeg-turbo liblzo2 giflib \
         setuptools distutilscross JsonSchemaBuilder TexturePacker \
         flatbuffers \
+        protobuf \
         meson ninja
 
 
@@ -42,6 +43,7 @@ ninja: python3
 swig: pcre
 distutilscross: python3
 tar: xz automake
+protobuf: libtool zlib
 python3: $(EXPAT) libffi pkg-config zlib
 setuptools: python3
 wayland-scanner: expat
