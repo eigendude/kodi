@@ -53,6 +53,7 @@
   <addon>xbmc.metadata</addon>
   <addon>xbmc.python</addon>
   <addon>xbmc.webinterface</addon>
+  <addon optional="true">game.libretro</addon>
   <addon optional="true">game.shader.presets</addon>
   <addon optional="true">inputstream.adaptive</addon>
   <addon optional="true">peripheral.joystick</addon>
@@ -62,5 +63,8 @@
   <addon optional="true">repository.osmcskin</addon>
   <addon optional="true">repository.teeedubb</addon>
   <addon optional="true">repository.zachmorris</addon>
+  <addon optional="true">screensaver.matrixtrails</addon>
   <addon optional="true">service.xbmc.versioncheck</addon>
+  <addon optional="true">vfs.libarchive</addon>
+  <addon optional="true">vfs.rar</addon>
 </addons>
