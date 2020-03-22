@@ -8,6 +8,9 @@
 
 #include "GameServices.h"
 
+// WIP
+#include "crypto/random/BoostRandomGenerator.h"
+
 #include "controllers/Controller.h"
 #include "controllers/ControllerManager.h"
 #include "filesystem/Directory.h"
@@ -454,7 +457,9 @@ boost::optional<libp2p::peer::PeerInfo> str2peerInfo(const std::string& str)
 template <typename... Ts>
 auto makeInjector(Ts&& ... args)
 {
-  auto csprng = std::make_shared<libp2p::crypto::random::BoostRandomGenerator>();
+  std::unique_ptr<CRYPTO::IRandomGenerator> csprng(new CRYPTO::CBoostRandomGenerator);
+
+  auto _csprng = std::make_shared<libp2p::crypto::random::BoostRandomGenerator>();
   auto ed25519_provider =
       std::make_shared<libp2p::crypto::ed25519::Ed25519ProviderImpl>();
   auto rsa_provider = std::make_shared<libp2p::crypto::rsa::RsaProviderImpl>();
@@ -466,7 +471,7 @@ auto makeInjector(Ts&& ... args)
 
   std::shared_ptr<libp2p::crypto::CryptoProvider> crypto_provider =
       std::make_shared<libp2p::crypto::CryptoProviderImpl>(
-          csprng, ed25519_provider, rsa_provider, ecdsa_provider,
+          _csprng, ed25519_provider, rsa_provider, ecdsa_provider,
           secp256k1_provider, hmac_provider);
   auto validator = std::make_shared<libp2p::crypto::validator::KeyValidatorImpl>(
       crypto_provider);
@@ -481,7 +486,7 @@ auto makeInjector(Ts&& ... args)
     boost::di::bind<libp2p::crypto::KeyPair>().template to(
         std::move(keypair))[boost::di::override],
     boost::di::bind<libp2p::crypto::random::CSPRNG>().template to(
-        std::move(csprng))[boost::di::override],
+        std::move(_csprng))[boost::di::override],
     boost::di::bind<libp2p::crypto::marshaller::KeyMarshaller>().template to<
         libp2p::crypto::marshaller::KeyMarshallerImpl>()[boost::di::override],
     boost::di::bind<libp2p::crypto::validator::KeyValidator>().template to(
