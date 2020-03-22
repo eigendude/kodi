@@ -9,7 +9,9 @@
 ################################################################################
 
 -include ../../Makefile.include
-DEPS = Makefile 0001-CMake-Provide-missing-android_log-module.patch
+DEPS = Makefile \
+  0001-CMake-Provide-missing-android_log-module.patch \
+  0001-Fix-Boost.Interprocess-exception-on-startup-on-Andro.patch \
 
 # lib name, version
 LIBNAME=filecoin
@@ -67,6 +69,7 @@ endif
 	cd $(PLATFORM); $(ARCHIVE_TOOL) $(ARCHIVE_TOOL_FLAGS) $(TARBALLS_LOCATION)/$(ARCHIVE)
 ifeq ($(OS),android)
 	cd $(PLATFORM); patch -p1 -i ../0001-CMake-Provide-missing-android_log-module.patch
+	cd $(PLATFORM); patch -p1 -i ../0001-Fix-Boost.Interprocess-exception-on-startup-on-Andro.patch
 endif
 
 $(LIBDYLIB): $(PLATFORM)
