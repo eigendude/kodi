@@ -13,6 +13,13 @@
 #include "games/GameSettings.h"
 #include "profiles/ProfileManager.h"
 
+// WIP
+#include "crypto/CryptoProvider.h"
+#include "crypto/CryptoTypes.h"
+#include "crypto/Key.h"
+#include "crypto/ed25519/OpenSSLEd25519Provider.h"
+#include "crypto/random/BoostRandomGenerator.h"
+
 using namespace KODI;
 using namespace GAME;
 
@@ -25,6 +32,15 @@ CGameServices::CGameServices(CControllerManager &controllerManager,
   m_profileManager(profileManager),
   m_gameSettings(new CGameSettings())
 {
+  std::unique_ptr<CRYPTO::IRandomGenerator> csprng(new CRYPTO::CBoostRandomGenerator);
+  CRYPTO::ByteArray buffer = csprng->RandomBytes(32);
+
+  std::unique_ptr<CRYPTO::IEd25519Provider> ed25519Provider(new CRYPTO::COpenSSLEd25519Provider);
+  std::unique_ptr<CRYPTO::IRandomGenerator> csrng(new CRYPTO::CBoostRandomGenerator);
+
+  CRYPTO::CCryptoProvider cryptoProvider(std::move(ed25519Provider), std::move(csrng));
+
+  auto keyPair = cryptoProvider.GenerateKeys(CRYPTO::Key::Type::Ed25519);
 }
 
 CGameServices::~CGameServices() = default;
