@@ -317,7 +317,7 @@ case $host in
     platform_cxxflags="$platform_cflags"
     platform_os="linux"
     meson_system="linux"
-    ffmpeg_options_default="--enable-vaapi --enable-vdpau --cpu=$use_cpu"
+    v_default="--enable-vdpau --cpu=$use_cpu"
   ;;
   *darwin*)
     if test "x$prefix" = "xNONE"; then
