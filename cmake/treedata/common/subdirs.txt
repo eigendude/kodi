@@ -16,6 +16,7 @@ xbmc/addons/kodi-addon-dev-kit/include/kodi/gui/gl addons_kodi-addon-dev-kit_inc
 xbmc/addons/kodi-addon-dev-kit/include/kodi/tools addons_kodi-addon-dev-kit_include_kodi_tools
 xbmc/addons/settings                            addons_settings
 xbmc/commons                                    commons
+xbmc/crypto/random                              crypto/random
 xbmc/dbwrappers                                 dbwrappers
 xbmc/dialogs                                    dialogs
 xbmc/favourites                                 favourites
