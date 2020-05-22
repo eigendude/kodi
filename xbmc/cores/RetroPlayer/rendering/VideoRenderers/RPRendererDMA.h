@@ -27,9 +27,9 @@ public:
                                   CRenderContext& context,
                                   std::shared_ptr<IRenderBufferPool> bufferPool) override;
   RenderBufferPoolVector CreateBufferPools(CRenderContext& context) override;
-  };
+};
 
-  /**
+/**
    * @brief Special CRPBaseRenderer implementation to handle Direct Memory
    *        Access (DMA) buffer types. For specific use with
    *        CRenderBufferPoolDMA and CRenderBufferDMA. A windowing system
@@ -37,17 +37,17 @@ public:
    *        CBufferObject types.
    *
    */
-  class CRPRendererDMA : public CRPRendererOpenGLES
-  {
-  public:
-    CRPRendererDMA(const CRenderSettings& renderSettings,
-                   CRenderContext& context,
-                   std::shared_ptr<IRenderBufferPool> bufferPool);
-    ~CRPRendererDMA() override = default;
+class CRPRendererDMA : public CRPRendererOpenGLES
+{
+public:
+  CRPRendererDMA(const CRenderSettings& renderSettings,
+                 CRenderContext& context,
+                 std::shared_ptr<IRenderBufferPool> bufferPool);
+  ~CRPRendererDMA() override = default;
 
-  protected:
-    // implementation of CRPRendererOpenGLES
-    void Render(uint8_t alpha) override;
-  };
-}
-}
+protected:
+  // implementation of CRPRendererOpenGLES
+  void Render(uint8_t alpha) override;
+};
+} // namespace RETRO
+} // namespace KODI
