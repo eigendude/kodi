@@ -22,28 +22,28 @@ namespace GAME
 class CGameClient;
 
 /*!
-   * \ingroup games
-   * \brief Handles mouse events for games.
-   *
-   * Listens to mouse events and forwards them to the games (as game_input_event).
-   */
+ * \ingroup games
+ * \brief Handles mouse events for games.
+ *
+ * Listens to mouse events and forwards them to the games (as game_input_event).
+ */
 class CGameClientMouse : public MOUSE::IMouseInputHandler
 {
 public:
   /*!
-     * \brief Constructor registers for mouse events at CInputManager.
-     * \param gameClient The game client implementation.
-     * \param controllerId The controller profile used for input
-     * \param dllStruct The emulator or game to which the events are sent.
-     * \param inputProvider The interface providing us with mouse input.
-     */
+   * \brief Constructor registers for mouse events at CInputManager.
+   * \param gameClient The game client implementation.
+   * \param controllerId The controller profile used for input
+   * \param dllStruct The emulator or game to which the events are sent.
+   * \param inputProvider The interface providing us with mouse input.
+   */
   CGameClientMouse(CGameClient& gameClient,
                    std::string controllerId,
                    MOUSE::IMouseInputProvider* inputProvider);
 
   /*!
-     * \brief Destructor unregisters from mouse events from CInputManager.
-     */
+   * \brief Destructor unregisters from mouse events from CInputManager.
+   */
   ~CGameClientMouse() override;
 
   // implementation of IMouseInputHandler

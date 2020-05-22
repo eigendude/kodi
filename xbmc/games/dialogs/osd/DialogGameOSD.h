@@ -32,15 +32,15 @@ public:
   void OnDeinitWindow(int nextWindowID) override;
 
   /*!
-     * \brief Decide if the game should play behind the given dialog
-     *
-     * If true, the game should be played at regular speed.
-     *
-     * \param dialog The current dialog
-     *
-     * \return True if the game should be played at regular speed behind the
-     *         dialog, false otherwise
-     */
+   * \brief Decide if the game should play behind the given dialog
+   *
+   * If true, the game should be played at regular speed.
+   *
+   * \param dialog The current dialog
+   *
+   * \return True if the game should be played at regular speed behind the
+   *         dialog, false otherwise
+   */
   static bool PlayInBackground(int dialogId);
 
 protected:

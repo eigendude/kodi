@@ -57,8 +57,8 @@ using namespace KODI::MESSAGING;
 namespace
 {
 /*
-   * \brief Convert to lower case and canonicalize with a leading "."
-   */
+ * \brief Convert to lower case and canonicalize with a leading "."
+ */
 std::string NormalizeExtension(const std::string& strExtension)
 {
   std::string ext = strExtension;

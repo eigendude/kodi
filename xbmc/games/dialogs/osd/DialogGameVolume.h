@@ -53,20 +53,20 @@ protected:
 
 private:
   /*!
-     * \brief Call when state change message is received
-     */
+   * \brief Call when state change message is received
+   */
   void OnStateChanged();
 
   /*!
-     * \brief Get the volume of the first callback
-     *
-     * \return The volume, as a fraction of maximum volume
-     */
+   * \brief Get the volume of the first callback
+   *
+   * \return The volume, as a fraction of maximum volume
+   */
   float GetVolumePercent() const;
 
   /*!
-     * \brief Get the volume bar label
-     */
+   * \brief Get the volume bar label
+   */
   static std::string GetLabel();
 
   // Volume parameters

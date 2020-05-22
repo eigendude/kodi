@@ -26,44 +26,44 @@ public:
   ~CControllerManager() = default;
 
   /*!
-     * \brief Get a controller
-     *
-     * A cache is used to avoid reloading controllers each time they are
-     * requested.
-     *
-     * \param controllerId The controller's ID
-     *
-     * \return The controller, or empty if the controller isn't installed or
-     *         can't be loaded
-     */
+   * \brief Get a controller
+   *
+   * A cache is used to avoid reloading controllers each time they are
+   * requested.
+   *
+   * \param controllerId The controller's ID
+   *
+   * \return The controller, or empty if the controller isn't installed or
+   *         can't be loaded
+   */
   ControllerPtr GetController(const std::string& controllerId);
 
   /*!
-     * \brief Get the default controller
-     *
-     * \return The default controller, or empty if the controller failed to load
-     */
+   * \brief Get the default controller
+   *
+   * \return The default controller, or empty if the controller failed to load
+   */
   ControllerPtr GetDefaultController();
 
   /*!
-     * \brief Get the default keyboard
-     *
-     * \return The keyboard controller, or empty if the controller failed to load
-     */
+   * \brief Get the default keyboard
+   *
+   * \return The keyboard controller, or empty if the controller failed to load
+   */
   ControllerPtr GetDefaultKeyboard();
 
   /*!
-     * \brief Get the default mouse
-     *
-     * \return The mouse controller, or empty if the controller failed to load
-     */
+   * \brief Get the default mouse
+   *
+   * \return The mouse controller, or empty if the controller failed to load
+   */
   ControllerPtr GetDefaultMouse();
 
   /*!
-     * \brief Get installed controllers
-     *
-     * \return The installed controllers that loaded successfully
-     */
+   * \brief Get installed controllers
+   *
+   * \return The installed controllers that loaded successfully
+   */
   ControllerVector GetControllers();
 
 private:

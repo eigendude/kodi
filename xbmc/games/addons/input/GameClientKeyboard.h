@@ -22,28 +22,28 @@ namespace GAME
 class CGameClient;
 
 /*!
-   * \ingroup games
-   * \brief Handles keyboard events for games.
-   *
-   * Listens to keyboard events and forwards them to the games (as game_input_event).
-   */
+ * \ingroup games
+ * \brief Handles keyboard events for games.
+ *
+ * Listens to keyboard events and forwards them to the games (as game_input_event).
+ */
 class CGameClientKeyboard : public KEYBOARD::IKeyboardInputHandler
 {
 public:
   /*!
-     * \brief Constructor registers for keyboard events at CInputManager.
-     * \param gameClient The game client implementation.
-     * \param controllerId The controller profile used for input
-     * \param dllStruct The emulator or game to which the events are sent.
-     * \param inputProvider The interface providing us with keyboard input.
-     */
+   * \brief Constructor registers for keyboard events at CInputManager.
+   * \param gameClient The game client implementation.
+   * \param controllerId The controller profile used for input
+   * \param dllStruct The emulator or game to which the events are sent.
+   * \param inputProvider The interface providing us with keyboard input.
+   */
   CGameClientKeyboard(CGameClient& gameClient,
                       std::string controllerId,
                       KEYBOARD::IKeyboardInputProvider* inputProvider);
 
   /*!
-     * \brief Destructor unregisters from keyboard events from CInputManager.
-     */
+   * \brief Destructor unregisters from keyboard events from CInputManager.
+   */
   ~CGameClientKeyboard() override;
 
   // implementation of IKeyboardInputHandler

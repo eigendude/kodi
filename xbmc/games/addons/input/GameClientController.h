@@ -32,22 +32,22 @@ namespace GAME
 class CGameClientInput;
 
 /*!
-   * \brief A container for the layout of a controller connected to a game
-   *        client input port
-   */
+ * \brief A container for the layout of a controller connected to a game
+ *        client input port
+ */
 class CGameClientController
 {
 public:
   /*!
-     * \brief Construct a controller layout
-     *
-     * \brief controller The controller add-on
-     */
+   * \brief Construct a controller layout
+   *
+   * \brief controller The controller add-on
+   */
   CGameClientController(CGameClientInput& input, ControllerPtr controller);
 
   /*!
-     * \brief Get a controller layout for the Game API
-     */
+   * \brief Get a controller layout for the Game API
+   */
   game_controller_layout TranslateController() const;
 
 private:

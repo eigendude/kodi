@@ -26,21 +26,21 @@ class CGameClient;
 class CPort;
 
 /*!
-   * \ingroup games
-   * \brief Handles game controller events for games.
-   *
-   * Listens to game controller events and forwards them to the games (as game_input_event).
-   */
+ * \ingroup games
+ * \brief Handles game controller events for games.
+ *
+ * Listens to game controller events and forwards them to the games (as game_input_event).
+ */
 class CGameClientJoystick : public JOYSTICK::IInputHandler
 {
 public:
   /*!
-     * \brief Constructor.
-     * \param addon The game client implementation.
-     * \param port The port this game controller is associated with.
-     * \param controller The game controller which is used (for controller mapping).
-     * \param dllStruct The emulator or game to which the events are sent.
-     */
+   * \brief Constructor.
+   * \param addon The game client implementation.
+   * \param port The port this game controller is associated with.
+   * \param controller The game controller which is used (for controller mapping).
+   * \param dllStruct The emulator or game to which the events are sent.
+   */
   CGameClientJoystick(CGameClient& addon,
                       const std::string& portAddress,
                       const ControllerPtr& controller);

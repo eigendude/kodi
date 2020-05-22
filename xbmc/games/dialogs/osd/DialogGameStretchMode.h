@@ -42,8 +42,8 @@ private:
   std::vector<StretchModeProperties> m_stretchModes;
 
   /*!
-     * \brief The list of all the stretch modes along with their properties
-     */
+   * \brief The list of all the stretch modes along with their properties
+   */
   static const std::vector<StretchModeProperties> m_allStretchModes;
 };
 } // namespace GAME

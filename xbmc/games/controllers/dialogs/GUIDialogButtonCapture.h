@@ -40,8 +40,8 @@ public:
   void Notify(const Observable& obs, const ObservableMessage msg) override;
 
   /*!
-     * \brief Show the dialog
-     */
+   * \brief Show the dialog
+   */
   void Show();
 
 protected:

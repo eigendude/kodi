@@ -30,8 +30,8 @@ struct GameClientSubsystems
 };
 
 /*!
-   * \brief Base class for game client subsystems
-   */
+ * \brief Base class for game client subsystems
+ */
 class CGameClientSubsystem
 {
 protected:
@@ -43,24 +43,24 @@ protected:
 
 public:
   /*!
-     * \brief Create a struct with the allocated subsystems
-     *
-     * \param gameClient The owner of the subsystems
-     * \param gameStruct The game client's add-on function table
-     * \param clientAccess Mutex guarding client function access
-     *
-     * \return A fully-allocated GameClientSubsystems struct
-     */
+   * \brief Create a struct with the allocated subsystems
+   *
+   * \param gameClient The owner of the subsystems
+   * \param gameStruct The game client's add-on function table
+   * \param clientAccess Mutex guarding client function access
+   *
+   * \return A fully-allocated GameClientSubsystems struct
+   */
   static GameClientSubsystems CreateSubsystems(CGameClient& gameClient,
                                                AddonInstance_Game& gameStruct,
                                                CCriticalSection& clientAccess);
 
   /*!
-     * \brief Deallocate subsystems
-     *
-     * \param subsystems The subsystems created by CreateSubsystems()
-     */
-  static void DestroySubsystems(GameClientSubsystems& subsystems);
+   * \brief Deallocate subsystems
+   *
+   * \param subsystems The subsystems created by CreateSubsystems()
+   */
+static void DestroySubsystems(GameClientSubsystems& subsystems);
 
 protected:
   // Subsystems

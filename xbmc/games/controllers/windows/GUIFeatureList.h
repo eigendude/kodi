@@ -49,9 +49,9 @@ private:
     std::string groupName;
     std::vector<CControllerFeature> features;
     /*!
-       * True if this group is a button that allows the user to map a key of
-       * their choosing.
-       */
+     * True if this group is a button that allows the user to map a key of
+     * their choosing.
+     */
     bool bIsVirtualKey = false;
   };
   std::vector<FeatureGroup> GetFeatureGroups(const std::vector<CControllerFeature>& features) const;

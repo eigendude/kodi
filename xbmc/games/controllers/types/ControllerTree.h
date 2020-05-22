@@ -23,11 +23,11 @@ class CControllerHub;
 class CControllerPort;
 
 /*!
-   * \brief Node in the controller tree
-   *
-   * The node identifies the controller profile, and optionally the available
-   * controller ports.
-   */
+ * \brief Node in the controller tree
+ *
+ * The node identifies the controller profile, and optionally the available
+ * controller ports.
+ */
 class CControllerNode
 {
 public:
@@ -40,60 +40,60 @@ public:
   void Clear();
 
   /*!
-     * \brief Controller profile of this code
-     *
-     * \return Controller profile, or empty if this node is invalid
-     *
-     * \sa IsValid()
-     */
+   * \brief Controller profile of this code
+   *
+   * \return Controller profile, or empty if this node is invalid
+   *
+   * \sa IsValid()
+   */
   const ControllerPtr& Controller() const { return m_controller; }
   void SetController(ControllerPtr controller);
 
   void GetControllers(ControllerVector& controllers) const;
 
   /*!
-     * \brief Address given to the node by the implementation
-     */
+   * \brief Address given to the node by the implementation
+   */
   const std::string& Address() const { return m_address; }
   void SetAddress(std::string address);
 
   /*!
-     * \brief Collection of ports on this controller
-     *
-     * \return A hub with controller ports, or an empty hub if this controller
-     *         has no available ports
-     */
+   * \brief Collection of ports on this controller
+   *
+   * \return A hub with controller ports, or an empty hub if this controller
+   *         has no available ports
+   */
   const CControllerHub& Hub() const { return *m_hub; }
   CControllerHub& Hub() { return *m_hub; }
   void SetHub(CControllerHub hub);
 
   /*!
-     * \brief Check if this node has a valid controller profile
-     */
+   * \brief Check if this node has a valid controller profile
+   */
   bool IsValid() const { return m_controller.get() != nullptr; }
 
   /*!
-     * \brief Check to see if a controller is compatible with a controller port
-     *
-     * \param controllerId The ID of the controller
-     *
-     * \return True if the controller is compatible with a port, false otherwise
-     */
+   * \brief Check to see if a controller is compatible with a controller port
+   *
+   * \param controllerId The ID of the controller
+   *
+   * \return True if the controller is compatible with a port, false otherwise
+   */
   bool IsControllerAccepted(const std::string& controllerId) const;
 
   /*!
-     * \brief Check to see if a controller is compatible with a controller port
-     *
-     * \param portAddress The port address
-     * \param controllerId The ID of the controller
-     *
-     * \return True if the controller is compatible with a port, false otherwise
-     */
+   * \brief Check to see if a controller is compatible with a controller port
+   *
+   * \param portAddress The port address
+   * \param controllerId The ID of the controller
+   *
+   * \return True if the controller is compatible with a port, false otherwise
+   */
   bool IsControllerAccepted(const std::string& portAddress, const std::string& controllerId) const;
 
   /*!
-     * \brief Check if this node provides input
-     */
+   * \brief Check if this node provides input
+   */
   bool ProvidesInput() const;
 
 private:
@@ -105,8 +105,8 @@ private:
 using ControllerNodeVec = std::vector<CControllerNode>;
 
 /*!
-   * \brief Collection of nodes that can be connected to this port
-   */
+ * \brief Collection of nodes that can be connected to this port
+ */
 class CControllerPortNode
 {
 public:
@@ -117,71 +117,71 @@ public:
   ~CControllerPortNode();
 
   /*!
-     * \brief Connection state of the port
-     *
-     * \return True if a controller is connected, false otherwise
-     */
+   * \brief Connection state of the port
+   *
+   * \return True if a controller is connected, false otherwise
+   */
   bool Connected() const { return m_bConnected; }
   void SetConnected(bool bConnected) { m_bConnected = bConnected; }
 
   /*!
-     * \brief The controller that is active on this port
-     *
-     * \return The active controller, or invalid if port is disconnected
-     */
+   * \brief The controller that is active on this port
+   *
+   * \return The active controller, or invalid if port is disconnected
+   */
   const CControllerNode& ActiveController() const;
   CControllerNode& ActiveController();
   void SetActiveController(unsigned int controllerIndex) { m_active = controllerIndex; }
 
   /*!
-     * \brief The port type
-     *
-     * \return The port type, if known
-     */
+   * \brief The port type
+   *
+   * \return The port type, if known
+   */
   PORT_TYPE PortType() const { return m_portType; }
   void SetPortType(PORT_TYPE type) { m_portType = type; }
 
   /*!
-     * \brief The hardware or controller port ID
-     *
-     * \return The port ID of the hardware port or controller port, or empty if
-     *         the port is only identified by its type
-     */
+   * \brief The hardware or controller port ID
+   *
+   * \return The port ID of the hardware port or controller port, or empty if
+   *         the port is only identified by its type
+   */
   const std::string& PortID() const { return m_portId; }
   void SetPortID(std::string portId);
 
   /*!
-     * \brief Address given to the node by the implementation
-     */
+   * \brief Address given to the node by the implementation
+   */
   const std::string& Address() const { return m_address; }
   void SetAddress(std::string address);
 
   /*!
-     * \brief Return the controller profiles that are compatible with this port
-     *
-     * \return The controller profiles, or empty if this port doesn't support
-     *         any controller profiles
-     */
+   * \brief Return the controller profiles that are compatible with this port
+   *
+   * \return The controller profiles, or empty if this port doesn't support
+   *         any controller profiles
+   */
   const ControllerNodeVec& CompatibleControllers() const { return m_controllers; }
   void SetCompatibleControllers(ControllerNodeVec controllers);
 
   /*!
-     * \brief Check to see if a controller is compatible with this tree
-     *
-     * \param controllerId The ID of the controller
-     *
-     * \return True if the controller is compatible with the tree, false otherwise
-     */
+   * \brief Check to see if a controller is compatible with this tree
+   *
+   * \param controllerId The ID of the controller
+   *
+   * \return True if the controller is compatible with the tree, false otherwise
+   */
   bool IsControllerAccepted(const std::string& controllerId) const;
 
   /*!
-     * \brief Check to see if a controller is compatible with this tree
-     *
-     * \param portAddress The port address
-     * \param controllerId The ID of the controller
-     *
-     * \return True if the controller is compatible with the tree, false otherwise
-     */
+   * \brief Check to see if a controller is compatible with this tree
+   *
+   * \param portAddress The port address
+   * \param controllerId The ID of the controller
+   *
+   * \return True if the controller is compatible with the tree, false otherwise
+   */
   bool IsControllerAccepted(const std::string& portAddress, const std::string& controllerId) const;
 
 private:
@@ -196,13 +196,13 @@ private:
 };
 
 /*!
-   * \brief Collection of port nodes
-   */
+ * \brief Collection of port nodes
+ */
 using ControllerPortVec = std::vector<CControllerPortNode>;
 
 /*!
-   * \brief A branch in the controller tree
-   */
+ * \brief A branch in the controller tree
+ */
 class CControllerHub
 {
 public:
@@ -234,8 +234,8 @@ private:
 };
 
 /*!
-   * \brief Collection of ports on a console
-   */
+ * \brief Collection of ports on a console
+ */
 using CControllerTree = CControllerHub;
 } // namespace GAME
 } // namespace KODI

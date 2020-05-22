@@ -17,17 +17,17 @@ namespace GAME
 class CGameClient;
 
 /*!
-   * \ingroup games
-   * \brief Handles events for hardware such as reset buttons
-   */
+ * \ingroup games
+ * \brief Handles events for hardware such as reset buttons
+ */
 class CGameClientHardware : public HARDWARE::IHardwareInput
 {
 public:
   /*!
-     * \brief Constructor
-     *
-     * \param gameClient The game client implementation
-     */
+   * \brief Constructor
+   *
+   * \param gameClient The game client implementation
+   */
   explicit CGameClientHardware(CGameClient& gameClient);
 
   ~CGameClientHardware() override = default;

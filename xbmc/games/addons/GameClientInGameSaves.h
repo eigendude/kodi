@@ -21,35 +21,35 @@ namespace GAME
 class CGameClient;
 
 /*!
-   * \brief This class implements in-game saves.
-   *
-   * \details Some games do not implement state persistence on their own, but rely on the frontend for saving their current
-   * memory state to disk. This is mostly the case for emulators for SRAM (battery backed up ram on cartridges) or
-   * memory cards.
-   *
-   * Differences to save states:
-   * - Works only for supported games (e.g. emulated games with SRAM support)
-   * - Often works emulator independent (and can be used to start a game with one emulator and continue with another)
-   * - Visible in-game (e.g. in-game save game selection menus)
-   */
+ * \brief This class implements in-game saves.
+ *
+ * \details Some games do not implement state persistence on their own, but rely on the frontend for saving their current
+ * memory state to disk. This is mostly the case for emulators for SRAM (battery backed up ram on cartridges) or
+ * memory cards.
+ *
+ * Differences to save states:
+ * - Works only for supported games (e.g. emulated games with SRAM support)
+ * - Often works emulator independent (and can be used to start a game with one emulator and continue with another)
+ * - Visible in-game (e.g. in-game save game selection menus)
+ */
 class CGameClientInGameSaves
 {
 public:
   /*!
-     * \brief Constructor.
-     * \param addon The game client implementation.
-     * \param dllStruct The emulator or game for which the in-game saves are processed.
-     */
+   * \brief Constructor.
+   * \param addon The game client implementation.
+   * \param dllStruct The emulator or game for which the in-game saves are processed.
+   */
   CGameClientInGameSaves(CGameClient* addon, const AddonInstance_Game* dllStruct);
 
   /*!
-     * \brief Load in-game data.
-     */
+   * \brief Load in-game data.
+   */
   void Load();
 
   /*!
-     * \brief Save in-game data.
-     */
+   * \brief Save in-game data.
+   */
   void Save();
 
 private:
