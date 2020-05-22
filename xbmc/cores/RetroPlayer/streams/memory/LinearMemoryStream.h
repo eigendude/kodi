@@ -51,10 +51,10 @@ protected:
   uint64_t m_maxFrames;
 
   /**
-     * Simple double-buffering. After XORing the two states, the next becomes
-     * the current, and the current becomes a buffer for the next call to
-     * CGameClient::Serialize().
-     */
+   * Simple double-buffering. After XORing the two states, the next becomes
+   * the current, and the current becomes a buffer for the next call to
+   * CGameClient::Serialize().
+   */
   std::unique_ptr<uint32_t[]> m_currentFrame;
   std::unique_ptr<uint32_t[]> m_nextFrame;
   bool m_bHasCurrentFrame;

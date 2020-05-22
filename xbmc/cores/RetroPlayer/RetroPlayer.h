@@ -83,9 +83,9 @@ private:
   void SetSpeedInternal(double speed);
 
   /*!
-     * \brief Called when the speed changes
-     * \param newSpeed The new speed, possibly equal to the previous speed
-     */
+   * \brief Called when the speed changes
+   * \param newSpeed The new speed, possibly equal to the previous speed
+   */
   void OnSpeedChange(double newSpeed);
 
   // Playback functions
@@ -93,21 +93,21 @@ private:
   void ResetPlayback();
 
   /*!
-     * \brief Opens the OSD
-     */
+   * \brief Opens the OSD
+   */
   void OpenOSD();
 
   /*!
-     * \brief Closes the OSD and shows the FullscreenGame window
-     */
+   * \brief Closes the OSD and shows the FullscreenGame window
+   */
   void CloseOSD();
 
   void RegisterWindowCallbacks();
   void UnregisterWindowCallbacks();
 
   /**
-     * \brief Dump game information (if any) to the debug log.
-     */
+   * \brief Dump game information (if any) to the debug log.
+   */
   void PrintGameInfo(const CFileItem& file) const;
 
   uint64_t GetTime();

@@ -38,16 +38,16 @@ public:
   virtual ~CRPBaseRenderer();
 
   /*!
-     * \brief Get the buffer pool used by this renderer
-     */
+   * \brief Get the buffer pool used by this renderer
+   */
   IRenderBufferPool* GetBufferPool() { return m_bufferPool.get(); }
 
   // Player functions
   bool Configure(AVPixelFormat format);
   void FrameMove();
   /*!
-     * \brief Performs whatever necessary before rendering the frame
-     */
+   * \brief Performs whatever necessary before rendering the frame
+   */
   void PreRender(bool clear);
   void SetBuffer(IRenderBuffer* buffer);
   void RenderFrame(bool clear, uint8_t alpha);
@@ -94,13 +94,13 @@ protected:
 
 private:
   /*!
-     * \brief Calculate driven dimensions
-     */
+   * \brief Calculate driven dimensions
+   */
   virtual void ManageRenderArea(const IRenderBuffer& renderBuffer);
 
   /*!
-     * \brief Performs whatever nessesary after a frame has been rendered
-     */
+   * \brief Performs whatever nessesary after a frame has been rendered
+   */
   void PostRender();
 
   void MarkDirty();

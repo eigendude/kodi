@@ -15,8 +15,8 @@ namespace KODI
 namespace RETRO
 {
 /*!
-   * \brief Class to control playback by monitoring OSD status
-   */
+ * \brief Class to control playback by monitoring OSD status
+ */
 class CGUIPlaybackControl : public IPlaybackControl
 {
 public:

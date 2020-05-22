@@ -61,22 +61,22 @@ public:
 
 private:
   /*!
-     * \brief Helper class to hold data needed in creation of a FlatBuffer
-     *
-     * The builder is used when deserializing from individual fields.
-     */
+   * \brief Helper class to hold data needed in creation of a FlatBuffer
+   *
+   * The builder is used when deserializing from individual fields.
+   */
   std::unique_ptr<flatbuffers::FlatBufferBuilder> m_builder;
 
   /*!
-     * \brief System memory storage (for deserializing savestates)
-     *
-     * This memory is used when deserializing from a vector.
-     */
+   * \brief System memory storage (for deserializing savestates)
+   *
+   * This memory is used when deserializing from a vector.
+   */
   std::vector<uint8_t> m_data;
 
   /*!
-     * \brief FlatBuffer struct used for accessing data
-     */
+   * \brief FlatBuffer struct used for accessing data
+   */
   const Savestate* m_savestate = nullptr;
 
   using StringOffset = flatbuffers::Offset<flatbuffers::String>;

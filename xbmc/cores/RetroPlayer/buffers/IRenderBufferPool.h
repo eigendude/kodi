@@ -41,20 +41,20 @@ public:
   virtual bool IsCompatible(const CRenderVideoSettings& renderSettings) const = 0;
 
   /*!
-     * \brief Get a free buffer from the pool, sets ref count to 1
-     *
-     * \param width The horizontal pixel count of the buffer
-     * \param height The vertical pixel could of the buffer
-     *
-     * \return The allocated buffer, or nullptr on failure
-     */
+   * \brief Get a free buffer from the pool, sets ref count to 1
+   *
+   * \param width The horizontal pixel count of the buffer
+   * \param height The vertical pixel could of the buffer
+   *
+   * \return The allocated buffer, or nullptr on failure
+   */
   virtual IRenderBuffer* GetBuffer(unsigned int width, unsigned int height) = 0;
 
   /*!
-     * \brief Called by buffer when ref count goes to zero
-     *
-     * \param buffer A fully dereferenced buffer
-     */
+   * \brief Called by buffer when ref count goes to zero
+   *
+   * \param buffer A fully dereferenced buffer
+   */
   virtual void Return(IRenderBuffer* buffer) = 0;
 
   virtual void Prime(unsigned int width, unsigned int height) = 0;
@@ -62,8 +62,8 @@ public:
   virtual void Flush() = 0;
 
   /*!
-     * \brief Call in GetBuffer() before returning buffer to caller
-     */
+   * \brief Call in GetBuffer() before returning buffer to caller
+   */
   virtual std::shared_ptr<IRenderBufferPool> GetPtr() { return shared_from_this(); }
 };
 } // namespace RETRO

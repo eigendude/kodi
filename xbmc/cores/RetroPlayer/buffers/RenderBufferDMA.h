@@ -24,12 +24,12 @@ namespace RETRO
 class CRenderContext;
 
 /**
-   * @brief Special IRenderBuffer implementation for use with CBufferObject.
-   *        This buffer type uses Direct Memory Access (DMA) sharing via file
-   *        descriptors (fds). The file descriptor is then used to create an
-   *        EGL image.
-   *
-   */
+ * @brief Special IRenderBuffer implementation for use with CBufferObject.
+ *        This buffer type uses Direct Memory Access (DMA) sharing via file
+ *        descriptors (fds). The file descriptor is then used to create an
+ *        EGL image.
+ *
+ */
 class CRenderBufferDMA : public CBaseRenderBuffer
 {
 public:

@@ -40,26 +40,26 @@ class IRenderBuffer;
 class IRenderBufferPool;
 
 /*!
-   * \brief Renders video frames provided by the game loop
-   *
-   * Generally, buffer pools are registered by the windowing subsystem. A buffer
-   * pool provides a software or hardware buffer to store the added frame. When
-   * RenderManager is created, it instantiates all registered buffer pools.
-   *
-   * When a frame arrives, it is copied into a buffer from each buffer pool with
-   * a visible renderer. For example, if a GLES and MMAL renderer are both
-   * visible in the GUI, then the frame will be copied into two buffers.
-   *
-   * When it is time to render the frame, the GUI control or window calls into
-   * this class through the IRenderManager interface. RenderManager selects an
-   * appropriate renderer to use to render the frame. The renderer is then
-   * given the buffer that came from its buffer pool.
-   *
-   * Special behavior is needed when the game is paused. As no new frames are
-   * delivered, a newly created renderer will stay black. For this scenario,
-   * when we detect a pause event, the frame is preemptively cached so that a
-   * newly created renderer will have something to display.
-   */
+ * \brief Renders video frames provided by the game loop
+ *
+ * Generally, buffer pools are registered by the windowing subsystem. A buffer
+ * pool provides a software or hardware buffer to store the added frame. When
+ * RenderManager is created, it instantiates all registered buffer pools.
+ *
+ * When a frame arrives, it is copied into a buffer from each buffer pool with
+ * a visible renderer. For example, if a GLES and MMAL renderer are both
+ * visible in the GUI, then the frame will be copied into two buffers.
+ *
+ * When it is time to render the frame, the GUI control or window calls into
+ * this class through the IRenderManager interface. RenderManager selects an
+ * appropriate renderer to use to render the frame. The renderer is then
+ * given the buffer that came from its buffer pool.
+ *
+ * Special behavior is needed when the game is paused. As no new frames are
+ * delivered, a newly created renderer will stay black. For this scenario,
+ * when we detect a pause event, the frame is preemptively cached so that a
+ * newly created renderer will have something to display.
+ */
 class CRPRenderManager : public IRenderManager, public IRenderCallback
 {
 public:
@@ -70,8 +70,8 @@ public:
   void Deinitialize();
 
   /*!
-     * \brief Access the factory for creating GUI render targets
-     */
+   * \brief Access the factory for creating GUI render targets
+   */
   CGUIRenderTargetFactory* GetGUIRenderTargetFactory() { return m_renderControlFactory.get(); }
 
   // Functions called from game loop
@@ -109,61 +109,61 @@ public:
 
 private:
   /*!
-     * \brief Get or create a renderer compatible with the given render settings
-     */
+   * \brief Get or create a renderer compatible with the given render settings
+   */
   std::shared_ptr<CRPBaseRenderer> GetRenderer(const IGUIRenderSettings* renderSettings);
 
   /*!
-     * \brief Get or create a renderer for the given buffer pool and render settings
-     */
+   * \brief Get or create a renderer for the given buffer pool and render settings
+   */
   std::shared_ptr<CRPBaseRenderer> GetRenderer(IRenderBufferPool* bufferPool,
                                                const CRenderSettings& renderSettings);
 
   /*!
-     * \brief Render a frame using the given renderer
-     */
+   * \brief Render a frame using the given renderer
+   */
   void RenderInternal(const std::shared_ptr<CRPBaseRenderer>& renderer,
                       bool bClear,
                       uint32_t alpha);
 
   /*!
-     * \brief Return true if we have a render buffer belonging to the specified pool
-     */
+   * \brief Return true if we have a render buffer belonging to the specified pool
+   */
   bool HasRenderBuffer(IRenderBufferPool* bufferPool);
 
   /*!
-     * \brief Get a render buffer belonging to the specified pool
-     */
+   * \brief Get a render buffer belonging to the specified pool
+   */
   IRenderBuffer* GetRenderBuffer(IRenderBufferPool* bufferPool);
 
   /*!
-     * \brief Create a render buffer for the specified pool from a cached frame
-     */
+   * \brief Create a render buffer for the specified pool from a cached frame
+   */
   void CreateRenderBuffer(IRenderBufferPool* bufferPool);
 
   /*!
-     * \brief Create a render buffer and copy the cached data into it
-     *
-     * The cached frame is accessed by both the game and rendering threads,
-     * and therefore requires synchronization.
-     *
-     * However, assuming the memory copy is expensive, we must avoid holding
-     * the mutex during the copy.
-     *
-     * To allow for this, the function is permitted to invalidate its
-     * cachedFrame parameter, as long as it is restored upon exit. While the
-     * mutex is exited inside this function, cachedFrame is guaranteed to be
-     * empty.
-     *
-     * \param cachedFrame The cached frame
-     * \param width The width of the cached frame
-     * \param height The height of the cached frame
-     * \param bufferPool The buffer pool used to create the render buffer
-     * \param mutex The locked mutex, to be unlocked during memory copy
-     *
-     * \return The render buffer if one was created from the cached frame,
-     *         otherwise nullptr
-     */
+   * \brief Create a render buffer and copy the cached data into it
+   *
+   * The cached frame is accessed by both the game and rendering threads,
+   * and therefore requires synchronization.
+   *
+   * However, assuming the memory copy is expensive, we must avoid holding
+   * the mutex during the copy.
+   *
+   * To allow for this, the function is permitted to invalidate its
+   * cachedFrame parameter, as long as it is restored upon exit. While the
+   * mutex is exited inside this function, cachedFrame is guaranteed to be
+   * empty.
+   *
+   * \param cachedFrame The cached frame
+   * \param width The width of the cached frame
+   * \param height The height of the cached frame
+   * \param bufferPool The buffer pool used to create the render buffer
+   * \param mutex The locked mutex, to be unlocked during memory copy
+   *
+   * \return The render buffer if one was created from the cached frame,
+   *         otherwise nullptr
+   */
   IRenderBuffer* CreateFromCache(std::vector<uint8_t>& cachedFrame,
                                  unsigned int width,
                                  unsigned int height,
@@ -171,8 +171,8 @@ private:
                                  CCriticalSection& mutex);
 
   /*!
-     * \brief Utility function to copy a frame and rescale pixels if necessary
-     */
+   * \brief Utility function to copy a frame and rescale pixels if necessary
+   */
   void CopyFrame(IRenderBuffer* renderBuffer,
                  AVPixelFormat format,
                  const uint8_t* data,

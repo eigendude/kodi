@@ -13,11 +13,11 @@ namespace KODI
 namespace RETRO
 {
 /*!
-   * \brief Type of save action, either:
-   *
-   *   - automatic (saving was not prompted by the user)
-   *   - manual (user manually prompted the save)
-   */
+ * \brief Type of save action, either:
+ *
+ *   - automatic (saving was not prompted by the user)
+ *   - manual (user manually prompted the save)
+ */
 enum class SAVE_TYPE
 {
   UNKNOWN,

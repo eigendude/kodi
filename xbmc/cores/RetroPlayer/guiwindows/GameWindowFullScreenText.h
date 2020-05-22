@@ -30,23 +30,23 @@ public:
   void FrameMove();
 
   /*!
-     * \brief Get a line of text
-     */
+   * \brief Get a line of text
+   */
   const std::string& GetText(unsigned int lineIndex) const;
 
   /*!
-     * \brief Set a line of text
-     */
+   * \brief Set a line of text
+   */
   void SetText(unsigned int lineIndex, std::string line);
 
   /*!
-     * \brief Get entire text
-     */
+   * \brief Get entire text
+   */
   const std::vector<std::string>& GetText() const;
 
   /*!
-    * \brief Set entire text
-    */
+   * \brief Set entire text
+   */
   void SetText(std::vector<std::string> text);
 
 private:
@@ -56,12 +56,12 @@ private:
   void Hide();
 
   /*!
-     * \brief Translate line index to the control ID in the skin
-     *
-     * \param lineIndex The line in the string vector
-     *
-     * \return The ID of the line's label control in the skin
-     */
+   * \brief Translate line index to the control ID in the skin
+   *
+   * \param lineIndex The line in the string vector
+   *
+   * \return The ID of the line's label control in the skin
+   */
   static int GetControlID(unsigned int lineIndex);
 
   // Window functions required by GUIMessage macros

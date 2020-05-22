@@ -73,10 +73,10 @@ struct VideoStreamPacket : public StreamPacket
 };
 
 /*!
-   * \brief Renders video frames provided by the game loop
-   *
-   * \sa CRPRenderManager
-   */
+ * \brief Renders video frames provided by the game loop
+ *
+ * \sa CRPRenderManager
+ */
 class CRetroPlayerVideo : public IRetroPlayerStream
 {
 public:

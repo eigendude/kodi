@@ -17,8 +17,8 @@ namespace KODI
 namespace RETRO
 {
 /*!
-   * \brief Video settings provided by the rendering system
-   */
+ * \brief Video settings provided by the rendering system
+ */
 class CRenderVideoSettings
 {
 public:
@@ -32,8 +32,8 @@ public:
   bool operator>(const CRenderVideoSettings& rhs) const { return !(*this == rhs || *this < rhs); }
 
   /*!
-     * \brief Get a string representation of the video filter parameters
-     */
+   * \brief Get a string representation of the video filter parameters
+   */
   std::string GetVideoFilter() const;
   void SetVideoFilter(const std::string& videoFilter);
 

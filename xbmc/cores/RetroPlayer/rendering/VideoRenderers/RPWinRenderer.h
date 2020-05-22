@@ -116,8 +116,8 @@ public:
   static bool SupportsScalingMethod(SCALINGMETHOD method);
 
   /*!
-     * \brief The default scaling method of the renderer
-     */
+   * \brief The default scaling method of the renderer
+   */
   static const SCALINGMETHOD DEFAULT_SCALING_METHOD = SCALINGMETHOD::NEAREST;
 
 protected:

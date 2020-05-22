@@ -64,16 +64,16 @@ protected:
   void FlushInternal() override;
 
   /*!
-     * \brief Set the entire backbuffer to black
-     */
+   * \brief Set the entire backbuffer to black
+   */
   void ClearBackBuffer();
 
   /*!
-     * \brief Draw black bars around the video quad
-     *
-     * This is more efficient than glClear() since it only sets pixels to
-     * black that aren't going to be overwritten by the game.
-     */
+   * \brief Draw black bars around the video quad
+   *
+   * This is more efficient than glClear() since it only sets pixels to
+   * black that aren't going to be overwritten by the game.
+   */
   void DrawBlackBars();
 
   virtual void Render(uint8_t alpha);
