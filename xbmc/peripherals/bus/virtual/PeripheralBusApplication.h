@@ -13,11 +13,11 @@
 namespace PERIPHERALS
 {
 /*!
-   * @class CPeripheralBusApplication
-   *
-   * This exposes peripherals that exist logically at the application level,
-   * such as emulated joysticks.
-   */
+ * @class CPeripheralBusApplication
+ *
+ * This exposes peripherals that exist logically at the application level,
+ * such as emulated joysticks.
+ */
 class CPeripheralBusApplication : public CPeripheralBus
 {
 public:
@@ -29,8 +29,8 @@ public:
   void GetDirectory(const std::string& strPath, CFileItemList& items) const override;
 
   /*!
-     * \brief Get the location for the specified controller index
-     */
+   * \brief Get the location for the specified controller index
+   */
   std::string MakeLocation(unsigned int controllerIndex) const;
 
 protected:

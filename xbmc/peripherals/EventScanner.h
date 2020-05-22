@@ -22,11 +22,11 @@ namespace PERIPHERALS
 class IEventScannerCallback;
 
 /*!
-   * \brief Class to scan for peripheral events
-   *
-   * By default, a rate of 60 Hz is used. A client can obtain control over when
-   * input is handled by registering for a polling handle.
-   */
+ * \brief Class to scan for peripheral events
+ *
+ * By default, a rate of 60 Hz is used. A client can obtain control over when
+ * input is handled by registering for a polling handle.
+ */
 class CEventScanner : public IEventPollCallback, public IEventLockCallback, protected CThread
 {
 public:
@@ -40,8 +40,8 @@ public:
   EventPollHandlePtr RegisterPollHandle();
 
   /*!
-     * \brief Acquire a lock that prevents event processing while held
-     */
+   * \brief Acquire a lock that prevents event processing while held
+   */
   EventLockHandlePtr RegisterLock();
 
   // implementation of IEventPollCallback

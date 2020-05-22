@@ -13,8 +13,8 @@ namespace PERIPHERALS
 class CEventLockHandle;
 
 /*!
-   * \brief Callback implemented by event scanner
-   */
+ * \brief Callback implemented by event scanner
+ */
 class IEventLockCallback
 {
 public:
@@ -24,21 +24,21 @@ public:
 };
 
 /*!
-   * \brief Handle returned by the event scanner to disable event processing
-   *
-   * When held, this disables event processing.
-   */
+ * \brief Handle returned by the event scanner to disable event processing
+ *
+ * When held, this disables event processing.
+ */
 class CEventLockHandle
 {
 public:
   /*!
-     * \brief Create an event lock handle
-     */
+   * \brief Create an event lock handle
+   */
   CEventLockHandle(IEventLockCallback& callback);
 
   /*!
-     * \brief Handle is automatically released when this class is destructed
-     */
+   * \brief Handle is automatically released when this class is destructed
+   */
   ~CEventLockHandle(void);
 
 private:

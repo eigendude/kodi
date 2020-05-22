@@ -32,8 +32,8 @@ public:
   ~CPeripheralBusCEC(void) override;
 
   /*!
-     * @see PeripheralBus::PerformDeviceScan()
-     */
+   * @see PeripheralBus::PerformDeviceScan()
+   */
   bool PerformDeviceScan(PeripheralScanResults& results) override;
 
 private:

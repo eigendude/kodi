@@ -28,26 +28,26 @@ public:
   void UpdateAddons(void);
 
   /*!
-    * \brief Get peripheral add-on that can provide button maps
-    */
+   * \brief Get peripheral add-on that can provide button maps
+   */
   bool GetAddonWithButtonMap(PeripheralAddonPtr& addon) const;
 
   /*!
-     * \brief Get peripheral add-on that can provide button maps for the given device
-     */
+   * \brief Get peripheral add-on that can provide button maps for the given device
+   */
   bool GetAddonWithButtonMap(const CPeripheral* device, PeripheralAddonPtr& addon) const;
 
   /*!
-     * \brief Set the rumble state of a rumble motor
-     *
-     * \param strLocation The location of the peripheral with the motor
-     * \param motorIndex  The index of the motor being rumbled
-     * \param magnitude   The amount of vibration in the closed interval [0.0, 1.0]
-     *
-     * \return true if the rumble motor's state is set, false otherwise
-     *
-     * TODO: Move declaration to parent class
-     */
+   * \brief Set the rumble state of a rumble motor
+   *
+   * \param strLocation The location of the peripheral with the motor
+   * \param motorIndex  The index of the motor being rumbled
+   * \param magnitude   The amount of vibration in the closed interval [0.0, 1.0]
+   *
+   * \return true if the rumble motor's state is set, false otherwise
+   *
+   * TODO: Move declaration to parent class
+   */
   bool SendRumbleEvent(const std::string& strLocation, unsigned int motorIndex, float magnitude);
 
   // Inherited from CPeripheralBus

@@ -46,13 +46,13 @@ public:
   ~CPeripheralAddon(void) override;
 
   /*!
-     * @brief Initialise the instance of this add-on
-     */
+   * @brief Initialise the instance of this add-on
+   */
   bool CreateAddon(void);
 
   /*!
-     * \brief Deinitialize the instance of this add-on
-     */
+   * \brief Deinitialize the instance of this add-on
+   */
   void DestroyAddon();
 
   bool Register(unsigned int peripheralIndex, const PeripheralPtr& peripheral);
@@ -120,8 +120,8 @@ private:
                                     const std::string& featureName) const;
 
   /*!
-     * @brief Helper functions
-     */
+   * @brief Helper functions
+   */
   static void GetPeripheralInfo(const CPeripheral* device, kodi::addon::Peripheral& peripheralInfo);
 
   static void GetJoystickInfo(const CPeripheral* device, kodi::addon::Joystick& joystickInfo);
@@ -129,13 +129,13 @@ private:
                               const kodi::addon::Joystick& joystickInfo);
 
   /*!
-     * @brief Reset all class members to their defaults. Called by the constructors
-     */
+   * @brief Reset all class members to their defaults. Called by the constructors
+   */
   void ResetProperties(void);
 
   /*!
-     * @brief Retrieve add-on properties from the add-on
-     */
+   * @brief Retrieve add-on properties from the add-on
+   */
   bool GetAddonProperties(void);
 
   bool LogError(const PERIPHERAL_ERROR error, const char* strMethod) const;
@@ -151,8 +151,8 @@ private:
   std::string m_strClientPath; /*!< @brief translated path to this add-on */
 
   /*!
-     * @brief Callback functions from addon to kodi
-     */
+   * @brief Callback functions from addon to kodi
+   */
   //@{
   static void cb_trigger_scan(void* kodiInstance);
   static void cb_refresh_button_maps(void* kodiInstance,

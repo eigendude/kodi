@@ -66,24 +66,24 @@ public:
   bool SetMotorState(unsigned int motorIndex, float magnitude) override;
 
   /*!
-     * \brief Get the name of the driver or API providing this joystick
-     */
+   * \brief Get the name of the driver or API providing this joystick
+   */
   const std::string& Provider(void) const { return m_strProvider; }
 
   /*!
-     * \brief Get the specific port number requested by this joystick
-     *
-     * This could indicate that the joystick is connected to a hardware port
-     * with a number label; some controllers, such as the Xbox 360 controller,
-     * also have LEDs that indicate the controller is on a specific port.
-     *
-     * \return The 0-indexed port number, or JOYSTICK_PORT_UNKNOWN if no port is requested
-     */
+   * \brief Get the specific port number requested by this joystick
+   *
+   * This could indicate that the joystick is connected to a hardware port
+   * with a number label; some controllers, such as the Xbox 360 controller,
+   * also have LEDs that indicate the controller is on a specific port.
+   *
+   * \return The 0-indexed port number, or JOYSTICK_PORT_UNKNOWN if no port is requested
+   */
   int RequestedPort(void) const { return m_requestedPort; }
 
   /*!
-     * \brief Get the number of elements reported by the driver
-     */
+   * \brief Get the number of elements reported by the driver
+   */
   unsigned int ButtonCount(void) const { return m_buttonCount; }
   unsigned int HatCount(void) const { return m_hatCount; }
   unsigned int AxisCount(void) const { return m_axisCount; }
@@ -91,8 +91,8 @@ public:
   bool SupportsPowerOff(void) const { return m_supportsPowerOff; }
 
   /*!
-     * \brief Set joystick properties
-     */
+   * \brief Set joystick properties
+   */
   void SetProvider(const std::string& provider) { m_strProvider = provider; }
   void SetRequestedPort(int port) { m_requestedPort = port; }
   void SetButtonCount(unsigned int buttonCount) { m_buttonCount = buttonCount; }

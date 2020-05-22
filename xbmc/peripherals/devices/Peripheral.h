@@ -87,102 +87,102 @@ public:
   const std::string& GetVersionInfo(void) const { return m_strVersionInfo; }
 
   /*!
-     * @brief Get an icon for this peripheral
-     * @return Path to an icon, or skin icon file name
-     */
+   * @brief Get an icon for this peripheral
+   * @return Path to an icon, or skin icon file name
+   */
   virtual std::string GetIcon() const;
 
   /*!
-     * @brief Check whether this device has the given feature.
-     * @param feature The feature to check for.
-     * @return True when the device has the feature, false otherwise.
-     */
+   * @brief Check whether this device has the given feature.
+   * @param feature The feature to check for.
+   * @return True when the device has the feature, false otherwise.
+   */
   bool HasFeature(const PeripheralFeature feature) const;
 
   /*!
-     * @brief Get all features that are supported by this device.
-     * @param features The features.
-     */
+   * @brief Get all features that are supported by this device.
+   * @param features The features.
+   */
   void GetFeatures(std::vector<PeripheralFeature>& features) const;
 
   /*!
-     * @brief Initialises the peripheral.
-     * @return True when the peripheral has been initialised successfully, false otherwise.
-     */
+   * @brief Initialises the peripheral.
+   * @return True when the peripheral has been initialised successfully, false otherwise.
+   */
   bool Initialise(void);
 
   /*!
-     * @brief Initialise one of the features of this peripheral.
-     * @param feature The feature to initialise.
-     * @return True when the feature has been initialised successfully, false otherwise.
-     */
+   * @brief Initialise one of the features of this peripheral.
+   * @param feature The feature to initialise.
+   * @return True when the feature has been initialised successfully, false otherwise.
+   */
   virtual bool InitialiseFeature(const PeripheralFeature feature) { return true; }
 
   /*!
-    * @brief Briefly activate a feature to notify the user
-    */
+  * @brief Briefly activate a feature to notify the user
+  */
   virtual void OnUserNotification() {}
 
   /*!
-     * @brief Briefly test one of the features of this peripheral.
-     * @param feature The feature to test.
-     * @return True if the test succeeded, false otherwise.
-     */
+   * @brief Briefly test one of the features of this peripheral.
+   * @param feature The feature to test.
+   * @return True if the test succeeded, false otherwise.
+   */
   virtual bool TestFeature(PeripheralFeature feature) { return false; }
 
   /*!
-     * @brief Called when a setting changed.
-     * @param strChangedSetting The changed setting.
-     */
+   * @brief Called when a setting changed.
+   * @param strChangedSetting The changed setting.
+   */
   virtual void OnSettingChanged(const std::string& strChangedSetting){};
 
   /*!
-     * @brief Called when this device is removed, before calling the destructor.
-     */
+   * @brief Called when this device is removed, before calling the destructor.
+   */
   virtual void OnDeviceRemoved(void) {}
 
   /*!
-     * @brief Get all subdevices if this device is multifunctional.
-     * @param subDevices The subdevices.
-     */
+   * @brief Get all subdevices if this device is multifunctional.
+   * @param subDevices The subdevices.
+   */
   virtual void GetSubdevices(PeripheralVector& subDevices) const;
 
   /*!
-     * @return True when this device is multifunctional, false otherwise.
-     */
+   * @return True when this device is multifunctional, false otherwise.
+   */
   virtual bool IsMultiFunctional(void) const;
 
   /*!
-     * @brief Add a setting to this peripheral. This will overwrite a previous setting with the same key.
-     * @param strKey The key of the setting.
-     * @param setting The setting.
-     */
+   * @brief Add a setting to this peripheral. This will overwrite a previous setting with the same key.
+   * @param strKey The key of the setting.
+   * @param setting The setting.
+   */
   virtual void AddSetting(const std::string& strKey,
                           std::shared_ptr<const CSetting> setting,
                           int order);
 
   /*!
-     * @brief Check whether a setting is known with the given key.
-     * @param strKey The key to search.
-     * @return True when found, false otherwise.
-     */
+   * @brief Check whether a setting is known with the given key.
+   * @param strKey The key to search.
+   * @return True when found, false otherwise.
+   */
   virtual bool HasSetting(const std::string& strKey) const;
 
   /*!
-     * @return True when this device has any settings, false otherwise.
-     */
+   * @return True when this device has any settings, false otherwise.
+   */
   virtual bool HasSettings(void) const;
 
   /*!
-     * @return True when this device has any configurable settings, false otherwise.
-     */
+   * @return True when this device has any configurable settings, false otherwise.
+   */
   virtual bool HasConfigurableSettings(void) const;
 
   /*!
-     * @brief Get the value of a setting.
-     * @param strKey The key to search.
-     * @return The value or an empty string if it wasn't found.
-     */
+   * @brief Get the value of a setting.
+   * @param strKey The key to search.
+   * @return The value or an empty string if it wasn't found.
+   */
   virtual const std::string GetSettingString(const std::string& strKey) const;
   virtual bool SetSetting(const std::string& strKey, const std::string& strValue);
   virtual void SetSettingVisible(const std::string& strKey, bool bSetTo);
@@ -244,10 +244,10 @@ public:
   virtual IKeymap* GetKeymap(const std::string& controllerId) { return nullptr; }
 
   /*!
-     * \brief Return the last time this peripheral was active
-     *
-     * \return The time of last activation, or invalid if unknown/never active
-     */
+   * \brief Return the last time this peripheral was active
+   *
+   * \return The time of last activation, or invalid if unknown/never active
+   */
   virtual CDateTime LastActive() { return CDateTime(); }
 
 protected:
