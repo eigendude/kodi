@@ -15,10 +15,10 @@
 class IKeymapEnvironment;
 
 /*!
-  * \brief Interface for mapping buttons to Kodi actions
-  *
-  * \sa CJoystickUtils::MakeKeyName
-  */
+ * \brief Interface for mapping buttons to Kodi actions
+ *
+ * \sa CJoystickUtils::MakeKeyName
+ */
 class IKeymap
 {
 public:
@@ -47,10 +47,10 @@ public:
 };
 
 /*!
-  * \brief Interface for mapping buttons to Kodi actions for specific windows
-  *
-  * \sa CJoystickUtils::MakeKeyName
-  */
+ * \brief Interface for mapping buttons to Kodi actions for specific windows
+ *
+ * \sa CJoystickUtils::MakeKeyName
+ */
 class IWindowKeymap
 {
 public:

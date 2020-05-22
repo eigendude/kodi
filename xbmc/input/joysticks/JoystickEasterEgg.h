@@ -19,8 +19,8 @@ namespace KODI
 namespace JOYSTICK
 {
 /*!
-   * \brief Hush!!!
-   */
+ * \brief Hush!!!
+ */
 class CJoystickEasterEgg : public IButtonSequence
 {
 public:

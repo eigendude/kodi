@@ -23,29 +23,29 @@ namespace KODI
 namespace JOYSTICK
 {
 /*!
-   * \brief Name of a physical feature belonging to the joystick
-   */
+ * \brief Name of a physical feature belonging to the joystick
+ */
 using FeatureName = std::string;
 
 /*!
-   * \brief Types of features used in the joystick library
-   *
-   * Available types:
-   *
-   *   1) scalar[*]
-   *   2) analog stick
-   *   3) accelerometer
-   *   4) rumble motor
-   *   5) relative pointer
-   *   6) absolute pointer
-   *   7) wheel
-   *   8) throttle
-   *   9) keyboard key
-   *
-   * [*] All three driver primitives (buttons, hats and axes) have a state that
-   *     can be represented using a single scalar value. For this reason,
-   *     features that map to a single primitive are called "scalar features".
-   */
+ * \brief Types of features used in the joystick library
+ *
+ * Available types:
+ *
+ *   1) scalar[*]
+ *   2) analog stick
+ *   3) accelerometer
+ *   4) rumble motor
+ *   5) relative pointer
+ *   6) absolute pointer
+ *   7) wheel
+ *   8) throttle
+ *   9) keyboard key
+ *
+ * [*] All three driver primitives (buttons, hats and axes) have a state that
+ *     can be represented using a single scalar value. For this reason,
+ *     features that map to a single primitive are called "scalar features".
+ */
 enum class FEATURE_TYPE
 {
   UNKNOWN,
@@ -61,8 +61,8 @@ enum class FEATURE_TYPE
 };
 
 /*!
-   * \brief Categories of features used in the joystick library
-   */
+ * \brief Categories of features used in the joystick library
+ */
 enum class FEATURE_CATEGORY
 {
   UNKNOWN,
@@ -85,28 +85,28 @@ enum class FEATURE_CATEGORY
 };
 
 /*!
-   * \brief Direction arrows on the hat (directional pad)
-   */
+ * \brief Direction arrows on the hat (directional pad)
+ */
 using HAT_DIRECTION = INPUT::CARDINAL_DIRECTION;
 
 /*!
-   * \brief States in which a hat can be
-   */
+ * \brief States in which a hat can be
+ */
 using HAT_STATE = INPUT::INTERCARDINAL_DIRECTION;
 
 /*!
-   * \brief Typedef for analog stick directions
-   */
+ * \brief Typedef for analog stick directions
+ */
 using ANALOG_STICK_DIRECTION = INPUT::CARDINAL_DIRECTION;
 
 /*!
-   * \brief Directions of motion for a relative pointer
-   */
+ * \brief Directions of motion for a relative pointer
+ */
 using RELATIVE_POINTER_DIRECTION = INPUT::CARDINAL_DIRECTION;
 
 /*!
-   * \brief Directions in which a semiaxis can point
-   */
+ * \brief Directions in which a semiaxis can point
+ */
 enum class SEMIAXIS_DIRECTION
 {
   NEGATIVE = -1, // semiaxis lies in the interval [-1.0, 0.0]
@@ -115,8 +115,8 @@ enum class SEMIAXIS_DIRECTION
 };
 
 /*!
-   * \brief Directions on a wheel
-   */
+ * \brief Directions on a wheel
+ */
 enum class WHEEL_DIRECTION
 {
   NONE,
@@ -125,8 +125,8 @@ enum class WHEEL_DIRECTION
 };
 
 /*!
-   * \brief Directions on a throttle
-   */
+ * \brief Directions on a throttle
+ */
 enum class THROTTLE_DIRECTION
 {
   NONE,
@@ -135,8 +135,8 @@ enum class THROTTLE_DIRECTION
 };
 
 /*!
-   * \brief Types of input available for scalar features
-   */
+ * \brief Types of input available for scalar features
+ */
 enum class INPUT_TYPE
 {
   UNKNOWN,
@@ -145,8 +145,8 @@ enum class INPUT_TYPE
 };
 
 /*!
-  * \brief Type of driver primitive
-  */
+* \brief Type of driver primitive
+*/
 enum class PRIMITIVE_TYPE
 {
   UNKNOWN = 0, // primitive has no type (invalid)
@@ -160,9 +160,9 @@ enum class PRIMITIVE_TYPE
 };
 
 /*!
-   * \ingroup joystick
-   * \brief Action entry in joystick.xml
-   */
+ * \ingroup joystick
+ * \brief Action entry in joystick.xml
+ */
 struct KeymapAction
 {
   unsigned int actionId;
@@ -174,9 +174,9 @@ struct KeymapAction
 };
 
 /*!
-   * \ingroup joystick
-   * \brief Container that sorts action entries by their holdtime
-   */
+ * \ingroup joystick
+ * \brief Container that sorts action entries by their holdtime
+ */
 struct KeymapActionGroup
 {
   int windowId = -1;

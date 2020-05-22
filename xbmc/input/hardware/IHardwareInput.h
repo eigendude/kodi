@@ -15,17 +15,17 @@ namespace KODI
 namespace HARDWARE
 {
 /*!
-   * \ingroup hardware
-   * \brief Handles events for hardware such as reset buttons on a game console
-   */
+ * \ingroup hardware
+ * \brief Handles events for hardware such as reset buttons on a game console
+ */
 class IHardwareInput
 {
 public:
   virtual ~IHardwareInput() = default;
 
   /*!
-     * \brief A hardware reset button has been pressed
-     */
+   * \brief A hardware reset button has been pressed
+   */
   virtual void OnResetButton() = 0;
 };
 } // namespace HARDWARE

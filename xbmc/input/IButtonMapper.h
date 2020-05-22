@@ -11,8 +11,8 @@
 class TiXmlNode;
 
 /*!
-  * \brief Interface for classes that can map buttons to Kodi actions
-  */
+ * \brief Interface for classes that can map buttons to Kodi actions
+ */
 class IButtonMapper
 {
 public:

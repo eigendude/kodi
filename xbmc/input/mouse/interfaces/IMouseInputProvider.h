@@ -15,28 +15,28 @@ namespace MOUSE
 class IMouseInputHandler;
 
 /*!
-   * \ingroup mouse
-   * \brief Interface for classes that can provide mouse input
-   */
+ * \ingroup mouse
+ * \brief Interface for classes that can provide mouse input
+ */
 class IMouseInputProvider
 {
 public:
   virtual ~IMouseInputProvider() = default;
 
   /*!
-     * \brief Registers a handler to be called on mouse input
-     *
-     * \param handler The handler to receive mouse input provided by this class
-     * \param bPromiscuous True to observe all events without affecting
-     *        subsequent handlers
-     */
+   * \brief Registers a handler to be called on mouse input
+   *
+   * \param handler The handler to receive mouse input provided by this class
+   * \param bPromiscuous True to observe all events without affecting
+   *        subsequent handlers
+   */
   virtual void RegisterMouseHandler(IMouseInputHandler* handler, bool bPromiscuous) = 0;
 
   /*!
-     * \brief Unregisters handler from mouse input
-     *
-     * \param handler The handler that was receiving mouse input
-     */
+   * \brief Unregisters handler from mouse input
+   *
+   * \param handler The handler that was receiving mouse input
+   */
   virtual void UnregisterMouseHandler(IMouseInputHandler* handler) = 0;
 };
 } // namespace MOUSE

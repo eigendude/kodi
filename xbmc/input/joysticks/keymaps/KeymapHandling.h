@@ -26,9 +26,9 @@ class IInputProvider;
 class IInputReceiver;
 
 /*!
-   * \ingroup joystick
-   * \brief
-   */
+ * \ingroup joystick
+ * \brief
+ */
 class CKeymapHandling : public Observer
 {
 public:
@@ -39,22 +39,22 @@ public:
   ~CKeymapHandling() override;
 
   /*!
-     * \brief Unregister the input provider
-     *
-     * Call this if the input provider is invalidated, such as if a user
-     * disconnects a controller. This prevents accessing the invalidated
-     * input provider when keymaps are unloaded upon destruction.
-     */
+   * \brief Unregister the input provider
+   *
+   * Call this if the input provider is invalidated, such as if a user
+   * disconnects a controller. This prevents accessing the invalidated
+   * input provider when keymaps are unloaded upon destruction.
+   */
   void UnregisterInputProvider() { m_inputProvider = nullptr; }
 
   /*!
-     * \brief
-     */
+   * \brief
+   */
   IInputReceiver* GetInputReceiver(const std::string& controllerId) const;
 
   /*!
-     * \brief
-     */
+   * \brief
+   */
   IKeymap* GetKeymap(const std::string& controllerId) const;
 
   // implementation of Observer

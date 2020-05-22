@@ -21,13 +21,13 @@ class IDriverReceiver;
 class IButtonMap;
 
 /*!
-   * \ingroup joystick
-   * \brief Class to translate input events from higher-level features to driver primitives
-   *
-   * A button map is used to translate controller features to driver primitives.
-   * The button map has been abstracted away behind the IButtonMap interface
-   * so that it can be provided by an add-on.
-   */
+ * \ingroup joystick
+ * \brief Class to translate input events from higher-level features to driver primitives
+ *
+ * A button map is used to translate controller features to driver primitives.
+ * The button map has been abstracted away behind the IButtonMap interface
+ * so that it can be provided by an add-on.
+ */
 class CDriverReceiving : public IInputReceiver
 {
 public:

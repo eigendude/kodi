@@ -22,10 +22,10 @@ namespace KEYBOARD
 class IKeyboardInputHandler;
 
 /*!
-     * \ingroup keyboard
-     * \brief Class to translate input from Kodi keycodes to key names defined
-     *        by the keyboard's controller profile
-     */
+ * \ingroup keyboard
+ * \brief Class to translate input from Kodi keycodes to key names defined
+ *        by the keyboard's controller profile
+ */
 class CKeyboardInputHandling : public IKeyboardDriverHandler
 {
 public:

@@ -18,8 +18,8 @@ namespace KODI
 namespace KEYBOARD
 {
 /*!
-   * \brief Hush!!!
-   */
+ * \brief Hush!!!
+ */
 class CKeyboardEasterEgg : public IKeyboardDriverHandler
 {
 public:

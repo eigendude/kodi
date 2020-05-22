@@ -13,8 +13,8 @@ namespace KODI
 namespace INPUT
 {
 /*!
-   * \brief Cardinal directions, used for input device motions
-   */
+ * \brief Cardinal directions, used for input device motions
+ */
 enum class CARDINAL_DIRECTION
 {
   NONE = 0x0,
@@ -25,8 +25,8 @@ enum class CARDINAL_DIRECTION
 };
 
 /*!
-   * \brief Cardinal and intercardinal directions, used for input device motions
-   */
+ * \brief Cardinal and intercardinal directions, used for input device motions
+ */
 enum class INTERCARDINAL_DIRECTION
 {
   NONE = static_cast<unsigned int>(CARDINAL_DIRECTION::NONE),

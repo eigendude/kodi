@@ -24,18 +24,18 @@ class IInputHandler;
 class IButtonMap;
 
 /*!
-   * \ingroup joystick
-   * \brief Class to translate input from the driver into higher-level features
-   *
-   * Raw driver input arrives for three elements: buttons, hats and axes. When
-   * driver input is handled by this class, it translates the raw driver
-   * elements into physical joystick features, such as buttons, analog sticks,
-   * etc.
-   *
-   * A button map is used to translate driver primitives to controller features.
-   * The button map has been abstracted away behind the IButtonMap
-   * interface so that it can be provided by an add-on.
-   */
+ * \ingroup joystick
+ * \brief Class to translate input from the driver into higher-level features
+ *
+ * Raw driver input arrives for three elements: buttons, hats and axes. When
+ * driver input is handled by this class, it translates the raw driver
+ * elements into physical joystick features, such as buttons, analog sticks,
+ * etc.
+ *
+ * A button map is used to translate driver primitives to controller features.
+ * The button map has been abstracted away behind the IButtonMap
+ * interface so that it can be provided by an add-on.
+ */
 class CInputHandling : public IDriverHandler
 {
 public:

@@ -27,9 +27,9 @@ namespace JOYSTICK
 class IKeyHandler;
 
 /*!
-   * \ingroup joystick
-   * \brief
-   */
+ * \ingroup joystick
+ * \brief
+ */
 class CKeymapHandler : public IKeymapHandler, public IInputHandler
 {
 public:

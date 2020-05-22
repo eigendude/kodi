@@ -15,10 +15,10 @@ namespace KODI
 namespace JOYSTICK
 {
 /*!
-   * \ingroup joystick
-   * \brief Monitors joystick input and resets screensaver/shutdown timers
-   *        whenever motion occurs.
-   */
+ * \ingroup joystick
+ * \brief Monitors joystick input and resets screensaver/shutdown timers
+ *        whenever motion occurs.
+ */
 class CJoystickMonitor : public IInputHandler
 {
 public:
@@ -48,9 +48,9 @@ public:
 
 private:
   /*!
-     * \brief  Reset screensaver and shutdown timers
-     * \return True if the application was woken from screensaver
-     */
+   * \brief  Reset screensaver and shutdown timers
+   * \return True if the application was woken from screensaver
+   */
   bool ResetTimers(void);
 };
 } // namespace JOYSTICK
