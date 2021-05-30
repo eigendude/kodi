@@ -11,6 +11,7 @@
 #include "ContextMenuManager.h"
 #include "DatabaseManager.h"
 #include "PlayListPlayer.h"
+#include "ServiceBroker.h"
 #include "addons/AddonManager.h"
 #include "addons/BinaryAddonCache.h"
 #include "addons/ExtsMimeSupportList.h"
@@ -40,6 +41,7 @@
 #include "powermanagement/PowerManager.h"
 #include "profiles/ProfileManager.h"
 #include "pvr/PVRManager.h"
+#include "smarthome/SmartHomeServices.h"
 #if !defined(TARGET_WINDOWS) && defined(HAS_OPTICAL_DRIVE)
 #include "storage/DetectDVDType.h"
 #endif
@@ -180,6 +182,8 @@ bool CServiceManager::InitStageTwo(const std::string& profilesUserDataFolder)
 
   m_gameRenderManager = std::make_unique<RETRO::CGUIGameRenderManager>();
 
+  m_smartHomeServices = std::make_unique<SMART_HOME::CSmartHomeServices>(*m_peripherals);
+
   m_fileExtensionProvider->Initialize(*m_addonMgr);
 
   m_powerManager = std::make_unique<CPowerManager>();
@@ -237,6 +241,8 @@ bool CServiceManager::InitStageThree(const std::shared_ptr<CProfileManager>& pro
   if (!m_Platform->InitStageThree())
     return false;
 
+  m_smartHomeServices->Initialize(*m_gameServices);
+
   init_level = 3;
   return true;
 }
@@ -277,6 +283,8 @@ void CServiceManager::DeinitStageTwo()
   m_weatherManager.reset();
   m_powerManager.reset();
   m_fileExtensionProvider->Deinitialize();
+  m_smartHomeServices->Deinitialize();
+  m_smartHomeServices.reset();
   m_gameRenderManager.reset();
   m_peripherals.reset();
   m_inputManager.reset();
@@ -473,4 +481,9 @@ CSlideShowDelegator& CServiceManager::GetSlideShowDelegator()
 KODI::UTILS::I18N::CSubTagRegistryManager& CServiceManager::GetSubTagRegistryManager()
 {
   return *m_subTagRegistryManager;
+}
+
+SMART_HOME::CSmartHomeServices& CServiceManager::GetSmartHomeServices()
+{
+  return *m_smartHomeServices;
 }
