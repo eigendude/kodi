@@ -489,3 +489,8 @@ std::shared_ptr<XFILE::CBlurayDiscCache> CServiceBroker::GetBlurayDiscCache()
 {
   return g_serviceBroker.m_blurayDiscCache;
 }
+
+SMART_HOME::CSmartHomeServices& CServiceBroker::GetSmartHomeServices()
+{
+  return g_application.m_ServiceManager->GetSmartHomeServices();
+}
