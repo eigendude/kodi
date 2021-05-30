@@ -500,3 +500,8 @@ CSubTagRegistryManager& CServiceBroker::GetSubTagRegistry()
 {
   return g_application.m_ServiceManager->GetSubTagRegistryManager();
 }
+
+SMART_HOME::CSmartHomeServices& CServiceBroker::GetSmartHomeServices()
+{
+  return g_application.m_ServiceManager->GetSmartHomeServices();
+}
