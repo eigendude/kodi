@@ -209,7 +209,7 @@ void CAdvancedSettings::Initialize()
 
   m_handleMounting = CServiceBroker::GetAppParams()->IsStandAlone();
 
-  m_fullScreenOnMovieStart = true;
+  m_fullScreenOnMovieStart = false;
   m_cachePath = "special://temp/";
 
   m_videoFilenameIdentifierRegExp = R"([\{\[](\w+?)(?:id)?[-=](\w+)[\}|\]])";
