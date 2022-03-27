@@ -60,10 +60,24 @@
 			<style>lighten</style>
 		</font>
 		<font>
+			<name>font32_narrow</name>
+			<filename>NotoSans-Regular.ttf</filename>
+			<size>32</size>
+			<style>lighten</style>
+			<linespacing>0.8</linespacing>
+		</font>
+		<font>
 			<name>font37</name>
 			<filename>NotoSans-Regular.ttf</filename>
 			<size>37</size>
 			<style>lighten</style>
+		</font>
+		<font>
+			<name>font37_narrow</name>
+			<filename>NotoSans-Regular.ttf</filename>
+			<size>37</size>
+			<style>lighten</style>
+			<linespacing>0.8</linespacing>
 		</font>
 		<font>
 			<name>font45</name>
@@ -75,6 +89,12 @@
 			<name>font60</name>
 			<filename>NotoSans-Regular.ttf</filename>
 			<size>60</size>
+			<style>lighten</style>
+		</font>
+		<font>
+			<name>font120</name>
+			<filename>NotoSans-Regular.ttf</filename>
+			<size>120</size>
 			<style>lighten</style>
 		</font>
 		<font>
