@@ -270,6 +270,22 @@ void CRPRenderManager::AddFrame(const uint8_t* data,
   }
 }
 
+void CRPRenderManager::Flush()
+{
+  m_bFlush = true;
+}
+
+void CRPRenderManager::DestroyContext()
+{
+  for (IRenderBufferPool* bufferPool : m_processInfo.GetBufferManager().GetBufferPools())
+  {
+    if (!bufferPool->HasVisibleRenderer())
+      continue;
+
+    bufferPool->DestroyContext();
+  }
+}
+
 bool CRPRenderManager::Create(unsigned int width, unsigned int height)
 {
   //! @todo
@@ -355,11 +371,6 @@ void CRPRenderManager::CheckFlush()
 
     m_bFlush = false;
   }
-}
-
-void CRPRenderManager::Flush()
-{
-  m_bFlush = true;
 }
 
 void CRPRenderManager::RenderWindow(bool bClear, const RESOLUTION_INFO& coordsRes)
