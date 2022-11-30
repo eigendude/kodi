@@ -1076,3 +1076,14 @@ void CRPRenderManager::LoadVideoFrameSync(const std::string& savestatePath)
   std::unique_lock lock(m_bufferMutex);
   m_savestateBuffers[savestatePath] = std::move(renderBuffers);
 }
+
+void CRPRenderManager::DestroyContext()
+{
+  for (IRenderBufferPool* bufferPool : m_processInfo.GetBufferManager().GetBufferPools())
+  {
+    if (!bufferPool->HasVisibleRenderer())
+      continue;
+
+    bufferPool->DestroyContext();
+  }
+}

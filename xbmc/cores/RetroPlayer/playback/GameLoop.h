@@ -41,6 +41,8 @@ public:
    * \brief The prior frame is being shown
    */
   virtual void RewindEvent() = 0;
+
+  virtual void EndEvent() = 0;
 };
 
 /*!

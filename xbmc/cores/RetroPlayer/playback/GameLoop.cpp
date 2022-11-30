@@ -117,6 +117,8 @@ void CGameLoop::Process(void)
         m_sleepEvent.Wait(sleepTimeUs);
     }
   }
+
+  m_callback->EndEvent();
 }
 
 std::chrono::microseconds CGameLoop::FrameTimeUs() const
