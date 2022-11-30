@@ -121,6 +121,9 @@ void CGameLoop::Process(void)
         m_sleepEvent.Wait(sleepTimeUs);
     }
   }
+
+  // Notify the callback that the loop has finished processing
+  m_callback->EndEvent();
 }
 
 std::chrono::microseconds CGameLoop::FrameTimeUs() const
