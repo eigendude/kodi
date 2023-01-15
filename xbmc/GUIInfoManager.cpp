@@ -4284,13 +4284,48 @@ constexpr std::array<InfoMap, 3> retroplayer = {{
 ///     @skinning_v22 **[New Infolabel]** \link SmartHome_System_CPUUtilization `SmartHome.System(name).CPUUtilization`\endlink
 ///     <p>
 ///   }
+///   \table_row3{   <b>`SmartHome.HasLab`</b>,
+///                  \anchor SmartHome_HasLab
+///                  _boolean_,
+///     @return **True** if a LEGO train lab has been seen recently.
+///     <p>
+///   }
+///   \table_row3{   <b>`SmartHome.LabCPU`</b>,
+///                  \anchor SmartHome_LabCPU
+///                  _string_,
+///     @return The CPU utilization of the computer powering a LEGO train lab.
+///     <p>
+///   }
+///   \table_row3{   <b>`SmartHome.LabMemory`</b>,
+///                  \anchor SmartHome_LabMemory
+///                  _string_,
+///     @return The RAM utilization of the LEGO train lab microcontroller.
+///     <p>
+///   }
+///   \table_row3{   <b>`SmartHome.LabCurrent`</b>,
+///                  \anchor SmartHome_LabCurrent
+///                  _string_,
+///     @return The current through the shunt current sensor
+///     <p>
+///   }
+///   \table_row3{   <b>`SmartHome.LabIR`</b>,
+///                  \anchor SmartHome_LabIR
+///                  _string_,
+///     @return The output voltage of the IR reflectance sensor
+///     <p>
+///   }
 /// \table_end
 ///
 /// -----------------------------------------------------------------------------
 // clang-format off
-constexpr std::array<InfoMap, 2> smarthome = {{
+constexpr std::array<InfoMap, 7> smarthome = {{
     {"cputemperature",      SMARTHOME_CPU_TEMPERATURE},
     {"cpuutilization",      SMARTHOME_CPU_UTILIZATION},
+    {"haslab",              SMARTHOME_HAS_LAB},
+    {"labcpu",              SMARTHOME_LAB_CPU},
+    {"labmemory",           SMARTHOME_LAB_MEMORY},
+    {"labcurrent",          SMARTHOME_LAB_CURRENT},
+    {"labir",               SMARTHOME_LAB_IR},
 }};
 // clang-format on
 
@@ -11104,6 +11139,14 @@ int CGUIInfoManager::TranslateSingleString(const std::string &strCondition, bool
       {
         if (prop.Name() == rd.str)
           return rd.val;
+      }
+    }
+    else if (cat.Name() == "smarthome")
+    {
+      for (const auto& i : smarthome)
+      {
+        if (prop.Name() == i.str)
+          return i.val;
       }
     }
   }
