@@ -489,3 +489,8 @@ std::shared_ptr<XFILE::CBlurayDiscCache> CServiceBroker::GetBlurayDiscCache()
 {
   return g_serviceBroker.m_blurayDiscCache;
 }
+
+RETRO_ENGINE::CRetroEngineServices& CServiceBroker::GetRetroEngineServices()
+{
+  return g_application.m_ServiceManager->GetRetroEngineServices();
+}
