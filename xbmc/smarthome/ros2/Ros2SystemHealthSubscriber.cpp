@@ -21,8 +21,6 @@ using std::placeholders::_1;
 namespace
 {
 constexpr const char* SUBSCRIBE_TELEMETRY_TOPIC = "system_telemetry";
-
-constexpr std::chrono::milliseconds DEFAULT_ACTIVE_TIMEOUT{10000};
 } // namespace
 
 CRos2SystemHealthSubscriber::CRos2SystemHealthSubscriber(std::string rosNamespace)
@@ -65,9 +63,6 @@ void CRos2SystemHealthSubscriber::Deinitialize()
 bool CRos2SystemHealthSubscriber::IsActive(std::chrono::milliseconds timeout) const
 {
   bool isActive = false;
-
-  if (timeout <= std::chrono::milliseconds::zero())
-    timeout = DEFAULT_ACTIVE_TIMEOUT;
 
   std::lock_guard<std::mutex> lock(m_mutex);
 
