@@ -4287,6 +4287,36 @@ constexpr std::array<InfoMap, 3> retroplayer = {{
 // clang-format on
 
 /// \page modules__infolabels_boolean_conditions
+/// \subsection modules__infolabels_boolean_conditions_SmartHome SmartHome
+/// \table_start
+///   \table_h3{ Labels, Type, Description }
+///   \table_row3{   <b>`SmartHome.System(name).CPUTemperature`</b>,
+///                  \anchor SmartHome_System_CPUTemperature
+///                  _string_,
+///     @return The CPU temperature of the given system, in localized units
+///     <p><hr>
+///     @skinning_v22 **[New Infolabel]** \link SmartHome_System_CPUTemperature `SmartHome.System(name).CPUTemperature`\endlink
+///     <p>
+///   }
+///   \table_row3{   <b>`SmartHome.System(name).CPUUtilization`</b>,
+///                  \anchor SmartHome_System_CPUUtilization
+///                  _string_,
+///     @return The CPU utilization of the given system, in percent
+///     <p><hr>
+///     @skinning_v22 **[New Infolabel]** \link SmartHome_System_CPUUtilization `SmartHome.System(name).CPUUtilization`\endlink
+///     <p>
+///   }
+/// \table_end
+///
+/// -----------------------------------------------------------------------------
+// clang-format off
+constexpr std::array<InfoMap, 2> smarthome = {{
+    {"cputemperature",      SMARTHOME_CPU_TEMPERATURE},
+    {"cpuutilization",      SMARTHOME_CPU_UTILIZATION},
+}};
+// clang-format on
+
+/// \page modules__infolabels_boolean_conditions
 /// \subsection modules__infolabels_boolean_conditions_Container Container
 /// \table_start
 ///   \table_h3{ Labels, Type, Description }
@@ -11204,6 +11234,22 @@ int CGUIInfoManager::TranslateSingleString(const std::string &strCondition, bool
           if (controlID)
             return AddMultiInfo(CGUIInfo(control_label.val, controlID, atoi(info[2].param(0).c_str())));
           return 0;
+        }
+      }
+    }
+    else if (info[0].Name() == "smarthome")
+    {
+      if (info[1].Name() == "system")
+      {
+        // Parameter is system name
+        const std::string systemName = info[1].param();
+
+        // Get next info
+        for (const auto& systemLabel : smarthome)
+        {
+          if (info[2].Name() == systemLabel.str)
+            return AddMultiInfo(
+                CGUIInfo(systemLabel.val, 2, systemName)); // 2 => absolute (0 used for not set)
         }
       }
     }
