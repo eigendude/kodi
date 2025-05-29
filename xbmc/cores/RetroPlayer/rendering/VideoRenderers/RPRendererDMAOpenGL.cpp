@@ -174,6 +174,7 @@ void CRPRendererDMAOpenGL::Render(uint8_t alpha)
 
   // Unbind VAO/VBO just to be safe
   glBindVertexArray(0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 
   m_context.DisableGUIShader();
