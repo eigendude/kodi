@@ -373,4 +373,7 @@ void CRPRendererOpenGLES::Render(uint8_t alpha)
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
   m_context.DisableGUIShader();
+
+  // Unbind texture to avoid leaking state to GUI rendering
+  glBindTexture(m_textureTarget, 0);
 }

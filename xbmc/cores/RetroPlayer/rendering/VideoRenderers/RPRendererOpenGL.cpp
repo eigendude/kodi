@@ -267,6 +267,9 @@ void CRPRendererOpenGL::DrawBlackBars()
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 
   m_context.DisableGUIShader();
+
+  // Unbind texture to avoid leaking state to GUI rendering
+  glBindTexture(m_textureTarget, 0);
 }
 
 void CRPRendererOpenGL::Render(uint8_t alpha)
@@ -395,4 +398,7 @@ void CRPRendererOpenGL::Render(uint8_t alpha)
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 
   m_context.DisableGUIShader();
+
+  // Unbind texture to avoid leaking state to GUI rendering
+  glBindTexture(m_textureTarget, 0);
 }
