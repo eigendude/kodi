@@ -234,5 +234,7 @@ void CShaderPresetGLES::RenderShader(IShader& shader,
               (GLsizei)newViewPort.y2);
     shader.Render(source, target);
     static_cast<CShaderTextureGLES&>(target).UnbindFBO();
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, 0);
   }
 }
