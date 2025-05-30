@@ -172,6 +172,9 @@ void CShaderGL::Render(IShaderTexture& source, IShaderTexture& target)
   glBindVertexArray(0);
 
   glUseProgram(0);
+
+  glBindTexture(GL_TEXTURE_2D, 0);
+  glActiveTexture(GL_TEXTURE0);
 }
 
 void CShaderGL::SetSizes(const float2& prevSize,

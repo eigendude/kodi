@@ -168,6 +168,9 @@ void CShaderGLES::Render(IShaderTexture& source, IShaderTexture& target)
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
   glUseProgram(0);
+
+  glBindTexture(GL_TEXTURE_2D, 0);
+  glActiveTexture(GL_TEXTURE0);
 }
 
 void CShaderGLES::SetSizes(const float2& prevSize,
