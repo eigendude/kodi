@@ -35,10 +35,10 @@ if(NOT TARGET ${APP_NAME_LC}::${CMAKE_FIND_PACKAGE_NAME})
 
     BUILD_DEP_TARGET()
 
-    add_dependencies(${${CMAKE_FIND_PACKAGE_NAME}_MODULE_LC}
-      ${APP_NAME_LC}::Boost
-      ${APP_NAME_LC}::Libdatachannel
-      ${APP_NAME_LC}::try_signal)
+    add_dependencies(${${${CMAKE_FIND_PACKAGE_NAME}_MODULE}_BUILD_NAME}
+                     ${APP_NAME_LC}::Boost
+                     ${APP_NAME_LC}::Libdatachannel
+                     ${APP_NAME_LC}::try_signal)
   endmacro()
 
   include(cmake/scripts/common/ModuleHelpers.cmake)
@@ -105,8 +105,8 @@ if(NOT TARGET ${APP_NAME_LC}::${CMAKE_FIND_PACKAGE_NAME})
                                                                             INTERFACE_LINK_LIBRARIES "-framework SystemConfiguration")
     endif()
 
-    if(TARGET libtorrent)
-      add_dependencies(${APP_NAME_LC}::${CMAKE_FIND_PACKAGE_NAME} libtorrent)
+    if(TARGET ${${${CMAKE_FIND_PACKAGE_NAME}_MODULE}_BUILD_NAME})
+      add_dependencies(${APP_NAME_LC}::${CMAKE_FIND_PACKAGE_NAME} ${${${CMAKE_FIND_PACKAGE_NAME}_MODULE}_BUILD_NAME})
     endif()
 
     # Add internal build target when a Multi Config Generator is used
@@ -118,11 +118,11 @@ if(NOT TARGET ${APP_NAME_LC}::${CMAKE_FIND_PACKAGE_NAME})
     # This is mainly targeted for windows who required different runtime libs for different
     # types, and they arent compatible
     if(_multiconfig_generator)
-      if(NOT TARGET libtorrent)
+      if(NOT TARGET ${${${CMAKE_FIND_PACKAGE_NAME}_MODULE}_BUILD_NAME})
         buildLibtorrent()
-        set_target_properties(libtorrent PROPERTIES EXCLUDE_FROM_ALL TRUE)
+        set_target_properties(${${${CMAKE_FIND_PACKAGE_NAME}_MODULE}_BUILD_NAME} PROPERTIES EXCLUDE_FROM_ALL TRUE)
       endif()
-      add_dependencies(build_internal_depends libtorrent)
+      add_dependencies(build_internal_depends ${${${CMAKE_FIND_PACKAGE_NAME}_MODULE}_BUILD_NAME})
     endif()
   else()
     if(Libtorrent_FIND_REQUIRED)
