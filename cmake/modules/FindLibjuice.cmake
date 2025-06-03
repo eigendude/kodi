@@ -36,7 +36,9 @@ if(NOT TARGET ${APP_NAME_LC}::${CMAKE_FIND_PACKAGE_NAME})
   # TODO: Check for existing libjuice. If version >= LIBJUICE-VERSION file version, dont build
   if(ENABLE_INTERNAL_LIBJUICE)
     # Build lib
-    buildLibjuice()
+    if(NOT TARGET ${${${CMAKE_FIND_PACKAGE_NAME}_MODULE}_BUILD_NAME})
+      buildLibjuice()
+    endif()
   else()
     # TODO
   endif()

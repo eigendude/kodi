@@ -162,7 +162,9 @@ if(NOT TARGET ${APP_NAME_LC}::${CMAKE_FIND_PACKAGE_NAME})
   # TODO: Check for existing boost. If version >= BOOST-VERSION file version, dont build
   if(ENABLE_INTERNAL_BOOST)
     # Build lib
-    buildBoost()
+    if(NOT TARGET ${${${CMAKE_FIND_PACKAGE_NAME}_MODULE}_BUILD_NAME})
+      buildBoost()
+    endif()
   else()
     # TODO
   endif()

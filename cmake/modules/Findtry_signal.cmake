@@ -32,7 +32,9 @@ if(NOT TARGET ${APP_NAME_LC}::${CMAKE_FIND_PACKAGE_NAME})
   # TODO: Check for existing try_signal. If version >= TRY_SIGNAL-VERSION file version, dont build
   if(ENABLE_INTERNAL_TRY_SIGNAL)
     # Build lib
-    buildtry_signal()
+    if(NOT TARGET ${${${CMAKE_FIND_PACKAGE_NAME}_MODULE}_BUILD_NAME})
+      buildtry_signal()
+    endif()
   else()
     # TODO
   endif()

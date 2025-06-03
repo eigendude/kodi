@@ -30,7 +30,9 @@ if(NOT TARGET ${APP_NAME_LC}::${CMAKE_FIND_PACKAGE_NAME})
   # TODO: Check for existing libsrtp. If version >= LIBSRTP-VERSION file version, dont build
   if(ENABLE_INTERNAL_LIBSRTP)
     # Build lib
-    buildLibsrtp()
+    if(NOT TARGET ${${${CMAKE_FIND_PACKAGE_NAME}_MODULE}_BUILD_NAME})
+      buildLibsrtp()
+    endif()
   else()
     # TODO
   endif()
