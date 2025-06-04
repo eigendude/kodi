@@ -105,7 +105,7 @@ bool CVideoBufferPoolDMA::IsCompatible(AVPixelFormat format, int size)
 
 void CVideoBufferPoolDMA::Released(CVideoBufferManager& videoBufferManager)
 {
-  if (!CBufferObjectFactory::CreateBufferObject(true))
+  if (!CBufferObjectFactory::HasDMAHeapBufferObject())
     return;
 
   videoBufferManager.RegisterPool(std::make_shared<CVideoBufferPoolDMA>());

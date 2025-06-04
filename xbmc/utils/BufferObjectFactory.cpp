@@ -33,10 +33,29 @@ std::unique_ptr<CBufferObject> CBufferObjectFactory::CreateBufferObject(bool nee
 void CBufferObjectFactory::RegisterBufferObject(
     const std::function<std::unique_ptr<CBufferObject>()>& createFunc)
 {
-  m_bufferObjects.emplace_back(createFunc);
+  m_bufferObjects.emplace_front(createFunc);
 }
 
 void CBufferObjectFactory::ClearBufferObjects()
 {
   m_bufferObjects.clear();
+}
+
+bool CBufferObjectFactory::HasDMAHeapBufferObject()
+{
+  for (const auto& bufferObject : m_bufferObjects)
+  {
+    auto bo = bufferObject();
+
+    if (bo->GetName() == "CDMAHeapBufferObject")
+    {
+      if (bo->CreateBufferObject(1))
+      {
+        bo->DestroyBufferObject();
+        return true;
+      }
+    }
+  }
+
+  return false;
 }

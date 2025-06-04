@@ -43,6 +43,11 @@ public:
    */
   static void ClearBufferObjects();
 
+  /*!\
+   * @brief Check if a DMA heap buffer object is available
+   */
+  static bool HasDMAHeapBufferObject();
+
 protected:
   static std::list<std::function<std::unique_ptr<CBufferObject>()>> m_bufferObjects;
 };

@@ -34,8 +34,9 @@ using namespace KODI::WINDOWING::GBM;
 using namespace std::chrono_literals;
 
 CWinSystemGbmGLContext::CWinSystemGbmGLContext()
-: CWinSystemGbmEGLContext(EGL_PLATFORM_GBM_MESA, "EGL_MESA_platform_gbm")
-{}
+  : CWinSystemGbmEGLContext(EGL_PLATFORM_GBM_MESA, "EGL_MESA_platform_gbm")
+{
+}
 
 void CWinSystemGbmGLContext::Register()
 {
@@ -74,24 +75,25 @@ bool CWinSystemGbmGLContext::InitWindowSystem()
   CScreenshotSurfaceGL::Register();
 
   CBufferObjectFactory::ClearBufferObjects();
-  CDumbBufferObject::Register();
-#if defined(HAS_GBM_BO_MAP)
-  CGBMBufferObject::Register();
+#if defined(HAVE_LINUX_DMA_HEAP)
+  CDMAHeapBufferObject::Register();
 #endif
 #if defined(HAVE_LINUX_MEMFD) && defined(HAVE_LINUX_UDMABUF)
   CUDMABufferObject::Register();
 #endif
-#if defined(HAVE_LINUX_DMA_HEAP)
-  CDMAHeapBufferObject::Register();
+  CDumbBufferObject::Register();
+#if defined(HAS_GBM_BO_MAP)
+  CGBMBufferObject::Register();
 #endif
 
   return true;
 }
 
-bool CWinSystemGbmGLContext::SetFullScreen(bool fullScreen, RESOLUTION_INFO& res, bool blankOtherDisplays)
+bool CWinSystemGbmGLContext::SetFullScreen(bool fullScreen,
+                                           RESOLUTION_INFO& res,
+                                           bool blankOtherDisplays)
 {
-  if (res.iWidth != m_nWidth ||
-      res.iHeight != m_nHeight)
+  if (res.iWidth != m_nWidth || res.iHeight != m_nHeight)
   {
     CLog::Log(LOGDEBUG, "CWinSystemGbmGLContext::{} - resolution changed, creating a new window",
               __FUNCTION__);
@@ -174,9 +176,10 @@ bool CWinSystemGbmGLContext::CreateContext()
   const EGLint glMinor = 2;
 
   CEGLAttributesVec contextAttribs;
-  contextAttribs.Add({{EGL_CONTEXT_MAJOR_VERSION_KHR, glMajor},
-                      {EGL_CONTEXT_MINOR_VERSION_KHR, glMinor},
-                      {EGL_CONTEXT_OPENGL_PROFILE_MASK_KHR, EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT_KHR}});
+  contextAttribs.Add(
+      {{EGL_CONTEXT_MAJOR_VERSION_KHR, glMajor},
+       {EGL_CONTEXT_MINOR_VERSION_KHR, glMinor},
+       {EGL_CONTEXT_OPENGL_PROFILE_MASK_KHR, EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT_KHR}});
 
   if (!m_eglContext.CreateContext(contextAttribs))
   {
@@ -190,7 +193,10 @@ bool CWinSystemGbmGLContext::CreateContext()
     }
     else
     {
-      CLog::Log(LOGWARNING, "Your OpenGL drivers do not support OpenGL {}.{} core profile. Kodi will run in compatibility mode, but performance may suffer.", glMajor, glMinor);
+      CLog::Log(LOGWARNING,
+                "Your OpenGL drivers do not support OpenGL {}.{} core profile. Kodi will run in "
+                "compatibility mode, but performance may suffer.",
+                glMajor, glMinor);
     }
   }
 
