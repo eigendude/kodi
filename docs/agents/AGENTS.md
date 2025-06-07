@@ -148,3 +148,5 @@ production code. When writing unit tests:
 - Comment any non-obvious setup or test data so that future contributors can
   quickly follow how the test works.
 - Keep tests focused on a single behavior, avoiding unnecessary complexity.
+- Begin each test with a short comment summarizing what it verifies. This
+  makes automated summaries clearer for reviewers.
