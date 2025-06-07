@@ -252,3 +252,71 @@ TEST(TestControllerTreeSerialization, SerializeControllerNodeMissingController)
   auto* root = doc.NewElement("accepts");
   EXPECT_FALSE(node.Serialize(*root));
 }
+
+/*!
+ * Fail deserialization when a port is missing an id
+ */
+TEST(TestControllerTreeSerialization, DeserializePortMissingID)
+{
+  // XML representing a port with a type but no id
+  const char* xml = "<port type=\"controller\">"
+                    "<accepts controller=\"game.controller.default\"/>"
+                    "</port>";
+  CXBMCTinyXML2 doc;
+  ASSERT_TRUE(doc.Parse(xml) == tinyxml2::XML_SUCCESS);
+  const tinyxml2::XMLElement* root = doc.RootElement();
+  ASSERT_NE(root, nullptr);
+
+  CPortNode port;
+  EXPECT_FALSE(port.Deserialize(*root));
+}
+
+/*!
+ * Fail deserialization when a controller node lacks the controller attribute
+ */
+TEST(TestControllerTreeSerialization, DeserializeControllerNodeMissingController)
+{
+  // XML node missing the controller attribute
+  const char* xml = "<accepts/>";
+  CXBMCTinyXML2 doc;
+  ASSERT_TRUE(doc.Parse(xml) == tinyxml2::XML_SUCCESS);
+  const tinyxml2::XMLElement* root = doc.RootElement();
+  ASSERT_NE(root, nullptr);
+
+  CControllerNode node;
+  EXPECT_FALSE(node.Deserialize(*root));
+}
+
+/*!
+ * Fail deserialization when a controller references an unknown profile
+ */
+TEST(TestControllerTreeSerialization, DeserializeControllerNodeUnknownController)
+{
+  // XML node referencing a non-existent controller id
+  const char* xml = "<accepts controller=\"game.controller.fake\"/>";
+  CXBMCTinyXML2 doc;
+  ASSERT_TRUE(doc.Parse(xml) == tinyxml2::XML_SUCCESS);
+  const tinyxml2::XMLElement* root = doc.RootElement();
+  ASSERT_NE(root, nullptr);
+
+  CControllerNode node;
+  EXPECT_FALSE(node.Deserialize(*root));
+}
+
+/*!
+ * Fail deserialization of a hub when a child port is invalid
+ */
+TEST(TestControllerTreeSerialization, DeserializeHubInvalidPort)
+{
+  // XML hub containing a port with no id
+  const char* xml = "<controller>"
+                    "<port type=\"controller\"/>"
+                    "</controller>";
+  CXBMCTinyXML2 doc;
+  ASSERT_TRUE(doc.Parse(xml) == tinyxml2::XML_SUCCESS);
+  const tinyxml2::XMLElement* root = doc.RootElement();
+  ASSERT_NE(root, nullptr);
+
+  CControllerHub hub;
+  EXPECT_FALSE(hub.Deserialize(*root));
+}
