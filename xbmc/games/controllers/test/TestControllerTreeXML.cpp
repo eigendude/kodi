@@ -104,7 +104,7 @@ TEST(TestControllerTreeXML, DeserializeSimpleTree)
                     "</port>"
                     "</controller>";
   CXBMCTinyXML2 doc;
-  ASSERT_TRUE(doc.Parse(std::string_view{xml}) == tinyxml2::XML_SUCCESS);
+  ASSERT_TRUE(doc.Parse(std::string_view{xml}));
   const tinyxml2::XMLElement* root = doc.RootElement();
   ASSERT_NE(root, nullptr);
 
@@ -157,7 +157,7 @@ TEST(TestControllerTreeXML, SerializeDeserializeRoundTrip)
 
   // Deserialize into a new hub
   CXBMCTinyXML2 doc2;
-  ASSERT_TRUE(doc2.Parse(xml) == tinyxml2::XML_SUCCESS);
+  ASSERT_TRUE(doc2.Parse(xml));
   const tinyxml2::XMLElement* root2 = doc2.RootElement();
   ASSERT_NE(root2, nullptr);
   CControllerHub hub2;
@@ -264,7 +264,7 @@ TEST(TestControllerTreeXML, DeserializePortMissingID)
                     "<accepts controller=\"game.controller.default\"/>"
                     "</port>";
   CXBMCTinyXML2 doc;
-  ASSERT_TRUE(doc.Parse(std::string_view{xml}) == tinyxml2::XML_SUCCESS);
+  ASSERT_TRUE(doc.Parse(std::string_view{xml}));
   const tinyxml2::XMLElement* root = doc.RootElement();
   ASSERT_NE(root, nullptr);
 
@@ -280,7 +280,7 @@ TEST(TestControllerTreeXML, DeserializeControllerNodeMissingController)
   // XML node missing the controller attribute
   const char* xml = "<accepts/>";
   CXBMCTinyXML2 doc;
-  ASSERT_TRUE(doc.Parse(std::string_view{xml}) == tinyxml2::XML_SUCCESS);
+  ASSERT_TRUE(doc.Parse(std::string_view{xml}));
   const tinyxml2::XMLElement* root = doc.RootElement();
   ASSERT_NE(root, nullptr);
 
@@ -296,7 +296,7 @@ TEST(TestControllerTreeXML, DeserializeControllerNodeUnknownController)
   // XML node referencing a non-existent controller id
   const char* xml = "<accepts controller=\"game.controller.fake\"/>";
   CXBMCTinyXML2 doc;
-  ASSERT_TRUE(doc.Parse(std::string_view{xml}) == tinyxml2::XML_SUCCESS);
+  ASSERT_TRUE(doc.Parse(std::string_view{xml}));
   const tinyxml2::XMLElement* root = doc.RootElement();
   ASSERT_NE(root, nullptr);
 
@@ -314,7 +314,7 @@ TEST(TestControllerTreeXML, DeserializeHubInvalidPort)
                     "<port type=\"controller\"/>"
                     "</controller>";
   CXBMCTinyXML2 doc;
-  ASSERT_TRUE(doc.Parse(std::string_view{xml}) == tinyxml2::XML_SUCCESS);
+  ASSERT_TRUE(doc.Parse(std::string_view{xml}));
   const tinyxml2::XMLElement* root = doc.RootElement();
   ASSERT_NE(root, nullptr);
 
