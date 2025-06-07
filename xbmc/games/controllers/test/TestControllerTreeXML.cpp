@@ -27,7 +27,7 @@ using namespace GAME;
 /*!
  * Verify translation between port type strings and enums
  */
-TEST(TestControllerTreeSerialization, TranslatePortType)
+TEST(TestControllerTreeXML, TranslatePortType)
 {
   // Ensure each known string maps to the correct enum value and back
   EXPECT_EQ(CControllerTranslator::TranslatePortType("keyboard"), PORT_TYPE::KEYBOARD);
@@ -48,7 +48,7 @@ TEST(TestControllerTreeSerialization, TranslatePortType)
  *
  * The tree contains one controller port accepting the default controller.
  */
-TEST(TestControllerTreeSerialization, SerializeSimpleTree)
+TEST(TestControllerTreeXML, SerializeSimpleTree)
 {
   // Load the default controller add-on
   ADDON::CAddonMgr& addonManager = CServiceBroker::GetAddonMgr();
@@ -95,7 +95,7 @@ TEST(TestControllerTreeSerialization, SerializeSimpleTree)
  *
  * The XML contains one controller port accepting the default controller.
  */
-TEST(TestControllerTreeSerialization, DeserializeSimpleTree)
+TEST(TestControllerTreeXML, DeserializeSimpleTree)
 {
   // Build an XML document representing a controller tree
   const char* xml = "<controller>"
@@ -126,7 +126,7 @@ TEST(TestControllerTreeSerialization, DeserializeSimpleTree)
 /*!
  * Round trip a controller tree through serialization and deserialization
  */
-TEST(TestControllerTreeSerialization, SerializeDeserializeRoundTrip)
+TEST(TestControllerTreeXML, SerializeDeserializeRoundTrip)
 {
   // Load the default controller add-on
   ADDON::CAddonMgr& addonManager = CServiceBroker::GetAddonMgr();
@@ -177,7 +177,7 @@ TEST(TestControllerTreeSerialization, SerializeDeserializeRoundTrip)
 /*!
  * Fail serialization for an unknown port type
  */
-TEST(TestControllerTreeSerialization, SerializePortInvalidType)
+TEST(TestControllerTreeXML, SerializePortInvalidType)
 {
   // Load the default controller add-on
   ADDON::CAddonMgr& addonManager = CServiceBroker::GetAddonMgr();
@@ -203,7 +203,7 @@ TEST(TestControllerTreeSerialization, SerializePortInvalidType)
 /*!
  * Fail serialization when a port is missing an id
  */
-TEST(TestControllerTreeSerialization, SerializePortMissingID)
+TEST(TestControllerTreeXML, SerializePortMissingID)
 {
   // Load the default controller add-on
   ADDON::CAddonMgr& addonManager = CServiceBroker::GetAddonMgr();
@@ -229,7 +229,7 @@ TEST(TestControllerTreeSerialization, SerializePortMissingID)
 /*!
  * Fail serialization when a port has no accepted controllers
  */
-TEST(TestControllerTreeSerialization, SerializePortNoControllers)
+TEST(TestControllerTreeXML, SerializePortNoControllers)
 {
   // Build a port with type and id but no controllers
   CPortNode port;
@@ -245,7 +245,7 @@ TEST(TestControllerTreeSerialization, SerializePortNoControllers)
 /*!
  * Fail serialization when a controller node lacks a controller profile
  */
-TEST(TestControllerTreeSerialization, SerializeControllerNodeMissingController)
+TEST(TestControllerTreeXML, SerializeControllerNodeMissingController)
 {
   CControllerNode node;
 
@@ -257,7 +257,7 @@ TEST(TestControllerTreeSerialization, SerializeControllerNodeMissingController)
 /*!
  * Fail deserialization when a port is missing an id
  */
-TEST(TestControllerTreeSerialization, DeserializePortMissingID)
+TEST(TestControllerTreeXML, DeserializePortMissingID)
 {
   // XML representing a port with a type but no id
   const char* xml = "<port type=\"controller\">"
@@ -275,7 +275,7 @@ TEST(TestControllerTreeSerialization, DeserializePortMissingID)
 /*!
  * Fail deserialization when a controller node lacks the controller attribute
  */
-TEST(TestControllerTreeSerialization, DeserializeControllerNodeMissingController)
+TEST(TestControllerTreeXML, DeserializeControllerNodeMissingController)
 {
   // XML node missing the controller attribute
   const char* xml = "<accepts/>";
@@ -291,7 +291,7 @@ TEST(TestControllerTreeSerialization, DeserializeControllerNodeMissingController
 /*!
  * Fail deserialization when a controller references an unknown profile
  */
-TEST(TestControllerTreeSerialization, DeserializeControllerNodeUnknownController)
+TEST(TestControllerTreeXML, DeserializeControllerNodeUnknownController)
 {
   // XML node referencing a non-existent controller id
   const char* xml = "<accepts controller=\"game.controller.fake\"/>";
@@ -307,7 +307,7 @@ TEST(TestControllerTreeSerialization, DeserializeControllerNodeUnknownController
 /*!
  * Fail deserialization of a hub when a child port is invalid
  */
-TEST(TestControllerTreeSerialization, DeserializeHubInvalidPort)
+TEST(TestControllerTreeXML, DeserializeHubInvalidPort)
 {
   // XML hub containing a port with no id
   const char* xml = "<controller>"

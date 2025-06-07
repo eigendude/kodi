@@ -1,3 +1,3 @@
-set(SOURCES TestControllerTreeSerialization.cpp)
+set(SOURCES TestControllerTreeXML.cpp)
 
 core_add_test_library(test_games_controllers)
