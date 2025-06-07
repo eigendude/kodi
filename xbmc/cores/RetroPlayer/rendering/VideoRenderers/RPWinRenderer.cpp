@@ -188,6 +188,10 @@ bool CWinRenderBufferPool::IsCompatible(const CRenderVideoSettings& renderSettin
   if (!renderSettings.GetShaderPreset().empty())
     return true;
 
+  // AUTO falls back to the default shader, which is always available
+  if (renderSettings.GetScalingMethod() == SCALINGMETHOD::AUTO)
+    return true;
+
   // If no shader preset is specified, scaling methods must match
   return GetShader(renderSettings.GetScalingMethod()) != nullptr;
 }
@@ -212,6 +216,9 @@ bool CWinRenderBufferPool::ConfigureDX()
 
 SHADER::CRPWinOutputShader* CWinRenderBufferPool::GetShader(SCALINGMETHOD scalingMethod) const
 {
+  if (scalingMethod == SCALINGMETHOD::AUTO)
+    scalingMethod = DEFAULT_SCALING_METHOD;
+
   auto it = m_outputShaders.find(scalingMethod);
 
   if (it != m_outputShaders.end())
@@ -286,6 +293,9 @@ bool CRPWinRenderer::Supports(RENDERFEATURE feature) const
 
 bool CRPWinRenderer::SupportsScalingMethod(SCALINGMETHOD method)
 {
+  if (method == SCALINGMETHOD::AUTO)
+    return true;
+
   if (method == SCALINGMETHOD::LINEAR || method == SCALINGMETHOD::NEAREST)
     return true;
 

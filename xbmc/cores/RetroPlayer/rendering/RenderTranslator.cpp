@@ -36,6 +36,8 @@ const char* CRenderTranslator::TranslateScalingMethod(SCALINGMETHOD scalingMetho
 {
   switch (scalingMethod)
   {
+    case SCALINGMETHOD::AUTO:
+      return "auto";
     case SCALINGMETHOD::NEAREST:
       return "nearest";
     case SCALINGMETHOD::LINEAR:

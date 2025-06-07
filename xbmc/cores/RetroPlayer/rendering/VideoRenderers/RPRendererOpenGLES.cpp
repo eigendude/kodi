@@ -109,6 +109,10 @@ bool CRPRendererOpenGLES::Supports(RENDERFEATURE feature) const
 
 bool CRPRendererOpenGLES::SupportsScalingMethod(SCALINGMETHOD method)
 {
+  // AUTO uses the renderer's default filter (NEAREST)
+  if (method == SCALINGMETHOD::AUTO)
+    return true;
+
   return method == SCALINGMETHOD::NEAREST || method == SCALINGMETHOD::LINEAR;
 }
 

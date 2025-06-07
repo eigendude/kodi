@@ -149,6 +149,10 @@ bool CRPRendererOpenGL::Supports(RENDERFEATURE feature) const
 
 bool CRPRendererOpenGL::SupportsScalingMethod(SCALINGMETHOD method)
 {
+  // AUTO falls back to the renderer's default filter, which is NEAREST
+  if (method == SCALINGMETHOD::AUTO)
+    return true;
+
   return method == SCALINGMETHOD::NEAREST || method == SCALINGMETHOD::LINEAR;
 }
 
