@@ -19,7 +19,6 @@
 #include "utils/XBMCTinyXML2.h"
 
 #include <gtest/gtest.h>
-#include <string_view>
 
 using namespace KODI;
 using namespace GAME;
@@ -103,8 +102,9 @@ TEST(TestControllerTreeXML, DeserializeSimpleTree)
                     "<accepts controller=\"game.controller.default\"/>"
                     "</port>"
                     "</controller>";
+  std::string xmlStr{xml};
   CXBMCTinyXML2 doc;
-  ASSERT_TRUE(doc.Parse(std::string_view{xml}));
+  ASSERT_TRUE(doc.Parse(xmlStr));
   const tinyxml2::XMLElement* root = doc.RootElement();
   ASSERT_NE(root, nullptr);
 
@@ -263,8 +263,9 @@ TEST(TestControllerTreeXML, DeserializePortMissingID)
   const char* xml = "<port type=\"controller\">"
                     "<accepts controller=\"game.controller.default\"/>"
                     "</port>";
+  std::string xmlStr{xml};
   CXBMCTinyXML2 doc;
-  ASSERT_TRUE(doc.Parse(std::string_view{xml}));
+  ASSERT_TRUE(doc.Parse(xmlStr));
   const tinyxml2::XMLElement* root = doc.RootElement();
   ASSERT_NE(root, nullptr);
 
@@ -279,8 +280,9 @@ TEST(TestControllerTreeXML, DeserializeControllerNodeMissingController)
 {
   // XML node missing the controller attribute
   const char* xml = "<accepts/>";
+  std::string xmlStr{xml};
   CXBMCTinyXML2 doc;
-  ASSERT_TRUE(doc.Parse(std::string_view{xml}));
+  ASSERT_TRUE(doc.Parse(xmlStr));
   const tinyxml2::XMLElement* root = doc.RootElement();
   ASSERT_NE(root, nullptr);
 
@@ -295,8 +297,9 @@ TEST(TestControllerTreeXML, DeserializeControllerNodeUnknownController)
 {
   // XML node referencing a non-existent controller id
   const char* xml = "<accepts controller=\"game.controller.fake\"/>";
+  std::string xmlStr{xml};
   CXBMCTinyXML2 doc;
-  ASSERT_TRUE(doc.Parse(std::string_view{xml}));
+  ASSERT_TRUE(doc.Parse(xmlStr));
   const tinyxml2::XMLElement* root = doc.RootElement();
   ASSERT_NE(root, nullptr);
 
@@ -313,8 +316,9 @@ TEST(TestControllerTreeXML, DeserializeHubInvalidPort)
   const char* xml = "<controller>"
                     "<port type=\"controller\"/>"
                     "</controller>";
+  std::string xmlStr{xml};
   CXBMCTinyXML2 doc;
-  ASSERT_TRUE(doc.Parse(std::string_view{xml}));
+  ASSERT_TRUE(doc.Parse(xmlStr));
   const tinyxml2::XMLElement* root = doc.RootElement();
   ASSERT_NE(root, nullptr);
 
