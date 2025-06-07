@@ -109,7 +109,8 @@ bool CRPRendererOpenGLES::Supports(RENDERFEATURE feature) const
 
 bool CRPRendererOpenGLES::SupportsScalingMethod(SCALINGMETHOD method)
 {
-  return method == SCALINGMETHOD::NEAREST || method == SCALINGMETHOD::LINEAR;
+  return method == SCALINGMETHOD::NEAREST || method == SCALINGMETHOD::LINEAR ||
+         method == SCALINGMETHOD::AUTO;
 }
 
 void CRPRendererOpenGLES::ClearBackBuffer()
