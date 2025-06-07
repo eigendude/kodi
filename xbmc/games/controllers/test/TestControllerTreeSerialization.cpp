@@ -172,3 +172,83 @@ TEST(TestControllerTreeSerialization, SerializeDeserializeRoundTrip)
   ASSERT_NE(node2.GetController(), nullptr);
   EXPECT_EQ(node2.GetController()->ID(), std::string(DEFAULT_CONTROLLER_ID));
 }
+
+/*!
+ * Fail serialization for an unknown port type
+ */
+TEST(TestControllerTreeSerialization, SerializePortInvalidType)
+{
+  // Load the default controller add-on
+  ADDON::CAddonMgr& addonManager = CServiceBroker::GetAddonMgr();
+  ADDON::AddonPtr addon;
+  ASSERT_TRUE(addonManager.GetAddon(DEFAULT_CONTROLLER_ID, addon, ADDON::AddonType::GAME_CONTROLLER,
+                                    ADDON::OnlyEnabled::CHOICE_YES));
+  ControllerPtr controller = std::static_pointer_cast<CController>(addon);
+  ASSERT_NE(controller.get(), nullptr);
+
+  // Build a port with no type set (defaults to UNKNOWN)
+  CControllerNode node;
+  node.SetController(controller);
+  CPortNode port;
+  port.SetPortID("1");
+  port.SetCompatibleControllers({node});
+
+  // Attempt serialization
+  CXBMCTinyXML2 doc;
+  auto* root = doc.NewElement("port");
+  EXPECT_FALSE(port.Serialize(*root));
+}
+
+/*!
+ * Fail serialization when a port is missing an id
+ */
+TEST(TestControllerTreeSerialization, SerializePortMissingID)
+{
+  // Load the default controller add-on
+  ADDON::CAddonMgr& addonManager = CServiceBroker::GetAddonMgr();
+  ADDON::AddonPtr addon;
+  ASSERT_TRUE(addonManager.GetAddon(DEFAULT_CONTROLLER_ID, addon, ADDON::AddonType::GAME_CONTROLLER,
+                                    ADDON::OnlyEnabled::CHOICE_YES));
+  ControllerPtr controller = std::static_pointer_cast<CController>(addon);
+  ASSERT_NE(controller.get(), nullptr);
+
+  // Build a port with no id set
+  CControllerNode node;
+  node.SetController(controller);
+  CPortNode port;
+  port.SetPortType(PORT_TYPE::CONTROLLER);
+  port.SetCompatibleControllers({node});
+
+  // Attempt serialization
+  CXBMCTinyXML2 doc;
+  auto* root = doc.NewElement("port");
+  EXPECT_FALSE(port.Serialize(*root));
+}
+
+/*!
+ * Fail serialization when a port has no accepted controllers
+ */
+TEST(TestControllerTreeSerialization, SerializePortNoControllers)
+{
+  // Build a port with type and id but no controllers
+  CPortNode port;
+  port.SetPortType(PORT_TYPE::CONTROLLER);
+  port.SetPortID("1");
+
+  // Attempt serialization
+  CXBMCTinyXML2 doc;
+  auto* root = doc.NewElement("port");
+  EXPECT_FALSE(port.Serialize(*root));
+}
+
+/*!
+ * Fail serialization when a controller node lacks a controller profile
+ */
+TEST(TestControllerTreeSerialization, SerializeControllerNodeMissingController)
+{
+  CControllerNode node;
+
+  CXBMCTinyXML2 doc;
+  auto* root = doc.NewElement("accepts");
+  EXPECT_FALSE(node.Serialize(*root));
+}
