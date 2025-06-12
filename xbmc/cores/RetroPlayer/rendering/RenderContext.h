@@ -60,6 +60,12 @@ public:
   void SetViewPort(const CRect& viewPort);
   void GetViewPort(CRect& viewPort);
   void SetScissors(const CRect& rect);
+  /**
+   * @brief Save the current render state so it can be restored later.
+   *
+   * This includes the currently bound VAO. Calls to this function must be
+   * paired with ApplyStateBlock() to restore the captured state.
+   */
   void CaptureStateBlock();
   void ApplyStateBlock();
   bool IsExtSupported(const char* extension);
