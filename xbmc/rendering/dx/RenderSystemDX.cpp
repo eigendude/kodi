@@ -392,6 +392,9 @@ void CRenderSystemDX::CaptureStateBlock()
 {
   if (!m_bRenderCreated)
     return;
+
+  // Intentionally left empty - DirectX resources are restored when state
+  // blocks are applied, so we don't need to capture anything here.
 }
 
 void CRenderSystemDX::ApplyStateBlock()

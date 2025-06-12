@@ -260,6 +260,8 @@ void CRPBaseRenderer::PreRender(bool clear)
     return;
 
   m_context.CaptureStateBlock();
+  // Note: CaptureStateBlock() does nothing for the DirectX backend since
+  // state restoration is handled separately.
 
   // Clear screen
   if (clear)
