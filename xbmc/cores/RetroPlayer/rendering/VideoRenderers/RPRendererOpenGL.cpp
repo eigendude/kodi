@@ -17,7 +17,6 @@
 #include "guilib/TextureGL.h"
 #include "utils/GLUtils.h"
 #include "utils/log.h"
-#include "xbmc/rendering/gl/RenderSystemGL.h"
 
 #include <cstddef>
 
@@ -57,6 +56,8 @@ CRPRendererOpenGL::CRPRendererOpenGL(const CRenderSettings& renderSettings,
   // Initialize CRPRendererOpenGL
   m_clearColour = m_context.UseLimitedColor() ? (16.0f / 0xff) : 0.0f;
 
+  m_context.CaptureStateBlock();
+
   // Set up main screen VAO/VBOs
   glGenVertexArrays(1, &m_mainVAO);
   glBindVertexArray(m_mainVAO);
@@ -92,9 +93,7 @@ CRPRendererOpenGL::CRPRendererOpenGL(const CRenderSettings& renderSettings,
   glEnableVertexAttribArray(posLoc);
   glVertexAttribPointer(posLoc, 3, GL_FLOAT, GL_FALSE, sizeof(Svertex), 0);
 
-  // Rebind global VAO
-  CRenderSystemGL* rendering = dynamic_cast<CRenderSystemGL*>(m_context.Rendering());
-  glBindVertexArray(rendering->GetVertexArray());
+  m_context.ApplyStateBlock();
 }
 
 CRPRendererOpenGL::~CRPRendererOpenGL()
@@ -264,10 +263,6 @@ void CRPRendererOpenGL::DrawBlackBars()
   glDrawArrays(GL_TRIANGLES, 0, count);
 
   m_context.DisableGUIShader();
-
-  // Rebind global VAO
-  CRenderSystemGL* rendering = dynamic_cast<CRenderSystemGL*>(m_context.Rendering());
-  glBindVertexArray(rendering->GetVertexArray());
 }
 
 void CRPRendererOpenGL::Render(uint8_t alpha)
@@ -394,8 +389,4 @@ void CRPRendererOpenGL::Render(uint8_t alpha)
 
     m_context.DisableGUIShader();
   }
-
-  // Rebind global VAO
-  CRenderSystemGL* rendering = dynamic_cast<CRenderSystemGL*>(m_context.Rendering());
-  glBindVertexArray(rendering->GetVertexArray());
 }
