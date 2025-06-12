@@ -165,6 +165,9 @@ void CShaderGLES::Render(IShaderTexture& source, IShaderTexture& target)
   glDisableVertexAttribArray(2);
 
   glUseProgram(0);
+
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
 void CShaderGLES::SetSizes(const float2& prevSize,
