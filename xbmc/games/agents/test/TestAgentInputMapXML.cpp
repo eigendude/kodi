@@ -13,6 +13,7 @@
 #include "games/agents/input/AgentTopology.h"
 #include "games/agents/input/AgentTopologyXML.h"
 #include "games/controllers/Controller.h"
+#include "games/controllers/ControllerIDs.h"
 #include "games/controllers/types/ControllerNode.h"
 #include "games/ports/types/PortNode.h"
 #include "test/TestUtils.h"
@@ -38,9 +39,8 @@ namespace
 std::shared_ptr<CAgentTopology> BuildSampleTopology(unsigned int id)
 {
   // Create a controller description to populate the node
-  ADDON::AddonInfoPtr addonInfo =
-      std::make_shared<ADDON::CAddonInfo>("game.controller.test",
-                                          ADDON::AddonType::GAME_CONTROLLER);
+  ADDON::AddonInfoPtr addonInfo = std::make_shared<ADDON::CAddonInfo>(
+      DEFAULT_CONTROLLER_ID, ADDON::AddonType::GAME_CONTROLLER);
   ControllerPtr controller = std::make_shared<CController>(addonInfo);
 
   // Build a single controller port tree
