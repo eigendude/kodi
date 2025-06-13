@@ -13,6 +13,7 @@
 #include "addons/AddonInstaller.h"
 #include "addons/AddonManager.h"
 #include "addons/addoninfo/AddonType.h"
+#include "utils/JobManager.h"
 #include "cores/RetroPlayer/guibridge/GUIGameVideoHandle.h"
 #include "cores/RetroPlayer/rendering/RenderVideoSettings.h"
 #include "cores/RetroPlayer/shaders/ShaderPresetFactory.h"
@@ -313,23 +314,29 @@ void CDialogGameVideoFilter::GetProperties(const CFileItem& item, std::string& v
 
 void CDialogGameVideoFilter::OnGetMore()
 {
-  using namespace ADDON;
+  CServiceBroker::GetJobManager()->Submit(
+      [this]() {
+        using namespace ADDON;
 
-  CAddonMgr& addonManager = CServiceBroker::GetAddonMgr();
+        CAddonMgr& addonManager = CServiceBroker::GetAddonMgr();
 
-  bool success = false;
-  if (addonManager.IsAddonDisabled(PRESETS_ADDON_NAME))
-  {
-    success = addonManager.EnableAddon(PRESETS_ADDON_NAME);
-  }
-  else if (!addonManager.IsAddonInstalled(PRESETS_ADDON_NAME))
-  {
-    AddonPtr addon;
-    success = CAddonInstaller::GetInstance().InstallModal(PRESETS_ADDON_NAME, addon, InstallModalPrompt::CHOICE_NO);
-  }
+        bool success = false;
+        if (addonManager.IsAddonDisabled(PRESETS_ADDON_NAME))
+        {
+          success = addonManager.EnableAddon(PRESETS_ADDON_NAME);
+        }
+        else if (!addonManager.IsAddonInstalled(PRESETS_ADDON_NAME))
+        {
+          AddonPtr addon;
+          success = CAddonInstaller::GetInstance().InstallModal(
+              PRESETS_ADDON_NAME, addon, InstallModalPrompt::CHOICE_NO);
+        }
 
-  if (success)
-    OnGetMoreComplete();
+        if (success)
+          OnGetMoreComplete();
+
+        return true;
+      });
 }
 
 void CDialogGameVideoFilter::OnGetMoreComplete()
