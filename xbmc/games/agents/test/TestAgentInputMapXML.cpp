@@ -57,7 +57,8 @@ std::shared_ptr<CAgentTopology> BuildSampleTopology(unsigned int id)
 
   // Serialize the hub to XML so it can be reloaded
   CXBMCTinyXML2 doc;
-  auto* root = doc.NewElement("controller");
+  // Use <logicaltopology> as the root element to match game add-on topology.xml
+  auto* root = doc.NewElement("logicaltopology");
   EXPECT_TRUE(hub.Serialize(*root));
   doc.InsertFirstChild(root);
 
