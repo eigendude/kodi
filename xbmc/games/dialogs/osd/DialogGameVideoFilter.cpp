@@ -10,6 +10,9 @@
 
 #include "ServiceBroker.h"
 #include "URL.h"
+#include "addons/AddonInstaller.h"
+#include "addons/AddonManager.h"
+#include "addons/addoninfo/AddonType.h"
 #include "cores/RetroPlayer/guibridge/GUIGameVideoHandle.h"
 #include "cores/RetroPlayer/rendering/RenderVideoSettings.h"
 #include "cores/RetroPlayer/shaders/ShaderPresetFactory.h"
@@ -17,10 +20,14 @@
 #include "filesystem/SpecialProtocol.h"
 #include "games/GameServices.h"
 #include "games/dialogs/DialogGameDefines.h"
+#include "guilib/GUIComponent.h"
+#include "guilib/GUIMessage.h"
+#include "guilib/GUIWindowManager.h"
 #include "guilib/LocalizeStrings.h"
 #include "guilib/WindowIDs.h"
 #include "settings/GameSettings.h"
 #include "settings/MediaSettings.h"
+#include "utils/JobManager.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
 #include "utils/Variant.h"
@@ -36,6 +43,10 @@ using namespace GAME;
 
 namespace
 {
+
+constexpr auto ICON_VIDEO = "DefaultVideo.png";
+constexpr auto ICON_GET_MORE = "DefaultAddSource.png";
+
 struct ScalingMethodProperties
 {
   int nameIndex;
@@ -66,6 +77,7 @@ void CDialogGameVideoFilter::PreInit()
 
   InitScalingMethods();
   InitVideoFilters();
+  InitGetMoreButton();
 
   if (m_items.Size() == 0)
   {
@@ -91,6 +103,7 @@ void CDialogGameVideoFilter::InitScalingMethods()
         item->SetProperty("game.videofilter", CVariant{videoSettings.GetVideoFilter()});
         item->SetProperty("game.videofilterdescription",
                           CVariant{g_localizeStrings.Get(scalingMethodProps.descriptionIndex)});
+        item->SetArt("icon", ICON_VIDEO);
         m_items.Add(std::move(item));
       }
     }
@@ -183,7 +196,38 @@ void CDialogGameVideoFilter::InitVideoFilters()
     CFileItem item{videoFilter.name};
     item.SetLabel2(videoFilter.folder);
     item.SetProperty("game.videofilter", CVariant{videoFilter.path});
+    item.SetArt("icon", ICON_VIDEO);
 
+    m_items.Add(std::move(item));
+  }
+}
+
+void CDialogGameVideoFilter::InitGetMoreButton()
+{
+  using namespace ADDON;
+
+  CAddonMgr& addonManager = CServiceBroker::GetAddonMgr();
+
+  // Show the "Get more" icon if add-on is disabled or missing
+  bool showGetMore = false;
+
+  if (addonManager.IsAddonInstalled(PRESETS_ADDON_NAME))
+  {
+    if (addonManager.IsAddonDisabled(PRESETS_ADDON_NAME))
+      showGetMore = true;
+  }
+  else
+  {
+    // Check if the add-on is in a remote repo
+    VECADDONS addons;
+    if (addonManager.GetInstallableAddons(addons, AddonType::SHADERDLL) && !addons.empty())
+      showGetMore = true;
+  }
+
+  if (showGetMore)
+  {
+    CFileItemPtr item = std::make_shared<CFileItem>(g_localizeStrings.Get(21452)); // "Get more..."
+    item->SetArt("icon", ICON_GET_MORE);
     m_items.Add(std::move(item));
   }
 }
@@ -198,10 +242,14 @@ void CDialogGameVideoFilter::OnItemFocus(unsigned int index)
 {
   if (static_cast<int>(index) < m_items.Size())
   {
+    m_focusedItemIndex = index;
+
     CFileItemPtr item = m_items[index];
 
     std::string videoFilter;
     GetProperties(*item, videoFilter);
+    if (videoFilter.empty())
+      return;
 
     ::CGameSettings& gameSettings = CMediaSettings::GetInstance().GetCurrentGameSettings();
 
@@ -238,8 +286,33 @@ void CDialogGameVideoFilter::PostExit()
 
 bool CDialogGameVideoFilter::OnClickAction()
 {
+  if (static_cast<int>(m_focusedItemIndex) < m_items.Size())
+  {
+    const std::shared_ptr<CFileItem> focusedItem = m_items[m_focusedItemIndex];
+
+    // "Get more..." button has an empty video filter
+    if (focusedItem && focusedItem->GetProperty("game.videofilter").empty())
+    {
+      OnGetMore();
+      return true;
+    }
+  }
+
   Close();
   return true;
+}
+
+void CDialogGameVideoFilter::RefreshList()
+{
+  // Re-generate the items in case the shader preset add-on was installed
+  if (regenerateList)
+  {
+    regenerateList = false;
+    PreInit();
+  }
+
+  // Call ancestor
+  CDialogGameVideoSelect::RefreshList();
 }
 
 std::string CDialogGameVideoFilter::GetLocalizedString(uint32_t code)
@@ -250,4 +323,61 @@ std::string CDialogGameVideoFilter::GetLocalizedString(uint32_t code)
 void CDialogGameVideoFilter::GetProperties(const CFileItem& item, std::string& videoFilter)
 {
   videoFilter = item.GetProperty("game.videofilter").asString();
+}
+
+void CDialogGameVideoFilter::OnGetMore()
+{
+  std::shared_ptr<CJobManager> jobManager = CServiceBroker::GetJobManager();
+  if (!jobManager)
+    return;
+
+  jobManager->Submit(
+      [this]()
+      {
+        using namespace ADDON;
+
+        CAddonMgr& addonManager = CServiceBroker::GetAddonMgr();
+
+        bool success = false;
+        if (addonManager.IsAddonDisabled(PRESETS_ADDON_NAME))
+        {
+          success = addonManager.EnableAddon(PRESETS_ADDON_NAME);
+        }
+        else if (!addonManager.IsAddonInstalled(PRESETS_ADDON_NAME))
+        {
+          AddonPtr addon;
+          success = CAddonInstaller::GetInstance().InstallModal(PRESETS_ADDON_NAME, addon,
+                                                                InstallModalPrompt::CHOICE_NO);
+        }
+
+        if (success)
+        {
+          // Shader preset add-ons are loaded async, so wait until the new
+          // add-on is fully loaded
+          while (!CServiceBroker::GetGameServices().VideoShaders().HasAddons())
+          {
+            //! @todo Sleep 50ms
+
+            //! @todo Bail if we've waited 5s
+          }
+          
+          OnGetMoreComplete();
+        }
+
+        return true;
+      });
+}
+
+void CDialogGameVideoFilter::OnGetMoreComplete()
+{
+  // Refresh the list to show the add-on's shader presets
+  CGUIComponent* gui = CServiceBroker::GetGUI();
+  if (gui != nullptr)
+  {
+    // Indicate that the new presets should be loaded
+    regenerateList = true;
+
+    CGUIMessage msg(GUI_MSG_REFRESH_LIST, GetID(), CONTROL_VIDEO_THUMBS);
+    gui->GetWindowManager().SendThreadMessage(msg, GetID());
+  }
 }
