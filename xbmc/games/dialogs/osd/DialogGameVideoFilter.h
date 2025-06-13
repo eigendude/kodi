@@ -38,6 +38,9 @@ protected:
 private:
   void InitScalingMethods();
   void InitVideoFilters();
+  void InitGetMoreButton();
+  void OnGetMore();
+  void OnGetMoreComplete();
 
   static void GetProperties(const CFileItem& item, std::string& videoFilter);
 
@@ -51,6 +54,8 @@ private:
     std::string name;
     std::string folder;
   };
+
+  unsigned int m_focusedItemIndex{0};
 };
 } // namespace GAME
 } // namespace KODI
