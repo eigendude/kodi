@@ -33,6 +33,7 @@
 #include "utils/Variant.h"
 #include "utils/XBMCTinyXML.h"
 #include "utils/log.h"
+#include "threads/SystemClock.h"
 
 #include <stdlib.h>
 
@@ -353,15 +354,26 @@ void CDialogGameVideoFilter::OnGetMore()
         if (success)
         {
           // Shader preset add-ons are loaded async, so wait until the new
-          // add-on is fully loaded
-          while (!CServiceBroker::GetGameServices().VideoShaders().HasAddons())
-          {
-            //! @todo Sleep 50ms
+          // add-on is fully loaded. Bail after a reasonable timeout to avoid
+          // blocking the user indefinitely.
+          using namespace std::chrono_literals;
 
-            //! @todo Bail if we've waited 5s
+          XbmcThreads::EndTime<> timeout(5s);
+          while (!CServiceBroker::GetGameServices().VideoShaders().HasAddons() &&
+                 !timeout.IsTimePast())
+          {
+            KODI::TIME::Sleep(50ms);
           }
-          
-          OnGetMoreComplete();
+
+          if (!timeout.IsTimePast())
+          {
+            OnGetMoreComplete();
+          }
+          else
+          {
+            CLog::Log(LOGWARNING,
+                      "{} - timed out waiting for shader presets to load", __FUNCTION__);
+          }
         }
 
         return true;
