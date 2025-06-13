@@ -8,6 +8,8 @@
 
 #include "addons/addoninfo/AddonInfo.h"
 #include "addons/addoninfo/AddonType.h"
+#include "ServiceBroker.h"
+#include "addons/AddonManager.h"
 #include "games/agents/input/AgentInputMap.h"
 #include "games/agents/input/AgentInputMapXML.h"
 #include "games/agents/input/AgentTopology.h"
@@ -38,10 +40,12 @@ namespace
  */
 std::shared_ptr<CAgentTopology> BuildSampleTopology(unsigned int id)
 {
-  // Create a controller description to populate the node
-  ADDON::AddonInfoPtr addonInfo = std::make_shared<ADDON::CAddonInfo>(
-      DEFAULT_CONTROLLER_ID, ADDON::AddonType::GAME_CONTROLLER);
-  ControllerPtr controller = std::make_shared<CController>(addonInfo);
+  // Retrieve the default controller from the add-on manager
+  ADDON::AddonPtr addon;
+  EXPECT_TRUE(CServiceBroker::GetAddonMgr().GetAddon(
+      DEFAULT_CONTROLLER_ID, addon, ADDON::AddonType::GAME_CONTROLLER,
+      ADDON::OnlyEnabled::CHOICE_NO));
+  ControllerPtr controller = std::static_pointer_cast<CController>(addon);
 
   // Build a single controller port tree
   CControllerNode node;
