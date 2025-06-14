@@ -5,6 +5,17 @@ if(WIN32)
 endif()
 project(kodi LANGUAGES CXX C ASM)
 
+# Enable Microsoft's ARM assembler for Visual Studio ARM64 builds. Newer
+# CMake releases name the language ASM_ARMASM while older releases use
+# ASM_MARMASM.
+if(WIN32 AND CMAKE_GENERATOR_PLATFORM MATCHES "[Aa][Rr][Mm]64")
+  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.31)
+    enable_language(ASM_ARMASM)
+  else()
+    enable_language(ASM_MARMASM)
+  endif()
+endif()
+
 if(POLICY CMP0069)
   set(CMAKE_POLICY_DEFAULT_CMP0069 NEW)
   cmake_policy(SET CMP0069 NEW)
