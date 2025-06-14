@@ -5,13 +5,6 @@ if(WIN32)
 endif()
 project(kodi LANGUAGES CXX C ASM)
 
-# For ARM64 Visual Studio builds, CMake identifies Microsoft's
-# assembler as the ASM_ARMASM language. Enable it here so
-# dependent packages such as Boost can detect it correctly.
-if(CMAKE_GENERATOR_PLATFORM MATCHES "[Aa][Rr][Mm]64")
-  enable_language(ASM_ARMASM)
-endif()
-
 if(POLICY CMP0069)
   set(CMAKE_POLICY_DEFAULT_CMP0069 NEW)
   cmake_policy(SET CMP0069 NEW)
