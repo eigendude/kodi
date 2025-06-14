@@ -23,6 +23,16 @@
 #
 
 if(NOT TARGET ${APP_NAME_LC}::${CMAKE_FIND_PACKAGE_NAME})
+  # Enable Microsoft ARM assembler when building Boost with Visual Studio ARM64
+  # Newer CMake versions use ASM_ARMASM while older releases use ASM_MARMASM.
+  if(WIN32 AND CMAKE_GENERATOR_PLATFORM MATCHES "[Aa][Rr][Mm]64")
+    if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.31)
+      enable_language(ASM_ARMASM)
+    else()
+      enable_language(ASM_MARMASM)
+    endif()
+  endif()
+
   macro(buildBoost)
     set(${${CMAKE_FIND_PACKAGE_NAME}_MODULE}_VERSION ${${${CMAKE_FIND_PACKAGE_NAME}_MODULE}_VER})
 
