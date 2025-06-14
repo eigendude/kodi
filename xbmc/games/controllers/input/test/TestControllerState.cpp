@@ -51,15 +51,27 @@ TEST(TestControllerState, CopyConstructor)
   CControllerState original(controller);
   original.SetDigitalButton("btn", true);
   original.SetAnalogButton("analog", 0.5f);
+  original.SetAnalogStick("stick", {0.1f, -0.1f});
+  original.SetAccelerometer("accel", {1.0f, 2.0f, 3.0f});
+  original.SetThrottle("thr", 0.8f);
+  original.SetWheel("wheel", -0.25f);
 
   CControllerState copy(original);
 
   // Modifying the original should not change the copy
   original.SetDigitalButton("btn", false);
   original.SetAnalogButton("analog", 0.0f);
+  original.SetAnalogStick("stick", {0.0f, 0.0f});
+  original.SetAccelerometer("accel", {0.0f, 0.0f, 0.0f});
+  original.SetThrottle("thr", 0.0f);
+  original.SetWheel("wheel", 0.0f);
 
   EXPECT_TRUE(copy.GetDigitalButton("btn"));
   EXPECT_FLOAT_EQ(copy.GetAnalogButton("analog"), 0.5f);
+  EXPECT_EQ(copy.GetAnalogStick("stick"), (CControllerState::AnalogStick{0.1f, -0.1f}));
+  EXPECT_EQ(copy.GetAccelerometer("accel"), (CControllerState::Accelerometer{1.0f, 2.0f, 3.0f}));
+  EXPECT_FLOAT_EQ(copy.GetThrottle("thr"), 0.8f);
+  EXPECT_FLOAT_EQ(copy.GetWheel("wheel"), -0.25f);
   EXPECT_EQ(copy.ID(), "test.controller");
 }
 
@@ -68,7 +80,11 @@ TEST(TestControllerState, CopyConstructor)
 //
 TEST(TestControllerState, EqualityOperator)
 {
-  CControllerState state1;
+  // Give both states an ID
+  std::shared_ptr<CAddonInfo> addon = ADDON::CAddonInfoBuilder::Generate("test.controller", ADDON::AddonType::GAME_CONTROLLER);
+  CController controller(addon);
+
+  CControllerState state1(controller);
   state1.SetDigitalButton("btn", true);
   state1.SetAnalogButton("analog", 1.0f);
   state1.SetAnalogStick("stick", {0.1f, 0.2f});
@@ -79,6 +95,7 @@ TEST(TestControllerState, EqualityOperator)
   CControllerState state2(state1);
   EXPECT_EQ(state1, state2);
   EXPECT_FALSE(state1 != state2);
+  EXPECT_EQ(state2.ID(), "test.controller");
 }
 
 //
@@ -94,6 +111,7 @@ TEST(TestControllerState, DefaultValues)
   EXPECT_EQ(state.GetAccelerometer("missing"), (CControllerState::Accelerometer{}));
   EXPECT_FLOAT_EQ(state.GetThrottle("missing"), 0.0f);
   EXPECT_FLOAT_EQ(state.GetWheel("missing"), 0.0f);
+  EXPECT_TRUE(state.ID().empty());
 }
 
 //
@@ -101,13 +119,53 @@ TEST(TestControllerState, DefaultValues)
 //
 TEST(TestControllerState, Inequality)
 {
-  CControllerState state1;
+  // Give states an ID and set all feature types
+  std::shared_ptr<CAddonInfo> addon = ADDON::CAddonInfoBuilder::Generate("base.controller", ADDON::AddonType::GAME_CONTROLLER);
+  CController controller(addon);
+
+  CControllerState state1(controller);
   state1.SetDigitalButton("btn", true);
+  state1.SetAnalogButton("analog", 1.0f);
+  state1.SetAnalogStick("stick", {0.0f, 1.0f});
+  state1.SetAccelerometer("accel", {1.0f, 2.0f, 3.0f});
+  state1.SetThrottle("thr", 0.5f);
+  state1.SetWheel("wheel", -0.5f);
 
   CControllerState state2(state1);
   state2.SetDigitalButton("btn", false);
-
   EXPECT_TRUE(state1 != state2);
+
+  state2 = state1;
+  state2.SetAnalogButton("analog", 0.0f);
+  EXPECT_TRUE(state1 != state2);
+
+  state2 = state1;
+  state2.SetAnalogStick("stick", {0.0f, 0.0f});
+  EXPECT_TRUE(state1 != state2);
+
+  state2 = state1;
+  state2.SetAccelerometer("accel", {0.0f, 0.0f, 0.0f});
+  EXPECT_TRUE(state1 != state2);
+
+  state2 = state1;
+  state2.SetThrottle("thr", 1.0f);
+  EXPECT_TRUE(state1 != state2);
+
+  state2 = state1;
+  state2.SetWheel("wheel", 0.0f);
+  EXPECT_TRUE(state1 != state2);
+
+  // Different controller ID
+  std::shared_ptr<CAddonInfo> addon2 = ADDON::CAddonInfoBuilder::Generate("other.controller", ADDON::AddonType::GAME_CONTROLLER);
+  CController controller2(addon2);
+  CControllerState state3(controller2);
+  state3.SetDigitalButton("btn", true);
+  state3.SetAnalogButton("analog", 1.0f);
+  state3.SetAnalogStick("stick", {0.0f, 1.0f});
+  state3.SetAccelerometer("accel", {1.0f, 2.0f, 3.0f});
+  state3.SetThrottle("thr", 0.5f);
+  state3.SetWheel("wheel", -0.5f);
+  EXPECT_TRUE(state1 != state3);
 }
 
 //
