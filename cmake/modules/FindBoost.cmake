@@ -86,17 +86,36 @@ if(NOT TARGET ${APP_NAME_LC}::${CMAKE_FIND_PACKAGE_NAME})
 
     # Add BOOST_CONTEXT_ARCHITECTURE to CMake arguments
     if(WIN32 OR WINDOWS_STORE)
-      # If the generator platform is set (VS multi-arch), we can pick from that
-      if(CMAKE_GENERATOR_PLATFORM MATCHES "Win32")
-        set(BOOST_CONTEXT_ARCHITECTURE "i386")
-      elseif(CMAKE_GENERATOR_PLATFORM MATCHES "x64")
-        set(BOOST_CONTEXT_ARCHITECTURE "x86_64")
-      elseif(CMAKE_GENERATOR_PLATFORM MATCHES "ARM")
-        set(BOOST_CONTEXT_ARCHITECTURE "arm")
-      elseif(CMAKE_GENERATOR_PLATFORM MATCHES "ARM64")
-        set(BOOST_CONTEXT_ARCHITECTURE "arm64")
+      # If the generator platform is set (VS multi-arch), use it to determine
+      # the boost context architecture. Normalize the platform string to
+      # uppercase first so the check is case-insensitive.
+      if(CMAKE_GENERATOR_PLATFORM)
+        string(TOUPPER "${CMAKE_GENERATOR_PLATFORM}" _gen_platform)
+        if(_gen_platform STREQUAL "WIN32")
+          set(BOOST_CONTEXT_ARCHITECTURE "i386")
+        elseif(_gen_platform STREQUAL "X64")
+          set(BOOST_CONTEXT_ARCHITECTURE "x86_64")
+        elseif(_gen_platform STREQUAL "ARM")
+          set(BOOST_CONTEXT_ARCHITECTURE "arm")
+        elseif(_gen_platform STREQUAL "ARM64")
+          set(BOOST_CONTEXT_ARCHITECTURE "arm64")
+        else()
+          message(FATAL_ERROR "Unrecognized generator platform: ${CMAKE_GENERATOR_PLATFORM}")
+        endif()
       else()
-        message(FATAL_ERROR "Unrecognized generator platform: ${CMAKE_GENERATOR_PLATFORM}")
+        # Fallback for generators that do not specify a platform. Determine the
+        # architecture from CMAKE_SYSTEM_PROCESSOR instead.
+        if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(i[3-6]86|x86)$")
+          set(BOOST_CONTEXT_ARCHITECTURE "i386")
+        elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|amd64|AMD64)$")
+          set(BOOST_CONTEXT_ARCHITECTURE "x86_64")
+        elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^(arm|armv[7-8]|armel|armhf|ARM)$")
+          set(BOOST_CONTEXT_ARCHITECTURE "arm")
+        elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64|arm64|ARM64)$")
+          set(BOOST_CONTEXT_ARCHITECTURE "arm64")
+        else()
+          message(FATAL_ERROR "Unknown CMAKE_SYSTEM_PROCESSOR: ${CMAKE_SYSTEM_PROCESSOR}")
+        endif()
       endif()
     else()
       # Dynamically determine the BOOST_CONTEXT_ARCHITECTURE based on the
