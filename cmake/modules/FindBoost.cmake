@@ -159,6 +159,13 @@ if(NOT TARGET ${APP_NAME_LC}::${CMAKE_FIND_PACKAGE_NAME})
 
   SETUP_BUILD_VARS()
 
+  # CMake 3.31+ treats Microsoft's ARM assembler as the ASM_ARMASM language.
+  # Explicitly enable it when generating for ARM64 so Boost can be configured
+  # without errors about missing CMakeASM_ARMASMLinkerInformation.cmake.
+  if(CMAKE_GENERATOR_PLATFORM STREQUAL "ARM64")
+    enable_language(ASM_ARMASM)
+  endif()
+
   # TODO: Check for existing boost. If version >= BOOST-VERSION file version, dont build
   if(ENABLE_INTERNAL_BOOST)
     if(NOT TARGET ${${${CMAKE_FIND_PACKAGE_NAME}_MODULE}_BUILD_NAME})
