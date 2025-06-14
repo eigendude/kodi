@@ -50,6 +50,7 @@ TEST(TestControllerState, EqualityOperator)
 
   CControllerState state2(state1);
   EXPECT_EQ(state1, state2);
+  EXPECT_FALSE(state1 != state2);
 }
 
 //
@@ -78,7 +79,7 @@ TEST(TestControllerState, Inequality)
   CControllerState state2(state1);
   state2.SetDigitalButton("btn", false);
 
-  EXPECT_FALSE(state1 == state2);
+  EXPECT_TRUE(state1 != state2);
 }
 
 //

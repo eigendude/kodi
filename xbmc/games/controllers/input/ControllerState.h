@@ -56,6 +56,7 @@ public:
 
   // Operators
   bool operator==(const CControllerState& rhs) const;
+  bool operator!=(const CControllerState& rhs) const;
 
   // Controller state
   const std::string& ID() const { return m_controllerId; }

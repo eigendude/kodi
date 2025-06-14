@@ -84,6 +84,11 @@ bool CControllerState::operator==(const CControllerState& rhs) const
   // clang-format on
 }
 
+bool CControllerState::operator!=(const CControllerState& rhs) const
+{
+  return !(*this == rhs);
+}
+
 CControllerState::DigitalButton CControllerState::GetDigitalButton(
     const std::string& featureName) const
 {
