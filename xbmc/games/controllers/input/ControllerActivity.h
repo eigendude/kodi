@@ -10,6 +10,7 @@
 
 #include "input/keyboard/KeyboardTypes.h"
 #include "input/mouse/MouseTypes.h"
+#include "threads/SystemClock.h"
 
 #include <set>
 
@@ -58,6 +59,7 @@ private:
   std::set<MOUSE::PointerName> m_activePointers;
   std::set<MOUSE::ButtonName> m_activeButtons;
   bool m_bKeyPressed{false};
+  XbmcThreads::EndTime<> m_motionTimer;
 };
 } // namespace GAME
 } // namespace KODI
