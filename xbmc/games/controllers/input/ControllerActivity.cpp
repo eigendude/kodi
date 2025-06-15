@@ -10,12 +10,20 @@
 
 #include "application/Application.h"
 #include "input/InputTranslator.h"
+#include "threads/SystemClock.h"
+
+using namespace std::chrono_literals;
 
 using namespace KODI;
 using namespace GAME;
 
 #include <algorithm>
 #include <cstdlib>
+
+namespace
+{
+constexpr auto MOUSE_MOTION_TIMEOUT = 200ms;
+}
 
 void CControllerActivity::ClearButtonState()
 {
@@ -77,17 +85,11 @@ void CControllerActivity::OnMouseMotion(const MOUSE::PointerName& relpointer,
                                         int differenceX,
                                         int differenceY)
 {
-  //! @todo Fix mouse pointer handling
-  return;
-
-  //! @todo Handle multiple pointers
-  //m_activePointers.insert(relpointer);
-
-  INPUT::INTERCARDINAL_DIRECTION dir = GetPointerDirection(differenceX, differenceY);
-
-  // Check if direction is valid
-  if (dir != INPUT::INTERCARDINAL_DIRECTION::NONE)
+  if (differenceX != 0 || differenceY != 0)
+  {
     m_currentActivation = 1.0f;
+    m_motionTimer.Set(MOUSE_MOTION_TIMEOUT);
+  }
 }
 
 void CControllerActivity::OnMouseButtonPress(const MOUSE::ButtonName& button)
@@ -112,6 +114,11 @@ void CControllerActivity::OnInputFrame()
     if (!m_activeButtons.empty())
       m_currentActivation = 1.0f;
   }
+
+  if (!m_motionTimer.IsTimePast())
+    m_currentActivation = 1.0f;
+  else
+    m_motionTimer.SetExpired();
 
   // Process activation
   m_lastActivation = m_currentActivation;
