@@ -34,14 +34,16 @@ public:
   {
     float x;
     float y;
-    bool operator==(const AnalogStick& rhs) const;
+    bool operator==(const AnalogStick& rhs) const = default;
+    bool operator!=(const AnalogStick& rhs) const = default;
   };
   struct Accelerometer
   {
     float x;
     float y;
     float z;
-    bool operator==(const Accelerometer& rhs) const;
+    bool operator==(const Accelerometer& rhs) const = default;
+    bool operator!=(const Accelerometer& rhs) const = default;
   };
   using Throttle = float;
   using Wheel = float;
@@ -55,8 +57,8 @@ public:
   ~CControllerState() = default;
 
   // Operators
-  bool operator==(const CControllerState& rhs) const;
-  bool operator!=(const CControllerState& rhs) const;
+  bool operator==(const CControllerState& rhs) const = default;
+  bool operator!=(const CControllerState& rhs) const = default;
 
   // Controller state
   const std::string& ID() const { return m_controllerId; }

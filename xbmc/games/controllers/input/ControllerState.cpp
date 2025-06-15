@@ -15,23 +15,6 @@
 using namespace KODI;
 using namespace GAME;
 
-bool CControllerState::AnalogStick::operator==(const AnalogStick& rhs) const
-{
-  // clang-format off
-  return x == rhs.x &&
-         y == rhs.y;
-  // clang-format on
-}
-
-bool CControllerState::Accelerometer::operator==(const Accelerometer& rhs) const
-{
-  // clang-format off
-  return x == rhs.x &&
-         y == rhs.y &&
-         z == rhs.z;
-  // clang-format on
-}
-
 CControllerState::CControllerState(const CController& controller) : m_controllerId(controller.ID())
 {
   for (const auto& feature : controller.Features())
@@ -69,24 +52,6 @@ CControllerState::CControllerState(const CController& controller) : m_controller
         break;
     }
   }
-}
-
-bool CControllerState::operator==(const CControllerState& rhs) const
-{
-  // clang-format off
-  return m_controllerId == rhs.m_controllerId &&
-         m_digitalButtons == rhs.m_digitalButtons &&
-         m_analogButtons == rhs.m_analogButtons &&
-         m_analogSticks == rhs.m_analogSticks &&
-         m_accelerometers == rhs.m_accelerometers &&
-         m_throttles == rhs.m_throttles &&
-         m_wheels == rhs.m_wheels;
-  // clang-format on
-}
-
-bool CControllerState::operator!=(const CControllerState& rhs) const
-{
-  return !(*this == rhs);
 }
 
 CControllerState::DigitalButton CControllerState::GetDigitalButton(
