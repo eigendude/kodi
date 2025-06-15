@@ -18,6 +18,7 @@ xbmc/games/agents/test       test/games/agents
 xbmc/guilib/test                  test/guilib
 xbmc/imagefiles/test              test/imagefiles
 xbmc/input/keyboard/test          test/input/keyboard
+xbmc/input/mouse/test             test/input/mouse
 xbmc/interfaces/python/test       test/python
 xbmc/music/test                   test/music
 xbmc/music/tags/test              test/music_tags
