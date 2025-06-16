@@ -285,9 +285,44 @@ void CGUIPortList::OnControllerSelected(const CPortNode& port, const ControllerP
     const bool bConnected = static_cast<bool>(controller);
 
     // Update the game client
-    const bool bSuccess =
-        bConnected ? m_gameClient->Input().ConnectController(port.GetAddress(), controller)
-                   : m_gameClient->Input().DisconnectController(port.GetAddress());
+    bool bSuccess = false;
+
+    if (bConnected)
+    {
+      switch (port.GetPortType())
+      {
+        case PORT_TYPE::CONTROLLER:
+          bSuccess = m_gameClient->Input().ConnectController(port.GetAddress(), controller);
+          break;
+        case PORT_TYPE::KEYBOARD:
+          bSuccess = m_gameClient->Input().OpenKeyboard(controller);
+          break;
+        case PORT_TYPE::MOUSE:
+          bSuccess = m_gameClient->Input().OpenMouse(controller);
+          break;
+        case PORT_TYPE::UNKNOWN:
+        default:
+          break;
+      }
+    }
+    else
+    {
+      switch (port.GetPortType())
+      {
+        case PORT_TYPE::CONTROLLER:
+          bSuccess = m_gameClient->Input().DisconnectController(port.GetAddress());
+          break;
+        case PORT_TYPE::KEYBOARD:
+          bSuccess = m_gameClient->Input().CloseKeyboard();
+          break;
+        case PORT_TYPE::MOUSE:
+          bSuccess = m_gameClient->Input().CloseMouse();
+          break;
+        case PORT_TYPE::UNKNOWN:
+        default:
+          break;
+      }
+    }
 
     if (bSuccess)
     {
