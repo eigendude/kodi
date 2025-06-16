@@ -71,8 +71,11 @@ bool CMouseInputHandling::OnPosition(int x, int y)
 
         GetRotation(dir, target.PointerDirection(), rotation);
 
-        differenceX = rotation[0][0] * differenceX + rotation[0][1] * differenceY;
-        differenceY = rotation[1][0] * differenceX + rotation[1][1] * differenceY;
+        int rotatedX = rotation[0][0] * differenceX + rotation[0][1] * differenceY;
+        int rotatedY = rotation[1][0] * differenceX + rotation[1][1] * differenceY;
+
+        differenceX = rotatedX;
+        differenceY = rotatedY;
 
         if (targetCCW.IsValid())
         {
@@ -81,8 +84,11 @@ bool CMouseInputHandling::OnPosition(int x, int y)
 
           GetReflectionCCW(target.PointerDirection(), targetCCW.PointerDirection(), reflection);
 
-          differenceX = reflection[0][0] * differenceX + reflection[0][1] * differenceY;
-          differenceY = reflection[1][0] * differenceX + reflection[1][1] * differenceY;
+          int reflectedX = reflection[0][0] * differenceX + reflection[0][1] * differenceY;
+          int reflectedY = reflection[1][0] * differenceX + reflection[1][1] * differenceY;
+
+          differenceX = reflectedX;
+          differenceY = reflectedY;
         }
 
         // Invert y back to left-handed coordinate system
