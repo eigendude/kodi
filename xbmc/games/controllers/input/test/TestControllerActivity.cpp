@@ -55,3 +55,49 @@ TEST(TestControllerActivity, MotionPersistsWithButton)
 
   EXPECT_FLOAT_EQ(activity.GetActivation(), 0.0f);
 }
+
+//
+// Spec: Mouse motion should reset the timeout when moved again
+//
+TEST(TestControllerActivity, MotionTimeoutReset)
+{
+  CControllerActivity activity;
+
+  activity.OnMouseMotion("pointer", 1, 0);
+  activity.OnInputFrame();
+  EXPECT_FLOAT_EQ(activity.GetActivation(), 1.0f);
+
+  std::this_thread::sleep_for(30ms);
+  activity.OnMouseMotion("pointer", 2, 0);
+  activity.OnInputFrame();
+
+  std::this_thread::sleep_for(60ms);
+  EXPECT_FLOAT_EQ(activity.GetActivation(), 1.0f);
+
+  std::this_thread::sleep_for(60ms);
+  EXPECT_FLOAT_EQ(activity.GetActivation(), 0.0f);
+}
+
+//
+// Spec: Activation should persist with multiple held buttons
+//
+TEST(TestControllerActivity, MotionPersistsMultipleButtons)
+{
+  CControllerActivity activity;
+
+  activity.OnMouseMotion("pointer", 2, 0);
+  activity.OnMouseButtonPress("left_button");
+  activity.OnMouseButtonPress("right_button");
+  activity.OnInputFrame();
+
+  EXPECT_FLOAT_EQ(activity.GetActivation(), 1.0f);
+
+  std::this_thread::sleep_for(100ms);
+  EXPECT_FLOAT_EQ(activity.GetActivation(), 1.0f);
+
+  activity.OnMouseButtonRelease("left_button");
+  EXPECT_FLOAT_EQ(activity.GetActivation(), 1.0f);
+
+  activity.OnMouseButtonRelease("right_button");
+  EXPECT_FLOAT_EQ(activity.GetActivation(), 0.0f);
+}
