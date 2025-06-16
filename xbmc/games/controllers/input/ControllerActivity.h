@@ -12,6 +12,7 @@
 #include "input/mouse/MouseTypes.h"
 #include "threads/SystemClock.h"
 
+#include <map>
 #include <set>
 
 namespace KODI
@@ -49,16 +50,21 @@ public:
   void OnInputFrame();
 
 private:
+  struct MousePointer
+  {
+    bool active{false};
+    XbmcThreads::EndTime<> timer;
+  };
+
   // State parameters
   // Required mutable because mouse motion may timeout without further mouse events
   mutable float m_lastActivation{0.0f};
   float m_currentActivation{0.0f};
   KEYBOARD::KeyName m_activeKey;
-  std::set<MOUSE::PointerName> m_activePointers;
+  std::map<MOUSE::PointerName, MousePointer> m_mousePointers;
   std::set<MOUSE::ButtonName> m_activeButtons;
   bool m_bKeyPressed{false};
-  mutable bool m_mouseActive{false};
-  XbmcThreads::EndTime<> m_motionTimer;
+  // m_mousePointers is mutable because timers may expire between frames
 };
 } // namespace GAME
 } // namespace KODI

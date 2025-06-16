@@ -27,12 +27,23 @@ constexpr auto MOUSE_MOTION_TIMEOUT = 50ms;
 
 float CControllerActivity::GetActivation() const
 {
-  // De-activate mouse if an event hasn't been sent since last motion
-  if (m_mouseActive && m_motionTimer.IsTimePast() && m_activeButtons.empty())
+  bool anyPointerActive = false;
+  for (auto& it : m_mousePointers)
   {
-    m_lastActivation = 0.0f;
-    m_mouseActive = false;
+    MousePointer& pointer = it.second;
+    if (pointer.active)
+    {
+      if (pointer.timer.IsTimePast() && m_activeButtons.empty())
+      {
+        pointer.active = false;
+      }
+      if (pointer.active)
+        anyPointerActive = true;
+    }
   }
+
+  if (!anyPointerActive && m_activeButtons.empty())
+    m_lastActivation = 0.0f;
 
   return m_lastActivation;
 }
@@ -42,11 +53,9 @@ void CControllerActivity::ClearButtonState()
   m_lastActivation = 0.0f;
   m_currentActivation = 0.0f;
   m_activeKey.clear();
-  m_activePointers.clear();
+  m_mousePointers.clear();
   m_activeButtons.clear();
   m_bKeyPressed = false;
-  m_mouseActive = false;
-  m_motionTimer.SetExpired();
 }
 
 void CControllerActivity::OnButtonPress(bool pressed)
@@ -100,8 +109,9 @@ void CControllerActivity::OnMouseMotion(const MOUSE::PointerName& relpointer,
                                         int differenceX,
                                         int differenceY)
 {
-  m_mouseActive = true;
-  m_motionTimer.Set(MOUSE_MOTION_TIMEOUT);
+  auto& pointer = m_mousePointers[relpointer];
+  pointer.active = true;
+  pointer.timer.Set(MOUSE_MOTION_TIMEOUT);
 }
 
 void CControllerActivity::OnMouseButtonPress(const MOUSE::ButtonName& button)
@@ -127,8 +137,15 @@ void CControllerActivity::OnInputFrame()
       m_currentActivation = 1.0f;
 
     // Process mouse motion
-    if (m_mouseActive && !m_motionTimer.IsTimePast())
-      m_currentActivation = 1.0f;
+    for (auto& it : m_mousePointers)
+    {
+      const MousePointer& pointer = it.second;
+      if (pointer.active && !pointer.timer.IsTimePast())
+      {
+        m_currentActivation = 1.0f;
+        break;
+      }
+    }
   }
 
   // Process activation

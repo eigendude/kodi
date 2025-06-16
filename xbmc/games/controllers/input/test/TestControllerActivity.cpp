@@ -101,3 +101,25 @@ TEST(TestControllerActivity, MotionPersistsMultipleButtons)
   activity.OnMouseButtonRelease("right_button");
   EXPECT_FLOAT_EQ(activity.GetActivation(), 0.0f);
 }
+
+//
+// Spec: Multiple pointers should be tracked independently
+//
+TEST(TestControllerActivity, MultiplePointers)
+{
+  CControllerActivity activity;
+
+  activity.OnMouseMotion("pointer1", 1, 0);
+  activity.OnInputFrame();
+  EXPECT_FLOAT_EQ(activity.GetActivation(), 1.0f);
+
+  std::this_thread::sleep_for(30ms);
+  activity.OnMouseMotion("pointer2", 1, 0);
+  activity.OnInputFrame();
+
+  std::this_thread::sleep_for(40ms);
+  EXPECT_FLOAT_EQ(activity.GetActivation(), 1.0f);
+
+  std::this_thread::sleep_for(60ms);
+  EXPECT_FLOAT_EQ(activity.GetActivation(), 0.0f);
+}
