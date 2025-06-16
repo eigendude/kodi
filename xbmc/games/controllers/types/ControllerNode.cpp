@@ -7,6 +7,7 @@
  */
 
 #include "ControllerNode.h"
+#include "DigestUtils.h"
 
 #include "ControllerHub.h"
 #include "ServiceBroker.h"
@@ -204,11 +205,9 @@ bool CControllerNode::Deserialize(const tinyxml2::XMLElement& controllerElement)
 
 std::string CControllerNode::GetDigest(UTILITY::CDigest::Type digestType) const
 {
-  UTILITY::CDigest digest{digestType};
-
-  if (m_controller)
-    digest.Update(m_controller->ID());
-  digest.Update(m_hub->GetDigest(digestType));
-
-  return digest.FinalizeRaw();
+  return DIGEST::ComposeDigest(digestType, [this, digestType](UTILITY::CDigest& digest) {
+    if (m_controller)
+      digest.Update(m_controller->ID());
+    digest.Update(m_hub->GetDigest(digestType));
+  });
 }

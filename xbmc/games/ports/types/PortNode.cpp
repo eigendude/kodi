@@ -7,6 +7,7 @@
  */
 
 #include "PortNode.h"
+#include "DigestUtils.h"
 
 #include "addons/kodi-dev-kit/include/kodi/c-api/addon-instance/game.h"
 #include "games/controllers/Controller.h"
@@ -292,13 +293,10 @@ bool CPortNode::Deserialize(const tinyxml2::XMLElement& portElement)
 
 std::string CPortNode::GetDigest(UTILITY::CDigest::Type digestType) const
 {
-  UTILITY::CDigest digest{digestType};
-
-  digest.Update(CControllerTranslator::TranslatePortType(m_portType));
-  digest.Update(m_portId);
-
-  for (const CControllerNode& controller : m_controllers)
-    digest.Update(controller.GetDigest(digestType));
-
-  return digest.FinalizeRaw();
+  return DIGEST::ComposeDigest(digestType, [this, digestType](UTILITY::CDigest& digest) {
+    digest.Update(CControllerTranslator::TranslatePortType(m_portType));
+    digest.Update(m_portId);
+    for (const CControllerNode& controller : m_controllers)
+      digest.Update(controller.GetDigest(digestType));
+  });
 }

@@ -7,6 +7,7 @@
  */
 
 #include "ControllerHub.h"
+#include "DigestUtils.h"
 
 #include "ControllerTree.h"
 #include "games/controllers/Controller.h"
@@ -171,10 +172,8 @@ bool CControllerHub::Deserialize(const tinyxml2::XMLElement& controllerElement)
 
 std::string CControllerHub::GetDigest(UTILITY::CDigest::Type digestType) const
 {
-  UTILITY::CDigest digest{digestType};
-
-  for (const CPortNode& port : m_ports)
-    digest.Update(port.GetDigest(digestType));
-
-  return digest.FinalizeRaw();
+  return DIGEST::ComposeDigest(digestType, [this, digestType](UTILITY::CDigest& digest) {
+    for (const CPortNode& port : m_ports)
+      digest.Update(port.GetDigest(digestType));
+  });
 }
