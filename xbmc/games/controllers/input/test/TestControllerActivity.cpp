@@ -29,7 +29,9 @@ TEST(TestControllerActivity, MouseMotionActivates)
 
   EXPECT_FLOAT_EQ(activity.GetActivation(), 1.0f);
 
-  std::this_thread::sleep_for(100ms);
+  // Sleep well beyond the 50ms motion timeout to ensure the value
+  // resets even on sluggish systems
+  std::this_thread::sleep_for(150ms);
 
   EXPECT_FLOAT_EQ(activity.GetActivation(), 0.0f);
 }
@@ -47,7 +49,10 @@ TEST(TestControllerActivity, MotionPersistsWithButton)
 
   EXPECT_FLOAT_EQ(activity.GetActivation(), 1.0f);
 
-  std::this_thread::sleep_for(100ms);
+  // Holding a button should keep the controller active regardless
+  // of the motion timeout. Sleep for a generous amount of time to
+  // avoid timing issues on slow machines.
+  std::this_thread::sleep_for(150ms);
 
   EXPECT_FLOAT_EQ(activity.GetActivation(), 1.0f);
 
@@ -67,14 +72,20 @@ TEST(TestControllerActivity, MotionTimeoutReset)
   activity.OnInputFrame();
   EXPECT_FLOAT_EQ(activity.GetActivation(), 1.0f);
 
-  std::this_thread::sleep_for(20ms);
+  // Wait briefly before moving again. Keep the delay tiny so that a
+  // slow scheduler can't accidentally exceed the timeout.
+  std::this_thread::sleep_for(5ms);
   activity.OnMouseMotion("pointer", 2, 0);
   activity.OnInputFrame();
 
-  std::this_thread::sleep_for(20ms);
+  // Verify we're still active shortly after the second motion. Use a
+  // minimal wait to prevent hitting the timeout on busy VMs.
+  std::this_thread::sleep_for(5ms);
   EXPECT_FLOAT_EQ(activity.GetActivation(), 1.0f);
 
-  std::this_thread::sleep_for(80ms);
+  // Sleep long past the timeout so the activity definitely expires
+  // even on slower machines.
+  std::this_thread::sleep_for(150ms);
   EXPECT_FLOAT_EQ(activity.GetActivation(), 0.0f);
 }
 
@@ -92,7 +103,9 @@ TEST(TestControllerActivity, MotionPersistsMultipleButtons)
 
   EXPECT_FLOAT_EQ(activity.GetActivation(), 1.0f);
 
-  std::this_thread::sleep_for(100ms);
+  // Long sleep to prove that held buttons keep the controller active
+  // regardless of the mouse motion timeout.
+  std::this_thread::sleep_for(150ms);
   EXPECT_FLOAT_EQ(activity.GetActivation(), 1.0f);
 
   activity.OnMouseButtonRelease("left_button");
@@ -113,13 +126,18 @@ TEST(TestControllerActivity, MultiplePointers)
   activity.OnInputFrame();
   EXPECT_FLOAT_EQ(activity.GetActivation(), 1.0f);
 
-  std::this_thread::sleep_for(20ms);
+  // Short pause before moving the second pointer. Keep it tiny so we
+  // don't inadvertently pass the motion timeout on slow systems.
+  std::this_thread::sleep_for(5ms);
   activity.OnMouseMotion("pointer2", 1, 0);
   activity.OnInputFrame();
 
-  std::this_thread::sleep_for(20ms);
+  // Ensure both pointers keep the controller active. Again, keep the
+  // wait well under the timeout.
+  std::this_thread::sleep_for(5ms);
   EXPECT_FLOAT_EQ(activity.GetActivation(), 1.0f);
 
-  std::this_thread::sleep_for(80ms);
+  // Finally exceed the timeout so all pointer activity expires.
+  std::this_thread::sleep_for(150ms);
   EXPECT_FLOAT_EQ(activity.GetActivation(), 0.0f);
 }
