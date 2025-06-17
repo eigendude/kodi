@@ -67,14 +67,14 @@ TEST(TestControllerActivity, MotionTimeoutReset)
   activity.OnInputFrame();
   EXPECT_FLOAT_EQ(activity.GetActivation(), 1.0f);
 
-  std::this_thread::sleep_for(30ms);
+  std::this_thread::sleep_for(20ms);
   activity.OnMouseMotion("pointer", 2, 0);
   activity.OnInputFrame();
 
-  std::this_thread::sleep_for(60ms);
+  std::this_thread::sleep_for(20ms);
   EXPECT_FLOAT_EQ(activity.GetActivation(), 1.0f);
 
-  std::this_thread::sleep_for(60ms);
+  std::this_thread::sleep_for(80ms);
   EXPECT_FLOAT_EQ(activity.GetActivation(), 0.0f);
 }
 
@@ -113,13 +113,13 @@ TEST(TestControllerActivity, MultiplePointers)
   activity.OnInputFrame();
   EXPECT_FLOAT_EQ(activity.GetActivation(), 1.0f);
 
-  std::this_thread::sleep_for(30ms);
+  std::this_thread::sleep_for(20ms);
   activity.OnMouseMotion("pointer2", 1, 0);
   activity.OnInputFrame();
 
-  std::this_thread::sleep_for(40ms);
+  std::this_thread::sleep_for(20ms);
   EXPECT_FLOAT_EQ(activity.GetActivation(), 1.0f);
 
-  std::this_thread::sleep_for(60ms);
+  std::this_thread::sleep_for(80ms);
   EXPECT_FLOAT_EQ(activity.GetActivation(), 0.0f);
 }
