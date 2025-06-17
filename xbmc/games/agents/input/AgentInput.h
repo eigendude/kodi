@@ -45,7 +45,6 @@ class IMouseInputProvider;
 
 namespace GAME
 {
-class CAgentControllerMap;
 class CAgentInputMap;
 class CGameClient;
 class CGameClientJoystick;
@@ -121,7 +120,9 @@ private:
   void ProcessMouse();
 
   // Internal helpers
-  void ProcessAgentControllers(PERIPHERALS::EventLockHandlePtr& inputHandlingLock);
+  void ProcessAgentControllers(const PERIPHERALS::PeripheralVector& peripherals,
+                               PERIPHERALS::EventLockHandlePtr& inputHandlingLock,
+                               bool updateJoysticks);
   void UpdateExpiredJoysticks(const PERIPHERALS::PeripheralVector& joysticks,
                               PERIPHERALS::EventLockHandlePtr& inputHandlingLock);
   void UpdateConnectedJoysticks(const PERIPHERALS::PeripheralVector& joysticks,
@@ -151,6 +152,7 @@ private:
   bool m_bHasMouse = false;
   int m_initialMouseX{-1};
   int m_initialMouseY{-1};
+  std::vector<std::shared_ptr<CAgentController>> m_controllers;
 
   // Synchronization parameters
   mutable std::mutex m_controllerMutex;
@@ -211,11 +213,6 @@ private:
    * \brief Input map for the agents
    */
   std::unique_ptr<CAgentInputMap> m_inputMap;
-
-  /*!
-   * \brief Controller map for the agents
-   */
-  std::unique_ptr<CAgentControllerMap> m_controllerMap;
 };
 } // namespace GAME
 } // namespace KODI
