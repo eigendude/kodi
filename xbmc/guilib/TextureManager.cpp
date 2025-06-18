@@ -99,6 +99,9 @@ void CTextureArray::Add(std::shared_ptr<CTexture> texture, int delay)
   if (!texture)
     return;
 
+  // Ensure new textures inherit the scaling method
+  texture->SetScalingMethod(m_scalingMethod);
+
   m_texWidth = texture->GetTextureWidth();
   m_texHeight = texture->GetTextureHeight();
   m_texCoordsArePixels = false;
