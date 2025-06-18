@@ -48,6 +48,9 @@ public:
   GLuint GetTextureID() const;
 
 protected:
+  void ApplyScalingMethod() override;
+
+protected:
   void SetSwizzle(bool swapRB);
   void SwapBlueRedSwizzle(GLint& component);
   TextureFormat GetFormatGLES20(KD_TEX_FMT textureFormat);
