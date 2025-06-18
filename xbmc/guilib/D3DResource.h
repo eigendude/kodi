@@ -15,6 +15,11 @@
 
 #include <map>
 #include <set>
+#include <string_view>
+#include <stdexcept>
+
+#include <fmt/format.h>
+#include "utils/Map.h"
 
 #include <DirectXMath.h>
 #include <d3dx11effect.h>
@@ -38,6 +43,39 @@ typedef enum SHADER_METHOD
   SHADER_METHOD_RENDER_STEREO_CHECKERBOARD_RIGHT,
   SHADER_METHOD_RENDER_COUNT
 } _SHADER_METHOD;
+
+template<>
+struct fmt::formatter<SHADER_METHOD> : fmt::formatter<std::string_view>
+{
+  template<typename FormatContext>
+  constexpr auto format(const SHADER_METHOD& shaderMethod, FormatContext& ctx)
+  {
+    const auto it = ShaderMethodMap.find(shaderMethod);
+    if (it == ShaderMethodMap.cend())
+      throw std::range_error("no string mapping found for shader method");
+
+    return fmt::formatter<std::string_view>::format(it->second, ctx);
+  }
+
+private:
+  static constexpr auto ShaderMethodMap = make_map<SHADER_METHOD, std::string_view>({
+      {SHADER_METHOD_RENDER_DEFAULT, "default"},
+      {SHADER_METHOD_RENDER_TEXTURE_NOBLEND, "texture noblend"},
+      {SHADER_METHOD_RENDER_TEXTURE_NOBLEND_NEAREST, "texture noblend nearest"},
+      {SHADER_METHOD_RENDER_FONT, "font"},
+      {SHADER_METHOD_RENDER_TEXTURE_BLEND, "texture blend"},
+      {SHADER_METHOD_RENDER_TEXTURE_BLEND_NEAREST, "texture blend nearest"},
+      {SHADER_METHOD_RENDER_MULTI_TEXTURE_BLEND, "multi texture blend"},
+      {SHADER_METHOD_RENDER_MULTI_TEXTURE_BLEND_NEAREST, "multi texture blend nearest"},
+      {SHADER_METHOD_RENDER_STEREO_INTERLACED_LEFT, "stereo interlaced left"},
+      {SHADER_METHOD_RENDER_STEREO_INTERLACED_RIGHT, "stereo interlaced right"},
+      {SHADER_METHOD_RENDER_STEREO_CHECKERBOARD_LEFT, "stereo checkerboard left"},
+      {SHADER_METHOD_RENDER_STEREO_CHECKERBOARD_RIGHT, "stereo checkerboard right"},
+  });
+
+  static_assert(static_cast<size_t>(SHADER_METHOD_RENDER_COUNT) == ShaderMethodMap.size(),
+                "ShaderMethodMap doesn't match the size of SHADER_METHOD, did you forget to add/remove a mapping?");
+};
 
 class ID3DResource
 {

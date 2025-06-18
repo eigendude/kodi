@@ -153,7 +153,7 @@ void CGUITextureD3D::Draw(float *x, float *y, float *z, const CRect &texture, co
   {
     CLog::LogF(LOGDEBUG,
                "GUITextureD3D using shader method {} for {}",
-               static_cast<int>(method),
+               method,
                m_info.filename);
   }
 
