@@ -146,7 +146,10 @@ void CGUITextureD3D::Draw(float *x, float *y, float *z, const CRect &texture, co
                  : SHADER_METHOD_RENDER_TEXTURE_BLEND;
   }
 
-  if (StringUtils::FindCaseInsensitive(m_info.filename, "avatar") != std::string::npos)
+  // Limit debug logging to avatar textures so normal GUI rendering is not
+  // flooded with messages. Use a case-insensitive search to match resources
+  // regardless of path casing.
+  if (StringUtils::Contains(m_info.filename, "avatar"))
   {
     CLog::LogF(LOGDEBUG,
                "GUITextureD3D using shader method {} for {}",
