@@ -120,13 +120,16 @@ public:
   virtual void CreateTextureObject() = 0;
   virtual void DestroyTextureObject() = 0;
   virtual void LoadToGPU() = 0;
-  /*! 
+  /*!
    * \brief Blocks execution until the previous GFX commands have been processed.
    */
   virtual void SyncGPU(){};
   virtual void BindToUnit(unsigned int unit) = 0;
 
-  /*! 
+  /*! \brief Set texture filtering method and update GPU state if needed */
+  virtual void SetScalingMethod(TEXTURE_SCALING scalingMethod);
+
+  /*!
    * \brief Checks if the processing pipeline can handle the texture format/swizzle
    \param format the format of the texture.
    \return true if the texturing pipeline supports the format
@@ -141,6 +144,7 @@ private:
   CTexture(const CTexture& copy) = delete;
 
 protected:
+  virtual void ApplyScalingMethod() {}
   bool LoadFromFileInMem(unsigned char* buffer,
                          size_t size,
                          const std::string& mimeType,

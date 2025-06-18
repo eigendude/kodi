@@ -56,6 +56,9 @@ public:
   GLuint GetTextureID() const;
 
 protected:
+  void ApplyScalingMethod() override;
+
+protected:
   void SetSwizzle();
   TextureFormat GetFormatGL(KD_TEX_FMT textureFormat);
 
