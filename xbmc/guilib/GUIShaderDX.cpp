@@ -24,6 +24,7 @@
 #include "guishader_texture.h"
 #include "guishader_texture_nearest.h"
 #include "guishader_texture_noblend.h"
+#include "guishader_texture_noblend_nearest.h"
 #include "guishader_vert.h"
 
 #include <d3dcompiler.h>
@@ -37,6 +38,7 @@ static const D3D_SHADER_DATA cbPSShaderCode[SHADER_METHOD_RENDER_COUNT] =
 {
   { guishader_default, sizeof(guishader_default) }, // SHADER_METHOD_RENDER_DEFAULT
   { guishader_texture_noblend, sizeof(guishader_texture_noblend) }, // SHADER_METHOD_RENDER_TEXTURE_NOBLEND
+  { guishader_texture_noblend_nearest, sizeof(guishader_texture_noblend_nearest) }, // SHADER_METHOD_RENDER_TEXTURE_NOBLEND_NEAREST
   { guishader_fonts, sizeof(guishader_fonts) }, // SHADER_METHOD_RENDER_FONT
   { guishader_texture, sizeof(guishader_texture) }, // SHADER_METHOD_RENDER_TEXTURE_BLEND
   { guishader_texture_nearest, sizeof(guishader_texture_nearest) }, // SHADER_METHOD_RENDER_TEXTURE_BLEND_NEAREST

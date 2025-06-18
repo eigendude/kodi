@@ -12,6 +12,7 @@
 #include "GUIShaderDX.h"
 #include "TextureDX.h"
 #include "rendering/dx/RenderContext.h"
+#include "utils/ColorUtils.h"
 
 #include <DirectXMath.h>
 
@@ -121,12 +122,27 @@ void CGUITextureD3D::Draw(float *x, float *y, float *z, const CRect &texture, co
   CDXTexture* tex = static_cast<CDXTexture*>(m_texture.m_textures[m_currentFrame].get());
   CGUIShaderDX* pGUIShader = DX::Windowing()->GetGUIShader();
 
-  pGUIShader->Begin(m_diffuse.size() > 0 ? (m_scalingMethod == TEXTURE_SCALING::NEAREST
-                                                ? SHADER_METHOD_RENDER_MULTI_TEXTURE_BLEND_NEAREST
-                                                : SHADER_METHOD_RENDER_MULTI_TEXTURE_BLEND)
-                                         : (m_scalingMethod == TEXTURE_SCALING::NEAREST
-                                                ? SHADER_METHOD_RENDER_TEXTURE_BLEND_NEAREST
-                                                : SHADER_METHOD_RENDER_TEXTURE_BLEND));
+  SHADER_METHOD method;
+  if (m_diffuse.size() > 0)
+  {
+    method = (m_scalingMethod == TEXTURE_SCALING::NEAREST)
+                 ? SHADER_METHOD_RENDER_MULTI_TEXTURE_BLEND_NEAREST
+                 : SHADER_METHOD_RENDER_MULTI_TEXTURE_BLEND;
+  }
+  else if (m_col == KODI::UTILS::COLOR::WHITE)
+  {
+    method = (m_scalingMethod == TEXTURE_SCALING::NEAREST)
+                 ? SHADER_METHOD_RENDER_TEXTURE_NOBLEND_NEAREST
+                 : SHADER_METHOD_RENDER_TEXTURE_NOBLEND;
+  }
+  else
+  {
+    method = (m_scalingMethod == TEXTURE_SCALING::NEAREST)
+                 ? SHADER_METHOD_RENDER_TEXTURE_BLEND_NEAREST
+                 : SHADER_METHOD_RENDER_TEXTURE_BLEND;
+  }
+
+  pGUIShader->Begin(method);
 
   if (m_diffuse.size())
   {
