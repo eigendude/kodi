@@ -13,6 +13,7 @@
 #include "TextureDX.h"
 #include "rendering/dx/RenderContext.h"
 #include "utils/ColorUtils.h"
+#include "utils/StringUtils.h"
 
 #include <DirectXMath.h>
 
@@ -145,7 +146,13 @@ void CGUITextureD3D::Draw(float *x, float *y, float *z, const CRect &texture, co
                  : SHADER_METHOD_RENDER_TEXTURE_BLEND;
   }
 
-  CLog::LogF(LOGDEBUG, "GUITextureD3D using shader method {}", static_cast<int>(method));
+  if (StringUtils::FindCaseInsensitive(m_info.filename, "avatar") != std::string::npos)
+  {
+    CLog::LogF(LOGDEBUG,
+               "GUITextureD3D using shader method {} for {}",
+               static_cast<int>(method),
+               m_info.filename);
+  }
 
   pGUIShader->Begin(method);
 
