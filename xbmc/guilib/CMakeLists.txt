@@ -219,7 +219,8 @@ if(CORE_SYSTEM_NAME STREQUAL windows OR CORE_SYSTEM_NAME STREQUAL windowsstore)
                     guishader_multi_texture_blend_nearest.hlsl
                     guishader_texture.hlsl
                     guishader_texture_nearest.hlsl
-                    guishader_texture_noblend.hlsl)
+                    guishader_texture_noblend.hlsl
+                    guishader_texture_noblend_nearest.hlsl)
   foreach(shader ${SHADERS_VERTEX})
     get_filename_component(file ${shader} NAME_WE)
     add_custom_command(OUTPUT ${file}.h
