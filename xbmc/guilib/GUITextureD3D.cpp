@@ -123,6 +123,9 @@ void CGUITextureD3D::Draw(float *x, float *y, float *z, const CRect &texture, co
   CGUIShaderDX* pGUIShader = DX::Windowing()->GetGUIShader();
 
   SHADER_METHOD method;
+  // Select the pixel shader based on whether a diffuse overlay or color tint is
+  // applied and the requested scaling method. Untinted images can skip color
+  // multiplication via the *noblend* shaders for improved performance.
   if (m_diffuse.size() > 0)
   {
     method = (m_scalingMethod == TEXTURE_SCALING::NEAREST)
@@ -141,6 +144,8 @@ void CGUITextureD3D::Draw(float *x, float *y, float *z, const CRect &texture, co
                  ? SHADER_METHOD_RENDER_TEXTURE_BLEND_NEAREST
                  : SHADER_METHOD_RENDER_TEXTURE_BLEND;
   }
+
+  CLog::LogF(LOGDEBUG, "GUITextureD3D using shader method {}", static_cast<int>(method));
 
   pGUIShader->Begin(method);
 
