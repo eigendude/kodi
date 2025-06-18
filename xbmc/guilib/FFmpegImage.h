@@ -9,6 +9,7 @@
 #pragma once
 
 #include "iimage.h"
+#include "guilib/TextureScaling.h"
 
 #include <cstdint>
 #include <memory>
@@ -73,6 +74,8 @@ public:
 
   bool Initialize(unsigned char* buffer, size_t bufSize);
 
+  void SetScalingMethod(TEXTURE_SCALING method) { m_scalingMethod = method; }
+
   std::shared_ptr<Frame> ReadFrame();
 
 private:
@@ -94,4 +97,5 @@ private:
 
   AVFrame* m_pFrame;
   uint8_t* m_outputBuffer;
+  TEXTURE_SCALING m_scalingMethod{TEXTURE_SCALING::LINEAR};
 };

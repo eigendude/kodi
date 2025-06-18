@@ -487,8 +487,9 @@ bool CFFmpegImage::DecodeFrame(AVFrame* frame, unsigned int width, unsigned int 
   AVColorRange range = frame->color_range;
   AVPixelFormat pixFormat = ConvertFormats(frame);
 
+  int swsFlags = (m_scalingMethod == TEXTURE_SCALING::NEAREST) ? SWS_POINT : SWS_BICUBIC;
   SwsContext* context = sws_getContext(m_originalWidth, m_originalHeight, pixFormat, width, height,
-                                       AV_PIX_FMT_RGB32, SWS_BICUBIC, NULL, NULL, NULL);
+                                       AV_PIX_FMT_RGB32, swsFlags, NULL, NULL, NULL);
 
   if (range == AVCOL_RANGE_JPEG)
   {
