@@ -87,6 +87,12 @@ protected:
    */
   void DrawBlackBars();
 
+  /*!\brief Initialize VAOs and VBOs*/
+  void InitBuffers();
+
+  /*!\brief Update the vertex VBO with new coordinates*/
+  void UpdateVertices(const PackedVertex* verts);
+
   virtual void Render(uint8_t alpha);
 
   std::map<CRenderBufferOpenGL*, std::unique_ptr<RenderBufferTextures>> m_RBTexturesMap;
