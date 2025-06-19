@@ -53,7 +53,8 @@ public:
       unsigned int idealWidth = 0,
       unsigned int idealHeight = 0,
       CAspectRatio::AspectRatio aspectRatio = CAspectRatio::CENTER,
-      const std::string& strMimeType = "");
+      const std::string& strMimeType = "",
+      TEXTURE_SCALING scalingMethod = TEXTURE_SCALING::LINEAR);
 
   /*! \brief Load a texture from a file in memory
    Loads a texture from a file in memory, restricting in size if needed based on maxHeight and maxWidth.
@@ -72,7 +73,8 @@ public:
       const std::string& mimeType,
       unsigned int idealWidth = 0,
       unsigned int idealHeight = 0,
-      CAspectRatio::AspectRatio aspectRatio = CAspectRatio::CENTER);
+      CAspectRatio::AspectRatio aspectRatio = CAspectRatio::CENTER,
+      TEXTURE_SCALING scalingMethod = TEXTURE_SCALING::LINEAR);
 
   bool LoadFromMemory(unsigned int width,
                       unsigned int height,
@@ -168,16 +170,19 @@ protected:
                          const std::string& mimeType,
                          unsigned int idealWidth,
                          unsigned int idealHeight,
-                         CAspectRatio::AspectRatio aspectRatio);
+                         CAspectRatio::AspectRatio aspectRatio,
+                         TEXTURE_SCALING scalingMethod);
   bool LoadFromFileInternal(const std::string& texturePath,
                             unsigned int idealWidth,
                             unsigned int idealHeight,
                             CAspectRatio::AspectRatio aspectRatio,
-                            const std::string& strMimeType = "");
+                            const std::string& strMimeType = "",
+                            TEXTURE_SCALING scalingMethod = TEXTURE_SCALING::LINEAR);
   bool LoadIImage(IImage* pImage,
                   unsigned char* buffer,
                   unsigned int bufSize,
                   unsigned int idealWidth,
                   unsigned int idealHeight,
-                  CAspectRatio::AspectRatio aspectRatio);
+                  CAspectRatio::AspectRatio aspectRatio,
+                  TEXTURE_SCALING scalingMethod);
 };
