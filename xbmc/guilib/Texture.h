@@ -46,6 +46,7 @@ public:
    \param idealHeight the ideal height of the texture (defaults to 0, no ideal height).
    \param aspectRatio the aspect ratio mode of the texture (defaults to "center").
    \param strMimeType mimetype of the given texture if available (defaults to empty)
+   \param scalingMethod the image filter to apply when scaling
    \return a CTexture std::unique_ptr to the created texture - nullptr if the texture failed to load.
    */
   static std::unique_ptr<CTexture> LoadFromFile(
@@ -65,6 +66,7 @@ public:
    \param idealWidth the ideal width of the texture (defaults to 0, no ideal width).
    \param idealHeight the ideal height of the texture (defaults to 0, no ideal height).
    \param aspectRatio the aspect ratio mode of the texture (defaults to "center").
+   \param scalingMethod the image filter to apply when scaling
    \return a CTexture std::unique_ptr to the created texture - nullptr if the texture failed to load.
    */
   static std::unique_ptr<CTexture> LoadFromFileInMemory(
