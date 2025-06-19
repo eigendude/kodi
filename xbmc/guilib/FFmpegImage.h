@@ -63,6 +63,15 @@ public:
 
   bool LoadImageFromMemory(unsigned char* buffer, unsigned int bufSize,
                            unsigned int width, unsigned int height) override;
+  bool LoadImageFromMemory(unsigned char* buffer,
+                           unsigned int bufSize,
+                           unsigned int width,
+                           unsigned int height,
+                           TEXTURE_SCALING scalingMethod) override
+  {
+    SetScalingMethod(scalingMethod);
+    return LoadImageFromMemory(buffer, bufSize, width, height);
+  }
   bool Decode(unsigned char * const pixels, unsigned int width, unsigned int height,
               unsigned int pitch, unsigned int format) override;
   bool CreateThumbnailFromSurface(unsigned char* bufferin, unsigned int width,

@@ -263,11 +263,8 @@ bool CTexture::LoadIImage(IImage* pImage,
     return false;
 
   unsigned int maxTextureSize = CServiceBroker::GetRenderSystem()->GetMaxTextureSize();
-  if (!pImage->LoadImageFromMemory(buffer, bufSize, maxTextureSize, maxTextureSize))
+  if (!pImage->LoadImageFromMemory(buffer, bufSize, maxTextureSize, maxTextureSize, scalingMethod))
     return false;
-
-  if (auto ffmpegImage = dynamic_cast<CFFmpegImage*>(pImage))
-    ffmpegImage->SetScalingMethod(scalingMethod);
 
   if (pImage->Width() == 0 || pImage->Height() == 0)
     return false;
