@@ -24,6 +24,8 @@
 
 #include <fcntl.h>
 #include <linux/input.h>
+#include <linux/input-event-codes.h>
+#include <libudev.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include <xkbcommon/xkbcommon-keysyms.h>
@@ -156,6 +158,17 @@ constexpr auto logLevelMap = make_map<xkb_log_level, int>({{XKB_LOG_LEVEL_CRITIC
                                                            {XKB_LOG_LEVEL_WARNING, LOGWARNING},
                                                            {XKB_LOG_LEVEL_INFO, LOGINFO},
                                                            {XKB_LOG_LEVEL_DEBUG, LOGDEBUG}});
+
+constexpr auto libinputKeyToRemoteButtonMap =
+    make_map<int, uint32_t>({{KEY_OK, XINPUT_IR_REMOTE_SELECT},
+                             {KEY_RADIO, XINPUT_IR_REMOTE_LIVE_RADIO},
+                             {KEY_AUDIO, XINPUT_IR_REMOTE_MY_MUSIC},
+                             {KEY_CAMERA, XINPUT_IR_REMOTE_MY_PICTURES},
+                             {KEY_VIDEO, XINPUT_IR_REMOTE_MY_VIDEOS},
+                             {KEY_PVR, XINPUT_IR_REMOTE_RECORDED_TV},
+                             {KEY_EPG, XINPUT_IR_REMOTE_GUIDE},
+                             {KEY_TUNER, XINPUT_IR_REMOTE_LIVE_TV},
+                             {KEY_DVD, XINPUT_IR_REMOTE_DVD_MENU}});
 
 constexpr auto XkbDeadKeyXBMCMapping =
     make_map<xkb_keycode_t, XBMCKey>({{XKB_KEY_dead_grave, XBMCK_GRAVE},
@@ -331,6 +344,14 @@ void CLibInputKeyboard::ProcessKey(libinput_event_keyboard *e)
 {
   if (!m_ctx || !m_keymap || !m_state)
     return;
+
+  libinput_event* base = libinput_event_keyboard_get_base_event(e);
+  libinput_device* dev = libinput_event_get_device(base);
+  if (IsRemote(dev))
+  {
+    ProcessRemoteControlInput(e);
+    return;
+  }
 
   const uint32_t xkbkey = libinput_event_keyboard_get_key(e) + 8;
   const xkb_keysym_t keysym = xkb_state_key_get_one_sym(m_state.get(), xkbkey);
@@ -595,4 +616,61 @@ std::uint32_t CLibInputKeyboard::UnicodeCodepointForKeycode(xkb_keycode_t code) 
     }
   }
   return unicode;
+}
+
+void CLibInputKeyboard::CheckForRemoteControl(libinput_device* dev, struct udev* udev)
+{
+  bool isRemote = false;
+  if (udev && dev)
+  {
+    const char* sysname = libinput_device_get_sysname(dev);
+    if (sysname != nullptr)
+    {
+      std::string sysPath = "/sys/class/input/";
+      sysPath += sysname;
+      struct udev_device* udevDev = udev_device_new_from_syspath(udev, sysPath.c_str());
+      if (udevDev)
+      {
+        struct udev_device* parent = udev_device_get_parent_with_subsystem_devtype(udevDev, "rc", nullptr);
+        if (parent)
+          isRemote = true;
+        udev_device_unref(udevDev);
+      }
+    }
+  }
+  m_remoteDevices[dev] = isRemote;
+}
+
+void CLibInputKeyboard::DeviceRemoved(libinput_device* dev)
+{
+  m_remoteDevices.erase(dev);
+}
+
+bool CLibInputKeyboard::IsRemote(libinput_device* dev) const
+{
+  auto it = m_remoteDevices.find(dev);
+  if (it != m_remoteDevices.end())
+    return it->second;
+  return false;
+}
+
+void CLibInputKeyboard::ProcessRemoteControlInput(libinput_event_keyboard* e)
+{
+  const bool pressed = libinput_event_keyboard_get_key_state(e) == LIBINPUT_KEY_STATE_PRESSED;
+  if (!pressed)
+    return;
+
+  const uint32_t scancode = libinput_event_keyboard_get_key(e);
+  auto it = libinputKeyToRemoteButtonMap.find(scancode);
+  if (it == libinputKeyToRemoteButtonMap.end())
+    return;
+
+  XBMC_Event event{};
+  event.type = XBMC_BUTTON;
+  event.keybutton.button = it->second;
+  event.keybutton.holdtime = 0;
+
+  std::shared_ptr<CAppInboundProtocol> appPort = CServiceBroker::GetAppPort();
+  if (appPort)
+    appPort->OnEvent(event);
 }

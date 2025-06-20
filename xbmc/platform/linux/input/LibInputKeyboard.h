@@ -16,6 +16,7 @@
 #include <vector>
 
 #include <libinput.h>
+#include <libudev.h>
 #include <xkbcommon/xkbcommon-compose.h>
 #include <xkbcommon/xkbcommon.h>
 
@@ -26,6 +27,8 @@ public:
   ~CLibInputKeyboard() = default;
 
   void ProcessKey(libinput_event_keyboard *e);
+  void CheckForRemoteControl(libinput_device* dev, struct udev* udev);
+  void DeviceRemoved(libinput_device* dev);
   void UpdateLeds(libinput_device *dev);
   void GetRepeat(libinput_device *dev);
 
@@ -34,6 +37,8 @@ public:
 private:
   XBMCKey XBMCKeyForKeysym(xkb_keysym_t sym, uint32_t scancode);
   void KeyRepeatTimeout();
+  void ProcessRemoteControlInput(libinput_event_keyboard* e);
+  bool IsRemote(libinput_device* dev) const;
   /**
    * Check if the system supports key composition
    * \return true if composition is supported, false otherwise
@@ -89,4 +94,5 @@ private:
   std::map<libinput_device*, std::vector<int>> m_repeatData;
   CTimer m_repeatTimer;
   int m_repeatRate;
+  std::map<libinput_device*, bool> m_remoteDevices;
 };
