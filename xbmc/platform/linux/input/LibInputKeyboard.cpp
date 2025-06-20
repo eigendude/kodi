@@ -24,6 +24,7 @@
 
 #include <fcntl.h>
 #include <linux/input.h>
+#include "input/keyboard/PendingXkbKeys.h" // temporary key codes pending upstream
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include <xkbcommon/xkbcommon-keysyms.h>
