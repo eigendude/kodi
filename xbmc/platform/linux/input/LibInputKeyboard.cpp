@@ -123,6 +123,7 @@ constexpr auto xkbMap = make_map<xkb_keysym_t, XBMCKey>({
     // Miscellaneous function keys
     {XKB_KEY_Help, XBMCK_HELP},
     {XKB_KEY_Print, XBMCK_PRINT},
+    {XKB_KEY_XF86Info, XBMCK_INFO},
     {XKB_KEY_Sys_Req, XBMCK_SYSREQ},
     {XKB_KEY_Break, XBMCK_BREAK},
     {XKB_KEY_Menu, XBMCK_MENU},
@@ -149,6 +150,23 @@ constexpr auto xkbMap = make_map<xkb_keysym_t, XBMCKey>({
     {XKB_KEY_XF86AudioPlay, XBMCK_PLAY},
     {XKB_KEY_XF86AudioRandomPlay, XBMCK_SHUFFLE}
     // XBMCK_FASTFORWARD clashes with XBMCK_MEDIA_FASTFORWARD
+});
+
+// Some input event codes are not mapped by XKB. Map these directly using the
+// libinput/evdev keycodes so that common remote control buttons work out of the
+// box.
+constexpr auto evdevMap = make_map<uint32_t, XBMCKey>({
+    {KEY_INFO, XBMCK_INFO},
+    {KEY_PAUSE, XBMCK_PAUSE},
+    {KEY_RED, XBMCK_RED},
+    {KEY_GREEN, XBMCK_GREEN},
+    {KEY_YELLOW, XBMCK_YELLOW},
+    {KEY_BLUE, XBMCK_BLUE},
+    {KEY_CHANNELUP, XBMCK_PAGEUP},
+    {KEY_CHANNELDOWN, XBMCK_PAGEDOWN},
+    {KEY_EPG, XBMCK_EPG},
+    {KEY_ZOOM, XBMCK_ZOOM},
+    {KEY_SUBTITLE, XBMCK_SUBTITLE},
 });
 
 constexpr auto logLevelMap = make_map<xkb_log_level, int>({{XKB_LOG_LEVEL_CRITICAL, LOGERROR},
@@ -492,6 +510,14 @@ XBMCKey CLibInputKeyboard::XBMCKeyForKeysym(xkb_keysym_t sym, uint32_t scancode)
   auto xkbmapping = xkbMap.find(sym);
   if (xkbmapping != xkbMap.cend())
     return xkbmapping->second;
+
+  auto evdevmapping = evdevMap.find(scancode);
+  if (evdevmapping != evdevMap.cend())
+    return evdevmapping->second;
+
+  CLog::Log(LOGDEBUG,
+            "ProcessKey: unable to map key with keycode {} (0x{:x}), XKB keysym {} (0x{:x}).",
+            scancode, scancode, sym, sym);
 
   return XBMCK_UNKNOWN;
 }
