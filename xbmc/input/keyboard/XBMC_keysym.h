@@ -228,6 +228,7 @@ enum XBMCKey
   XBMCK_HOMEPAGE = 0x14e,
   XBMCK_CONFIG = 0x14f,
   XBMCK_EPG = 0x150,
+  XBMCK_SUBTITLE = 0x151,
 
   // Add any other keys here
 
