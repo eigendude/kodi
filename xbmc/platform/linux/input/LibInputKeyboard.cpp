@@ -30,6 +30,8 @@
 #include <xkbcommon/xkbcommon-keysyms.h>
 #include <xkbcommon/xkbcommon-names.h>
 
+using KODI::KEYBOARD::PENDING::Key;
+
 namespace
 {
 constexpr unsigned int REPEAT_DELAY = 400;
@@ -168,6 +170,27 @@ constexpr auto evdevMap = make_map<uint32_t, XBMCKey>({
     {KEY_EPG, XBMCK_EPG},
     {KEY_ZOOM, XBMCK_ZOOM},
     {KEY_SUBTITLE, XBMCK_SUBTITLE},
+    {static_cast<uint32_t>(Key::KEY_OK), XBMCK_RETURN},
+    {static_cast<uint32_t>(Key::KEY_SELECT), XBMCK_RETURN},
+    {static_cast<uint32_t>(Key::KEY_CLEAR), XBMCK_CLEAR},
+    {static_cast<uint32_t>(Key::KEY_APPLICATION_POWER), XBMCK_POWER},
+    {static_cast<uint32_t>(Key::KEY_OPTION), XBMCK_MENU},
+    {static_cast<uint32_t>(Key::KEY_FAVORITES), XBMCK_FAVORITES},
+    {static_cast<uint32_t>(Key::KEY_PVR), XBMCK_GUIDE},
+    {static_cast<uint32_t>(Key::KEY_FULL_SCREEN), XBMCK_ZOOM},
+    {static_cast<uint32_t>(Key::KEY_ASPECT_RATIO), XBMCK_ZOOM},
+    {static_cast<uint32_t>(Key::KEY_LAUNCH_AV_PLAYER), XBMCK_LAUNCH_MEDIA_CENTER},
+    {static_cast<uint32_t>(Key::KEY_TEXT), XBMCK_TEXT},
+    {static_cast<uint32_t>(Key::KEY_RED), XBMCK_RED},
+    {static_cast<uint32_t>(Key::KEY_GREEN), XBMCK_GREEN},
+    {static_cast<uint32_t>(Key::KEY_YELLOW), XBMCK_YELLOW},
+    {static_cast<uint32_t>(Key::KEY_BLUE), XBMCK_BLUE},
+    {static_cast<uint32_t>(Key::KEY_CHANNEL_UP), XBMCK_PAGEUP},
+    {static_cast<uint32_t>(Key::KEY_CHANNEL_DOWN), XBMCK_PAGEDOWN},
+    {static_cast<uint32_t>(Key::KEY_NEXT), XBMCK_MEDIA_NEXT_TRACK},
+    {static_cast<uint32_t>(Key::KEY_SHUFFLE), XBMCK_SHUFFLE},
+    {static_cast<uint32_t>(Key::KEY_BREAK), XBMCK_BREAK},
+    {static_cast<uint32_t>(Key::KEY_PREVIOUS), XBMCK_MEDIA_PREV_TRACK},
 });
 
 constexpr auto logLevelMap = make_map<xkb_log_level, int>({{XKB_LOG_LEVEL_CRITICAL, LOGERROR},
