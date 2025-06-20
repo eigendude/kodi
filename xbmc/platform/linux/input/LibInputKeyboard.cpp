@@ -156,18 +156,20 @@ constexpr auto xkbMap = make_map<xkb_keysym_t, XBMCKey>({
 // Some input event codes are not mapped by XKB. Map these directly using the
 // libinput/evdev keycodes so that common remote control buttons work out of the
 // box.
+namespace KP = KODI::KEYBOARD::PENDING;
+
 constexpr auto evdevMap = make_map<uint32_t, XBMCKey>({
-    {KEY_INFO, XBMCK_INFO},
+    {KP::KEY_INFO, XBMCK_INFO},
     {KEY_PAUSE, XBMCK_PAUSE},
-    {KEY_RED, XBMCK_RED},
-    {KEY_GREEN, XBMCK_GREEN},
-    {KEY_YELLOW, XBMCK_YELLOW},
-    {KEY_BLUE, XBMCK_BLUE},
-    {KEY_CHANNELUP, XBMCK_PAGEUP},
-    {KEY_CHANNELDOWN, XBMCK_PAGEDOWN},
-    {KEY_EPG, XBMCK_EPG},
+    {KP::KEY_RED, XBMCK_RED},
+    {KP::KEY_GREEN, XBMCK_GREEN},
+    {KP::KEY_YELLOW, XBMCK_YELLOW},
+    {KP::KEY_BLUE, XBMCK_BLUE},
+    {KP::KEY_CHANNEL_UP, XBMCK_PAGEUP},
+    {KP::KEY_CHANNEL_DOWN, XBMCK_PAGEDOWN},
+    {KP::KEY_EPG, XBMCK_EPG},
     {KEY_ZOOM, XBMCK_ZOOM},
-    {KEY_SUBTITLE, XBMCK_SUBTITLE},
+    {KP::KEY_SUBTITLE, XBMCK_SUBTITLE},
 });
 
 constexpr auto logLevelMap = make_map<xkb_log_level, int>({{XKB_LOG_LEVEL_CRITICAL, LOGERROR},
