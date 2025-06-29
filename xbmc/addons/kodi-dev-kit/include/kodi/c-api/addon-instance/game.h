@@ -245,16 +245,17 @@ extern "C"
     /// @brief The nominal height, in pixels
     unsigned int nominal_height;
 
+    /// @brief The nominal display aspect ratio (DAR) used to show the video frame
+    ///
+    /// An aspect ratio of 0.0 indicates square pixels, e.i. a DAR of W/H.
+    ///
+    float nominal_display_aspect_ratio;
+
     /// @brief The maximum width, in pixels
     unsigned int max_width;
 
     /// @brief The maximum height, in pixels
     unsigned int max_height;
-
-    /// @brief Aspect ratio used for the video stream
-    ///
-    /// @note If aspect_ratio is <= 0.0, an aspect ratio of nominal_width / nominal_height is assumed
-    float aspect_ratio;
   } ATTR_PACKED game_stream_video_properties;
   //----------------------------------------------------------------------------
 
@@ -270,6 +271,12 @@ extern "C"
 
     /// @brief Video height, in pixels
     unsigned int height;
+
+    /// @brief Display aspect ratio (DAR) to use when showing the video frame
+    ///
+    /// An aspect ratio of 0.0 indicates square pixels, e.i. a DAR of W/H.
+    ///
+    float display_aspect_ratio;
 
     /// @brief Video rotation angle defined by @ref GAME_VIDEO_ROTATION
     GAME_VIDEO_ROTATION rotation;

@@ -26,10 +26,8 @@ bool CRetroEngineStreamSwFramebuffer::OpenStream(RETRO::IRetroPlayerStream* stre
     return false;
   }
 
-  const float pixelAspectRatio =
-      static_cast<float>(nominalWidth) / static_cast<float>(nominalHeight);
-  RETRO::VideoStreamProperties videoProperties{nominalFormat, nominalWidth,  nominalHeight,
-                                               nominalWidth,  nominalHeight, pixelAspectRatio};
+  RETRO::VideoStreamProperties videoProperties{nominalFormat, nominalWidth, nominalHeight,
+                                               0.0f,          nominalWidth, nominalHeight};
 
   if (videoStream->OpenStream(static_cast<const RETRO::StreamProperties&>(videoProperties)))
     m_stream = stream;
@@ -74,7 +72,7 @@ void CRetroEngineStreamSwFramebuffer::AddData(unsigned int width,
   {
     const RETRO::VideoRotation rotation = RETRO::VideoRotation::ROTATION_0;
 
-    RETRO::VideoStreamPacket videoPacket{width, height, rotation, data, size};
+    RETRO::VideoStreamPacket videoPacket{width, height, 0.0f, rotation, data, size};
 
     m_stream->AddStreamData(static_cast<const RETRO::StreamPacket&>(videoPacket));
   }
