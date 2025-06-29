@@ -9,7 +9,7 @@
 #pragma once
 
 #include "GLShader.h"
-#include "rendering/RenderSystem.h"
+#include "rendering/opengl/RenderSystemGLBase.h"
 #include "utils/ColorUtils.h"
 #include "utils/Map.h"
 
@@ -63,7 +63,7 @@ private:
                 "add/remove a mapping?");
 };
 
-class CRenderSystemGL : public CRenderSystemBase
+class CRenderSystemGL : public CRenderSystemGLBase
 {
 public:
   CRenderSystemGL();
@@ -82,26 +82,12 @@ public:
   void SetVSync(bool vsync);
   void ResetVSync() { m_bVsyncInit = false; }
 
-  void SetViewPort(const CRect& viewPort) override;
-  void GetViewPort(CRect& viewPort) override;
-
-  bool ScissorsCanEffectClipping() override;
-  CRect ClipRectToScissorRect(const CRect &rect) override;
-  void SetScissors(const CRect &rect) override;
-  void ResetScissors() override;
-
-  void SetDepthCulling(DEPTH_CULLING culling) override;
-
   void CaptureStateBlock() override;
   void ApplyStateBlock() override;
-
-  void SetCameraPosition(const CPoint &camera, int screenWidth, int screenHeight, float stereoFactor = 0.0f) override;
-
   void SetStereoMode(RENDER_STEREO_MODE mode, RENDER_STEREO_VIEW view) override;
+  
   bool SupportsStereo(RENDER_STEREO_MODE mode) const override;
   bool SupportsNPOT(bool dxt) const override;
-
-  void Project(float &x, float &y, float &z) override;
 
   std::string GetShaderPath(const std::string &filename) override;
 
@@ -127,20 +113,22 @@ public:
 protected:
   virtual void SetVSyncImpl(bool enable) = 0;
   virtual void PresentRenderImpl(bool rendered) = 0;
+  bool CurrentShaderHardwareClipIsPossible() override;
+  float CurrentShaderClipXFactor() const override;
+  float CurrentShaderClipXOffset() const override;
+  float CurrentShaderClipYFactor() const override;
+  float CurrentShaderClipYOffset() const override;
   void CalculateMaxTexturesize();
   void InitialiseShaders();
   void ReleaseShaders();
 
   bool m_bVsyncInit = false;
-  int m_width;
-  int m_height;
 
   std::string m_RenderExtensions;
 
   int m_glslMajor = 0;
   int m_glslMinor = 0;
 
-  GLint m_viewPort[4];
 
   std::map<ShaderMethodGL, std::unique_ptr<CGLShader>> m_pShader;
   ShaderMethodGL m_method = ShaderMethodGL::SM_DEFAULT;

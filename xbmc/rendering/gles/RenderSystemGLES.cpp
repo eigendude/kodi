@@ -319,125 +319,33 @@ void CRenderSystemGLES::ApplyStateBlock()
   glClear(GL_DEPTH_BUFFER_BIT);
 }
 
-void CRenderSystemGLES::SetCameraPosition(const CPoint &camera, int screenWidth, int screenHeight, float stereoFactor)
-{
-  if (!m_bRenderCreated)
-    return;
-
-  CPoint offset = camera - CPoint(screenWidth*0.5f, screenHeight*0.5f);
-
-  float w = (float)m_viewPort[2]*0.5f;
-  float h = (float)m_viewPort[3]*0.5f;
-
-  glMatrixModview->LoadIdentity();
-  glMatrixModview->Translatef(-(w + offset.x - stereoFactor), +(h + offset.y), 0);
-  glMatrixModview->LookAt(0.0f, 0.0f, -2.0f * h, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f);
-  glMatrixModview.Load();
-
-  glMatrixProject->LoadIdentity();
-  glMatrixProject->Frustum( (-w - offset.x)*0.5f, (w - offset.x)*0.5f, (-h + offset.y)*0.5f, (h + offset.y)*0.5f, h, 100*h);
-  glMatrixProject.Load();
-}
-
-void CRenderSystemGLES::Project(float &x, float &y, float &z)
-{
-  GLfloat coordX, coordY, coordZ;
-  if (CMatrixGL::Project(x, y, z, glMatrixModview.Get(), glMatrixProject.Get(), m_viewPort, &coordX, &coordY, &coordZ))
-  {
-    x = coordX;
-    y = (float)(m_viewPort[1] + m_viewPort[3] - coordY);
-    z = 0;
-  }
-}
-
-void CRenderSystemGLES::CalculateMaxTexturesize()
-{
-  // GLES cannot do PROXY textures to determine maximum size,
-  CLog::Log(LOGINFO, "GLES: Maximum texture width: {}", m_maxTextureSize);
-}
-
-void CRenderSystemGLES::GetViewPort(CRect& viewPort)
-{
-  if (!m_bRenderCreated)
-    return;
-
-  viewPort.x1 = m_viewPort[0];
-  viewPort.y1 = m_height - m_viewPort[1] - m_viewPort[3];
-  viewPort.x2 = m_viewPort[0] + m_viewPort[2];
-  viewPort.y2 = viewPort.y1 + m_viewPort[3];
-}
-
-void CRenderSystemGLES::SetViewPort(const CRect& viewPort)
-{
-  if (!m_bRenderCreated)
-    return;
-
-  glScissor((GLint) viewPort.x1, (GLint) (m_height - viewPort.y1 - viewPort.Height()), (GLsizei) viewPort.Width(), (GLsizei) viewPort.Height());
-  glViewport((GLint) viewPort.x1, (GLint) (m_height - viewPort.y1 - viewPort.Height()), (GLsizei) viewPort.Width(), (GLsizei) viewPort.Height());
-  m_viewPort[0] = viewPort.x1;
-  m_viewPort[1] = m_height - viewPort.y1 - viewPort.Height();
-  m_viewPort[2] = viewPort.Width();
-  m_viewPort[3] = viewPort.Height();
-}
-
-bool CRenderSystemGLES::ScissorsCanEffectClipping()
+bool CRenderSystemGLES::CurrentShaderHardwareClipIsPossible()
 {
   if (m_pShader[m_method])
     return m_pShader[m_method]->HardwareClipIsPossible();
-
   return false;
 }
 
-CRect CRenderSystemGLES::ClipRectToScissorRect(const CRect &rect)
+float CRenderSystemGLES::CurrentShaderClipXFactor() const
 {
-  if (!m_pShader[m_method])
-    return CRect();
-  float xFactor = m_pShader[m_method]->GetClipXFactor();
-  float xOffset = m_pShader[m_method]->GetClipXOffset();
-  float yFactor = m_pShader[m_method]->GetClipYFactor();
-  float yOffset = m_pShader[m_method]->GetClipYOffset();
-  return CRect(rect.x1 * xFactor + xOffset,
-               rect.y1 * yFactor + yOffset,
-               rect.x2 * xFactor + xOffset,
-               rect.y2 * yFactor + yOffset);
+  return m_pShader[m_method] ? m_pShader[m_method]->GetClipXFactor() : 0.0f;
 }
 
-void CRenderSystemGLES::SetScissors(const CRect &rect)
+float CRenderSystemGLES::CurrentShaderClipXOffset() const
 {
-  if (!m_bRenderCreated)
-    return;
-  GLint x1 = MathUtils::round_int(static_cast<double>(rect.x1));
-  GLint y1 = MathUtils::round_int(static_cast<double>(rect.y1));
-  GLint x2 = MathUtils::round_int(static_cast<double>(rect.x2));
-  GLint y2 = MathUtils::round_int(static_cast<double>(rect.y2));
-  glScissor(x1, m_height - y2, x2-x1, y2-y1);
+  return m_pShader[m_method] ? m_pShader[m_method]->GetClipXOffset() : 0.0f;
 }
 
-void CRenderSystemGLES::ResetScissors()
+float CRenderSystemGLES::CurrentShaderClipYFactor() const
 {
-  SetScissors(CRect(0, 0, (float)m_width, (float)m_height));
+  return m_pShader[m_method] ? m_pShader[m_method]->GetClipYFactor() : 0.0f;
 }
 
-void CRenderSystemGLES::SetDepthCulling(DEPTH_CULLING culling)
+float CRenderSystemGLES::CurrentShaderClipYOffset() const
 {
-  if (culling == DEPTH_CULLING_OFF)
-  {
-    glDisable(GL_DEPTH_TEST);
-    glDepthMask(GL_FALSE);
-  }
-  else if (culling == DEPTH_CULLING_BACK_TO_FRONT)
-  {
-    glEnable(GL_DEPTH_TEST);
-    glDepthMask(GL_FALSE);
-    glDepthFunc(GL_GEQUAL);
-  }
-  else if (culling == DEPTH_CULLING_FRONT_TO_BACK)
-  {
-    glEnable(GL_DEPTH_TEST);
-    glDepthMask(GL_TRUE);
-    glDepthFunc(GL_GREATER);
-  }
+  return m_pShader[m_method] ? m_pShader[m_method]->GetClipYOffset() : 0.0f;
 }
+
 
 void CRenderSystemGLES::InitialiseShaders()
 {

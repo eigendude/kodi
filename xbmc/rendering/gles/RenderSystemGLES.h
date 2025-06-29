@@ -9,7 +9,7 @@
 #pragma once
 
 #include "GLESShader.h"
-#include "rendering/RenderSystem.h"
+#include "rendering/opengl/RenderSystemGLBase.h"
 #include "utils/ColorUtils.h"
 #include "utils/Map.h"
 
@@ -82,7 +82,7 @@ private:
                 "add/remove a mapping?");
 };
 
-class CRenderSystemGLES : public CRenderSystemBase
+class CRenderSystemGLES : public CRenderSystemGLBase
 {
 public:
   CRenderSystemGLES();
@@ -102,24 +102,10 @@ public:
   void SetVSync(bool vsync);
   void ResetVSync() { m_bVsyncInit = false; }
 
-  void SetViewPort(const CRect& viewPort) override;
-  void GetViewPort(CRect& viewPort) override;
-
-  bool ScissorsCanEffectClipping() override;
-  CRect ClipRectToScissorRect(const CRect &rect) override;
-  void SetScissors(const CRect& rect) override;
-  void ResetScissors() override;
-
-  void SetDepthCulling(DEPTH_CULLING culling) override;
-
   void CaptureStateBlock() override;
   void ApplyStateBlock() override;
 
-  void SetCameraPosition(const CPoint &camera, int screenWidth, int screenHeight, float stereoFactor = 0.0f) override;
-
   bool SupportsStereo(RENDER_STEREO_MODE mode) const override;
-
-  void Project(float &x, float &y, float &z) override;
 
   std::string GetShaderPath(const std::string& filename) override;
 
@@ -147,16 +133,18 @@ public:
 protected:
   virtual void SetVSyncImpl(bool enable) = 0;
   virtual void PresentRenderImpl(bool rendered) = 0;
+  bool CurrentShaderHardwareClipIsPossible() override;
+  float CurrentShaderClipXFactor() const override;
+  float CurrentShaderClipXOffset() const override;
+  float CurrentShaderClipYFactor() const override;
+  float CurrentShaderClipYOffset() const override;
   void CalculateMaxTexturesize();
 
   bool m_bVsyncInit{false};
-  int m_width;
-  int m_height;
 
   std::string m_RenderExtensions;
 
   std::map<ShaderMethodGLES, std::unique_ptr<CGLESShader>> m_pShader;
   ShaderMethodGLES m_method = ShaderMethodGLES::SM_DEFAULT;
 
-  GLint      m_viewPort[4];
 };
