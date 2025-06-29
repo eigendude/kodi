@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2014-2018 Team Kodi
+ *  Copyright (C) 2014-2025 Team Kodi
  *  This file is part of Kodi - https://kodi.tv
  *
  *  SPDX-License-Identifier: GPL-2.0-or-later
@@ -23,11 +23,11 @@ namespace addon
 //==============================================================================
 /// @addtogroup cpp_kodi_addon_game
 ///
-/// To use on Libretro and for stand-alone games or emulators that does not use
-/// the Libretro API.
+/// For use with Libretro cores and with stand-alone games or emulators that do
+/// not use the Libretro API.
 ///
-/// Possible examples could be, Nvidia GameStream via Limelight or WINE capture
-/// could possible through the Game API.
+/// Possible examples include Nvidia GameStream via Limelight or capturing WINE
+/// games through the Game API.
 ///
 
 //==============================================================================
@@ -112,7 +112,7 @@ public:
 /// This class provides the basic game processing system for use as an add-on in
 /// Kodi.
 ///
-/// This class is created at addon by Kodi.
+/// Kodi creates this class in the add-on.
 ///
 class ATTR_DLL_LOCAL CInstanceGame : public IAddonInstance
 {
@@ -127,15 +127,15 @@ public:
   //============================================================================
   /// @brief Game class constructor
   ///
-  /// Used by an add-on that only supports only Game and only in one instance.
+  /// Used by an add-on that supports only one game instance.
   ///
-  /// This class is created at addon by Kodi.
+  /// Kodi creates this class in the add-on.
   ///
   ///
   /// --------------------------------------------------------------------------
   ///
   ///
-  /// **Here's example about the use of this:**
+  /// **Here's an example of how to use this:**
   /// ~~~~~~~~~~~~~{.cpp}
   /// #include <kodi/addon-instance/Game.h>
   /// ...
@@ -180,7 +180,7 @@ public:
   /// @brief **Callback to Kodi Function**\n
   /// The path of the game client being loaded.
   ///
-  /// @return the used game client Dll path
+  /// @return The used game client DLL path
   ///
   /// @remarks Only called from addon itself
   ///
@@ -191,8 +191,8 @@ public:
   /// @brief **Callback to Kodi Function**\n
   /// Paths to proxy DLLs used to load the game client.
   ///
-  /// @param[out] paths vector list to store available dll paths
-  /// @return true if success and dll paths present
+  /// @param[out] paths Vector list to store available DLL paths
+  /// @return true if successful and DLL paths were found
   ///
   /// @remarks Only called from addon itself
   ///
@@ -259,8 +259,8 @@ public:
   /// @brief **Callback to Kodi Function**\n
   /// The extensions in the <extensions> property from addon.xml.
   ///
-  /// @param[out] extensions vector list to store available extension
-  /// @return true if success and extensions present
+  /// @param[out] extensions Vector list to store available extensions
+  /// @return true if successful and extensions were found
   ///
   /// @remarks Only called from addon itself
   ///
@@ -285,7 +285,7 @@ public:
   /// @ingroup cpp_kodi_addon_game
   /// @brief **Game operations**
   ///
-  /// These are mandatory functions for using this addon to get the available
+  /// These are mandatory functions for using this add-on to get the available
   /// channels.
   ///
   ///
@@ -439,7 +439,7 @@ public:
 
       if (m_handle)
       {
-        kodi::Log(ADDON_LOG_INFO, "kodi::addon::CInstanceGame::CStream already becomes reopened");
+        kodi::Log(ADDON_LOG_INFO, "kodi::addon::CInstanceGame::CStream already reopened");
         Close();
       }
 
@@ -537,7 +537,7 @@ public:
 
     //==========================================================================
     /// @ingroup cpp_kodi_addon_game_Operation_CStream
-    /// @brief To check stream open was OK, e.g. after use of constructor
+    /// @brief Check if the stream opened correctly, e.g. after calling the constructor
     ///
     /// @return true if stream was successfully opened
     ///
