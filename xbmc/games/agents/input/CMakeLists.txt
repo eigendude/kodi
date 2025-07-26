@@ -1,6 +1,4 @@
 set(SOURCES AgentController.cpp
-            AgentControllerMap.cpp
-            AgentControllerXML.cpp
             AgentInput.cpp
             AgentInputMap.cpp
             AgentInputMapXML.cpp
@@ -12,8 +10,6 @@ set(SOURCES AgentController.cpp
 )
 
 set(HEADERS AgentController.h
-            AgentControllerMap.h
-            AgentControllerXML.h
             AgentInput.h
             AgentInputMap.h
             AgentInputMapXML.h
