@@ -509,6 +509,11 @@ std::shared_ptr<CRPBaseRenderer> CRPRenderManager::GetRendererForSettings(
 {
   std::shared_ptr<CRPBaseRenderer> renderer;
 
+  // Stale renderers may exist after stream reconfiguration. Clean them up before
+  // creating or using new renderers to ensure GL resources are deleted while
+  // their original context is still active.
+  m_staleRenderers.clear();
+
   {
     std::unique_lock lock(m_stateMutex);
     if (m_state == RENDER_STATE::UNCONFIGURED)
