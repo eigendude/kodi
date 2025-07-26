@@ -71,6 +71,13 @@ public:
    */
   virtual std::shared_ptr<IRenderBufferPool> GetPtr() { return shared_from_this(); }
 
+  /*!
+   * \brief Release resources tied to the rendering context
+   *
+   * This function is called when the render context is being destroyed.
+   * Implementations should free any context-specific resources so that the
+   * pool can be safely recreated.
+   */
   virtual void DestroyContext() {}
 };
 } // namespace RETRO
