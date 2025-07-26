@@ -173,7 +173,7 @@ void CRPRendererOpenGL::DrawBlackBars()
   m_context.EnableGUIShader(GL_SHADER_METHOD::DEFAULT);
   GLint uniCol = m_context.GUIShaderGetUniCol();
 
-  glUniform4f(uniCol, m_clearColour / 255.0f, m_clearColour / 255.0f, m_clearColour / 255.0f, 1.0f);
+  glUniform4f(uniCol, m_clearColour, m_clearColour, m_clearColour, 1.0f);
 
   // top quad
   if (m_rotatedDestCoords[0].y > 0.0f)

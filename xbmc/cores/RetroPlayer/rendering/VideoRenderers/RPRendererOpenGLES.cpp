@@ -142,7 +142,7 @@ void CRPRendererOpenGLES::DrawBlackBars()
   GLint uniCol = m_context.GUIShaderGetUniCol();
   GLint depthLoc = m_context.GUIShaderGetDepth();
 
-  glUniform4f(uniCol, m_clearColour / 255.0f, m_clearColour / 255.0f, m_clearColour / 255.0f, 1.0f);
+  glUniform4f(uniCol, m_clearColour, m_clearColour, m_clearColour, 1.0f);
   glUniform1f(depthLoc, -1.0f);
 
   // top quad
