@@ -92,7 +92,8 @@ void CRPRenderManager::Deinitialize()
   }
   m_savestateBuffers.clear();
 
-  m_renderers.clear();
+  // It might not be safe to clear renderers off-thread, so defer cleanup
+  m_staleRenderers = std::move(m_renderers);
 
   m_state = RENDER_STATE::UNCONFIGURED;
 }
@@ -480,6 +481,9 @@ void CRPRenderManager::RenderInternal(const std::shared_ptr<CRPBaseRenderer>& re
                                       uint32_t alpha)
 {
   CSingleExit exitLock(m_renderContext.GraphicsMutex());
+
+  // Clean up any stale renderers
+  m_staleRenderers.clear();
 
   if (renderBuffer != nullptr)
   {
