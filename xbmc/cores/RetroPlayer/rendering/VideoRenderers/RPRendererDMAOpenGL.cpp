@@ -16,6 +16,7 @@
 #include "cores/RetroPlayer/shaders/gl/ShaderTextureGL.h"
 #include "guilib/TextureFormats.h"
 #include "guilib/TextureGL.h"
+#include "guilib/NonOwningGLTexture.h"
 #include "utils/BufferObjectFactory.h"
 #include "utils/GLUtils.h"
 
@@ -70,10 +71,11 @@ void CRPRendererDMAOpenGL::Render(uint8_t alpha)
   {
     // We can't copy or move CGLTexture, so construct source/target in-place
     rbTextures = new RenderBufferTextures{
-        // Source texture
-        std::make_shared<CGLTexture>(static_cast<unsigned int>(renderBuffer->GetWidth()),
-                                     static_cast<unsigned int>(renderBuffer->GetHeight()),
-                                     XB_FMT_RGB8, renderBuffer->TextureID()),
+        // Source texture (do not delete underlying render buffer texture)
+        std::make_shared<CNonOwningGLTexture>(
+            static_cast<unsigned int>(renderBuffer->GetWidth()),
+            static_cast<unsigned int>(renderBuffer->GetHeight()), XB_FMT_RGB8,
+            renderBuffer->TextureID()),
         // Target texture
         std::make_shared<CGLTexture>(static_cast<unsigned int>(m_context.GetScreenWidth()),
                                      static_cast<unsigned int>(m_context.GetScreenHeight())),
