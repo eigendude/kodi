@@ -66,9 +66,14 @@ CRPRendererOpenGLES::CRPRendererOpenGLES(const CRenderSettings& renderSettings,
 
 CRPRendererOpenGLES::~CRPRendererOpenGLES()
 {
+  // Clean-up can affect the OpenGL state. Preserve the state so the GUI
+  // renderer isn't left with unexpected bindings.
+  m_context.CaptureStateBlock();
   glDeleteBuffers(1, &m_mainIndexVBO);
   glDeleteBuffers(1, &m_mainVertexVBO);
   glDeleteBuffers(1, &m_blackbarsVertexVBO);
+
+  m_context.ApplyStateBlock();
 }
 
 void CRPRendererOpenGLES::RenderInternal(bool clear, uint8_t alpha)

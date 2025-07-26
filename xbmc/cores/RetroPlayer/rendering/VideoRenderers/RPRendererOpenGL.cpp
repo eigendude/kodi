@@ -102,12 +102,17 @@ CRPRendererOpenGL::CRPRendererOpenGL(const CRenderSettings& renderSettings,
 
 CRPRendererOpenGL::~CRPRendererOpenGL()
 {
+  // Deleting vertex objects can modify the current OpenGL state. Capture and
+  // restore the state around cleanup to prevent side effects in the GUI.
+  m_context.CaptureStateBlock();
   glDeleteBuffers(1, &m_mainIndexVBO);
   glDeleteBuffers(1, &m_mainVertexVBO);
   glDeleteBuffers(1, &m_blackbarsVertexVBO);
 
   glDeleteVertexArrays(1, &m_mainVAO);
   glDeleteVertexArrays(1, &m_blackbarsVAO);
+
+  m_context.ApplyStateBlock();
 }
 
 void CRPRendererOpenGL::RenderInternal(bool clear, uint8_t alpha)
