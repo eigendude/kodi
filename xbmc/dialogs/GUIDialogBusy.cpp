@@ -80,14 +80,19 @@ bool CGUIDialogBusy::WaitOnEvent(CEvent &event, unsigned int displaytime /* = 10
     CGUIDialogBusy* dialog = CServiceBroker::GetGUI()->GetWindowManager().GetWindow<CGUIDialogBusy>(WINDOW_DIALOG_BUSY);
     if (dialog)
     {
-      if (dialog->IsDialogRunning())
+      bool dialogAlreadyRunning = dialog->IsDialogRunning();
+      // If another busy dialog is already active reuse it instead of throwing
+      // an exception which would crash Kodi. This avoids issues when two
+      // asynchronous tasks show the busy spinner at the same time.
+      if (dialogAlreadyRunning)
       {
-        CLog::Log(LOGFATAL, "Logic error due to two concurrent busydialogs, this is a known issue. "
-                            "The application will exit.");
-        throw std::logic_error("busy dialog already running");
+        CLog::Log(LOGDEBUG,
+                  "Busy dialog already running - reusing existing dialog");
       }
-
-      dialog->Open();
+      else
+      {
+        dialog->Open();
+      }
 
       while (!event.Wait(1ms))
       {
@@ -99,7 +104,8 @@ bool CGUIDialogBusy::WaitOnEvent(CEvent &event, unsigned int displaytime /* = 10
         }
       }
 
-      dialog->Close(true);
+      if (!dialogAlreadyRunning)
+        dialog->Close(true);
     }
   }
   return !cancelled;
