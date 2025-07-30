@@ -56,4 +56,5 @@
   <addon optional="true">game.shader.presets</addon>
   <addon optional="true">inputstream.adaptive</addon>
   <addon optional="true">peripheral.joystick</addon>
+  <addon optional="true">screensaver.matrixtrails</addon>
 </addons>
