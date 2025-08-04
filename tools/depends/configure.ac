@@ -264,6 +264,15 @@ case $host in
         platform_cc=armv7a-linux-androideabi$use_ndk_api-clang
         platform_cxx=armv7a-linux-androideabi$use_ndk_api-clang++
     esac
+
+    # NDK r26 and later name the compilers with the API level (e.g. aarch64-linux-android24-clang).
+    # Fall back to the legacy names without the level when the new binaries are missing
+    if test ! -x "$use_toolchain/bin/$platform_cc"; then
+      platform_cc=$use_host-clang
+    fi
+    if test ! -x "$use_toolchain/bin/$platform_cxx"; then
+      platform_cxx=$use_host-clang++
+    fi
   ;;
   *darwin*)
     # Again we set CC to find toolchain path for use in AC_PATH_TOOL macros further down
