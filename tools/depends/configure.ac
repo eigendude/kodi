@@ -289,7 +289,16 @@ AC_PATH_TOOL([AS], [${platform_tool_prefix}as],, $PATH_FOR_HOST)
 AC_PATH_TOOL([NM], [${platform_tool_prefix}nm],, $PATH_FOR_HOST)
 AC_PATH_TOOL([OBJDUMP], [${platform_tool_prefix}objdump],, $PATH_FOR_HOST)
 AC_PATH_TOOL([CC],[$platform_cc],,$PATH_FOR_HOST)
+if test "x$CC" = "x"; then
+  AC_PATH_TOOL([CC],[$use_host-clang],,$PATH_FOR_HOST)
+fi
 AC_PATH_TOOL([CXX],[$platform_cxx],,$PATH_FOR_HOST)
+if test "x$CXX" = "x"; then
+  AC_PATH_TOOL([CXX],[$use_host-clang++],,$PATH_FOR_HOST)
+fi
+if test "x$CC" = "x" || test "x$CXX" = "x"; then
+  AC_MSG_ERROR([No suitable Android clang compiler found. Check NDK path and API level])
+fi
 
 if test "x$LD" = "x"; then
   AC_MSG_ERROR(No linker found with name ${use_linker}. You may want to provide using --with-linker=<linker>)
