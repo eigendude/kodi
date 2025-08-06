@@ -19,6 +19,8 @@ namespace
 {
 // Default FPS value in case fps is 0 (which shouldn't happen)
 constexpr double DEFAULT_FPS = 60.0;
+// Duration to sleep while the game loop is paused
+constexpr auto PAUSE_SLEEP = 5s;
 } // namespace
 
 CGameLoop::CGameLoop(IGameLoopCallback* callback, double fps)
@@ -53,7 +55,7 @@ void CGameLoop::Stop()
 void CGameLoop::SetSpeed(double speedFactor)
 {
   // Set the new speed factor
-  m_speedFactor = speedFactor;
+  m_speedFactor.store(speedFactor);
 
   // Wake up the thread to apply the new speed immediately
   m_sleepEvent.Set();
@@ -72,20 +74,21 @@ void CGameLoop::Process(void)
   {
     // If the speed factor has changed, reset the last frame time and update
     // the loop speed factor
-    if (m_loopSpeedFactor != m_speedFactor)
+    const double speed = m_speedFactor.load();
+    if (m_loopSpeedFactor != speed)
     {
       // Reset last frame time
       m_lastFrameUs = std::chrono::microseconds::zero();
 
       // Update loop speed factor
-      m_loopSpeedFactor = m_speedFactor;
+      m_loopSpeedFactor = speed;
     }
 
     // If the game is paused, wait for 5000 milliseconds before checking again
     if (m_loopSpeedFactor == 0.0)
     {
-      // Wait for a long duration (5 seconds) if paused
-      m_sleepEvent.Wait(5000ms);
+      // Wait for a long duration if paused
+      m_sleepEvent.Wait(PAUSE_SLEEP);
     }
     else
     {
@@ -126,11 +129,8 @@ std::chrono::microseconds CGameLoop::FrameTimeUs() const
 {
   // Calculate the duration of one frame in microseconds based on the FPS and
   // speed factor
-  if (m_loopSpeedFactor != 0.0)
-    return std::chrono::duration_cast<std::chrono::microseconds>(1s / m_fps /
-                                                                 std::abs(m_loopSpeedFactor));
-  else
-    return std::chrono::duration_cast<std::chrono::microseconds>(1s / m_fps);
+  const double factor = m_loopSpeedFactor != 0.0 ? std::abs(m_loopSpeedFactor) : 1.0;
+  return std::chrono::duration_cast<std::chrono::microseconds>(1s / m_fps / factor);
 }
 
 std::chrono::microseconds CGameLoop::NowUs() const

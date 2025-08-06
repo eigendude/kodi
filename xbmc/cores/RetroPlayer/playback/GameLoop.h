@@ -74,7 +74,7 @@ public:
 
   double FPS() const { return m_fps; }
 
-  double GetSpeed() const { return m_speedFactor; }
+  double GetSpeed() const { return m_speedFactor.load(); }
   void SetSpeed(double speedFactor);
   void PauseAsync();
 
