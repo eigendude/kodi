@@ -3,10 +3,11 @@ DEPS =../../Makefile.include Makefile ../../download-files.include
 
 # lib name, version
 LIBNAME=libxkbcommon
-VERSION=1.5.0
+VERSION=1.11.0
 SOURCE=$(LIBNAME)-$(VERSION)
 ARCHIVE=$(SOURCE).tar.xz
-SHA512=bbba6665f052c04c7450413cc5e2badd6bfd41326b0e4c60e3ec01d730cae695fd34ce2662b8a91ece7a76b974a0ea330f7462dd5d2db148b0d0da26264ced9c
+SHA512=f434c816c1212bd27e259bba22b0db7de7c58a0f22a1d4aef387515d9fb9595d2f0e515642a287a6f2791bd439ccf771771b76780ab4f564172c04c4d6a48b11
+FULL_URL=https://github.com/xkbcommon/libxkbcommon/archive/refs/tags/xkbcommon-$(VERSION).tar.gz
 include ../../download-files.include
 
 # configuration settings
