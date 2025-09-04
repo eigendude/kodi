@@ -154,4 +154,10 @@ AddonRepoUpdateMode CAddonSystemSettings::GetAddonRepoUpdateMode() const
       CSettings::SETTING_ADDONS_UPDATEMODE);
   return static_cast<AddonRepoUpdateMode>(updateMode);
 }
+
+bool CAddonSystemSettings::IsSilentInstallAllowed() const
+{
+  return CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
+      CSettings::SETTING_ADDONS_ENABLE_SILENT_INSTALLATION);
 }
+} // namespace ADDON

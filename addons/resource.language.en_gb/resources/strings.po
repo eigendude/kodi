@@ -22376,7 +22376,19 @@ msgctxt "#36642"
 msgid "No orphaned add-ons to remove."
 msgstr ""
 
-#empty strings from id 36643 to 36898
+#. Label for enabling silent add-on installation
+#: system/settings/settings.xml
+msgctxt "#36643"
+msgid "Enable silent installation"
+msgstr ""
+
+#. Description of enabling silent add-on installation
+#: system/settings/settings.xml
+msgctxt "#36644"
+msgid "Allow add-ons to be installed without user prompts."
+msgstr ""
+
+#empty strings from id 36645 to 36898
 
 #. Description of setting with label #729 "Enable SSL"
 #: system/settings/settings.xml

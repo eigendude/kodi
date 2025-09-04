@@ -52,10 +52,24 @@ using KODI::MESSAGING::HELPERS::DialogResponse;
  */
 static int InstallAddon(const std::vector<std::string>& params)
 {
+  if (params.empty())
+  {
+    CLog::Log(LOGERROR, "InstallAddon called with no arguments");
+    return -1;
+  }
+
   const std::string& addonid = params[0];
+  const bool silent = params.size() > 1 && StringUtils::EqualsNoCase(params[1], "silent");
+
+  if (silent && !CAddonSystemSettings::GetInstance().IsSilentInstallAllowed())
+  {
+    CLog::Log(LOGERROR, "InstallAddon: silent install of {} denied (disabled in settings)", addonid);
+    return -1;
+  }
 
   AddonPtr addon;
-  CAddonInstaller::GetInstance().InstallModal(addonid, addon, InstallModalPrompt::CHOICE_YES);
+  CAddonInstaller::GetInstance().InstallModal(
+      addonid, addon, silent ? InstallModalPrompt::CHOICE_NO : InstallModalPrompt::CHOICE_YES);
 
   return 0;
 }

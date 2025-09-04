@@ -474,6 +474,7 @@ public:
   static constexpr auto SETTING_ADDONS_MANAGE_DEPENDENCIES = "addons.managedependencies";
   static constexpr auto SETTING_ADDONS_REMOVE_ORPHANED_DEPENDENCIES =
       "addons.removeorphaneddependencies";
+  static constexpr auto SETTING_ADDONS_ENABLE_SILENT_INSTALLATION = "addons.enablesilentinstall";
   static constexpr auto SETTING_GENERAL_ADDONFOREIGNFILTER = "general.addonforeignfilter";
   static constexpr auto SETTING_GENERAL_ADDONBROKENFILTER = "general.addonbrokenfilter";
   static constexpr auto SETTING_SOURCE_VIDEOS = "source.videos";

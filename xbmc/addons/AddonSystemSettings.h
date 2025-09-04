@@ -67,6 +67,13 @@ public:
    */
   bool UnsetActive(const AddonInfoPtr& addon) const;
 
+  /*!
+   * Determines if silent add-on installation is enabled.
+   *
+   * @return true if silent installation is allowed
+   */
+  bool IsSilentInstallAllowed() const;
+
 private:
   CAddonSystemSettings();
   CAddonSystemSettings(const CAddonSystemSettings&) = delete;
