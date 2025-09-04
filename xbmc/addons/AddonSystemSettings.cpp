@@ -44,7 +44,8 @@ CAddonSystemSettings::CAddonSystemSettings()
         {AddonType::WEB_INTERFACE, CSettings::SETTING_SERVICES_WEBSKIN},
         {AddonType::VISUALIZATION, CSettings::SETTING_MUSICPLAYER_VISUALISATION},
     }
-{}
+{
+}
 
 CAddonSystemSettings& CAddonSystemSettings::GetInstance()
 {
@@ -92,7 +93,8 @@ void CAddonSystemSettings::OnSettingChanged(const std::shared_ptr<const CSetting
           CSettings::SETTING_ADDONS_ALLOW_UNKNOWN_SOURCES) &&
       ShowYesNoDialogText(19098, 36618) != DialogResponse::CHOICE_YES)
   {
-    CServiceBroker::GetSettingsComponent()->GetSettings()->SetBool(CSettings::SETTING_ADDONS_ALLOW_UNKNOWN_SOURCES, false);
+    CServiceBroker::GetSettingsComponent()->GetSettings()->SetBool(
+        CSettings::SETTING_ADDONS_ALLOW_UNKNOWN_SOURCES, false);
   }
 }
 
@@ -101,7 +103,8 @@ bool CAddonSystemSettings::GetActive(AddonType type, AddonPtr& addon) const
   auto it = m_activeSettings.find(type);
   if (it != m_activeSettings.end())
   {
-    auto settingValue = CServiceBroker::GetSettingsComponent()->GetSettings()->GetString(it->second);
+    auto settingValue =
+        CServiceBroker::GetSettingsComponent()->GetSettings()->GetString(it->second);
     return CServiceBroker::GetAddonMgr().GetAddon(settingValue, addon, type,
                                                   OnlyEnabled::CHOICE_YES);
   }
@@ -131,7 +134,8 @@ bool CAddonSystemSettings::UnsetActive(const AddonInfoPtr& addon) const
   if (it == m_activeSettings.end())
     return true;
 
-  auto setting = std::static_pointer_cast<CSettingString>(CServiceBroker::GetSettingsComponent()->GetSettings()->GetSetting(it->second));
+  auto setting = std::static_pointer_cast<CSettingString>(
+      CServiceBroker::GetSettingsComponent()->GetSettings()->GetSetting(it->second));
   if (setting->GetValue() != addon->ID())
     return true;
 
@@ -154,4 +158,10 @@ AddonRepoUpdateMode CAddonSystemSettings::GetAddonRepoUpdateMode() const
       CSettings::SETTING_ADDONS_UPDATEMODE);
   return static_cast<AddonRepoUpdateMode>(updateMode);
 }
+
+bool CAddonSystemSettings::IsSilentInstallAllowed() const
+{
+  return CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(
+      CSettings::SETTING_ADDONS_ENABLE_SILENT_INSTALLATION);
 }
+} // namespace ADDON

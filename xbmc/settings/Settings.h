@@ -25,8 +25,10 @@ class TiXmlNode;
  setting types.
  \sa CSettingsManager
  */
-class CSettings : public CSettingsBase, public CSettingCreator, public CSettingControlCreator
-                , private ISubSettings
+class CSettings : public CSettingsBase,
+                  public CSettingCreator,
+                  public CSettingControlCreator,
+                  private ISubSettings
 {
 public:
   static constexpr auto SETTING_LOOKANDFEEL_SKIN = "lookandfeel.skin";
@@ -425,7 +427,8 @@ public:
   static constexpr auto SETTING_INPUT_APPLEREMOTEMODE = "input.appleremotemode";
   static constexpr auto SETTING_INPUT_APPLEREMOTEALWAYSON = "input.appleremotealwayson";
   static constexpr auto SETTING_INPUT_APPLEREMOTESEQUENCETIME = "input.appleremotesequencetime";
-  static constexpr auto SETTING_INPUT_SIRIREMOTEIDLETIMERENABLED = "input.siriremoteidletimerenabled";
+  static constexpr auto SETTING_INPUT_SIRIREMOTEIDLETIMERENABLED =
+      "input.siriremoteidletimerenabled";
   static constexpr auto SETTING_INPUT_SIRIREMOTEIDLETIME = "input.siriremoteidletime";
   static constexpr auto SETTING_INPUT_SIRIREMOTEHORIZONTALSENSITIVITY =
       "input.siriremotehorizontalsensitivity";
@@ -474,6 +477,7 @@ public:
   static constexpr auto SETTING_ADDONS_MANAGE_DEPENDENCIES = "addons.managedependencies";
   static constexpr auto SETTING_ADDONS_REMOVE_ORPHANED_DEPENDENCIES =
       "addons.removeorphaneddependencies";
+  static constexpr auto SETTING_ADDONS_ENABLE_SILENT_INSTALLATION = "addons.enablesilentinstall";
   static constexpr auto SETTING_GENERAL_ADDONFOREIGNFILTER = "general.addonforeignfilter";
   static constexpr auto SETTING_GENERAL_ADDONBROKENFILTER = "general.addonbrokenfilter";
   static constexpr auto SETTING_SOURCE_VIDEOS = "source.videos";
@@ -546,7 +550,7 @@ public:
    \param file Path to an XML file containing setting values
    \return True if the setting values were successfully loaded, false otherwise
    */
-  bool Load(const std::string &file);
+  bool Load(const std::string& file);
   /*!
   \brief Loads setting values from the given XML element.
 
@@ -561,7 +565,7 @@ public:
    \param hide Whether to hide the loaded settings or not
    \return True if the setting values were successfully loaded, false otherwise
    */
-  bool LoadHidden(const TiXmlElement *root) { return CSettingsBase::LoadHiddenValuesFromXml(root); }
+  bool LoadHidden(const TiXmlElement* root) { return CSettingsBase::LoadHiddenValuesFromXml(root); }
 
   /*!
    \brief Saves the setting values to the given (XML) file.
@@ -628,7 +632,7 @@ private:
   // implementation of ISubSettings
   bool Load(const TiXmlNode* settings) override;
 
-  bool Initialize(const std::string &file);
+  bool Initialize(const std::string& file);
   bool Reset();
 
   std::set<ISubSettings*> m_subSettings;

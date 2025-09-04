@@ -52,14 +52,21 @@ using KODI::MESSAGING::HELPERS::DialogResponse;
  */
 static int InstallAddon(const std::vector<std::string>& params)
 {
-  const std::string& addonid = params[0];
-  const bool silent = StringUtils::EqualsNoCase(params[1], "silent");
+  if (params.empty())
+    return -1;
 
-  // Verify permission for silent installation, and fail if "silent" is true and permission is not granted
-  // TOTO
+  const std::string& addonid = params[0];
+  const bool silent = params.size() > 1 && StringUtils::EqualsNoCase(params[1], "silent");
+
+  if (silent && !CAddonSystemSettings::GetInstance().IsSilentInstallAllowed())
+  {
+    CLog::Log(LOGERROR, "InstallAddon: silent install of {} denied (disabled)", addonid);
+    return -1;
+  }
 
   AddonPtr addon;
-  CAddonInstaller::GetInstance().InstallModal(addonid, addon, silent ? InstallModalPrompt::CHOICE_YES : InstallModalPrompt::CHOICE_NO);
+  CAddonInstaller::GetInstance().InstallModal(
+      addonid, addon, silent ? InstallModalPrompt::CHOICE_NO : InstallModalPrompt::CHOICE_YES);
 
   return 0;
 }
@@ -225,7 +232,7 @@ static int RunAddon(const std::vector<std::string>& params)
  *           Set the OnlyApple template parameter to true to only attempt
  *           execution of applescripts.
  */
-template<bool OnlyApple=false>
+template<bool OnlyApple = false>
 static int RunScript(const std::vector<std::string>& params)
 {
 #if defined(TARGET_DARWIN_OSX)
@@ -508,20 +515,23 @@ static int UpdateLocals(const std::vector<std::string>& params)
 CBuiltins::CommandMap CAddonBuiltins::GetOperations() const
 {
   return {
-           {"addon.default.opensettings", {"Open a settings dialog for the default addon of the given type", 1, OpenDefaultSettings}},
-           {"addon.default.set",          {"Open a select dialog to allow choosing the default addon of the given type", 1, SetDefaultAddon}},
-           {"addon.opensettings",         {"Open a settings dialog for the addon of the given id", 1, AddonSettings}},
-           {"enableaddon",                {"Enables the specified plugin/script", 1, EnableAddon}},
-           {"installaddon",               {"Install the specified plugin/script", 1, InstallAddon}},
-           {"installfromzip",             { "Open the install from zip dialog", 0, InstallFromZip}},
-           {"runaddon",                   {"Run the specified plugin/script", 1, RunAddon}},
+      {"addon.default.opensettings",
+       {"Open a settings dialog for the default addon of the given type", 1, OpenDefaultSettings}},
+      {"addon.default.set",
+       {"Open a select dialog to allow choosing the default addon of the given type", 1,
+        SetDefaultAddon}},
+      {"addon.opensettings",
+       {"Open a settings dialog for the addon of the given id", 1, AddonSettings}},
+      {"enableaddon", {"Enables the specified plugin/script", 1, EnableAddon}},
+      {"installaddon", {"Install the specified plugin/script", 1, InstallAddon}},
+      {"installfromzip", {"Open the install from zip dialog", 0, InstallFromZip}},
+      {"runaddon", {"Run the specified plugin/script", 1, RunAddon}},
 #ifdef TARGET_DARWIN
-           {"runapplescript",             {"Run the specified AppleScript command", 1, RunScript<true>}},
+      {"runapplescript", {"Run the specified AppleScript command", 1, RunScript<true>}},
 #endif
-           {"runplugin",                  {"Run the specified plugin", 1, RunPlugin}},
-           {"runscript",                  {"Run the specified script", 1, RunScript}},
-           {"stopscript",                 {"Stop the script by ID or path, if running", 1, StopScript}},
-           {"updateaddonrepos",           {"Check add-on repositories for updates", 0, UpdateRepos}},
-           {"updatelocaladdons",          {"Check for local add-on changes", 0, UpdateLocals}}
-         };
+      {"runplugin", {"Run the specified plugin", 1, RunPlugin}},
+      {"runscript", {"Run the specified script", 1, RunScript}},
+      {"stopscript", {"Stop the script by ID or path, if running", 1, StopScript}},
+      {"updateaddonrepos", {"Check add-on repositories for updates", 0, UpdateRepos}},
+      {"updatelocaladdons", {"Check for local add-on changes", 0, UpdateLocals}}};
 }

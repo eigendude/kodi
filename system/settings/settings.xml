@@ -3727,6 +3727,11 @@
           <level>2</level>
           <control type="button" format="action" />
         </setting>
+        <setting id="addons.enablesilentinstall" type="boolean" label="36643" help="36644">
+          <level>0</level>
+          <default>false</default>
+          <control type="toggle" />
+        </setting>
         <setting id="addons.unknownsources" type="boolean" label="36615" help="36616">
           <level>0</level>
           <default>false</default>

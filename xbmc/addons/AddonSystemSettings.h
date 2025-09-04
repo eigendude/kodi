@@ -53,7 +53,6 @@ public:
   */
   int GetAddonAutoUpdateMode() const;
 
-
   /*!
    * Gets Kodi preferred addon repository update mode
    *
@@ -67,6 +66,13 @@ public:
    */
   bool UnsetActive(const AddonInfoPtr& addon) const;
 
+  /*!
+   * Determines if silent add-on installation is enabled.
+   *
+   * @return true if silent installation is allowed
+   */
+  bool IsSilentInstallAllowed() const;
+
 private:
   CAddonSystemSettings();
   CAddonSystemSettings(const CAddonSystemSettings&) = delete;
@@ -75,4 +81,4 @@ private:
 
   const std::map<AddonType, std::string> m_activeSettings;
 };
-};
+}; // namespace ADDON
