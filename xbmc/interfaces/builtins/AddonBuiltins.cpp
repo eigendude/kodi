@@ -53,9 +53,13 @@ using KODI::MESSAGING::HELPERS::DialogResponse;
 static int InstallAddon(const std::vector<std::string>& params)
 {
   const std::string& addonid = params[0];
+  const bool silent = StringUtils::EqualsNoCase(params[1], "silent");
+
+  // Verify permission for silent installation, and fail if "silent" is true and permission is not granted
+  // TOTO
 
   AddonPtr addon;
-  CAddonInstaller::GetInstance().InstallModal(addonid, addon, InstallModalPrompt::CHOICE_YES);
+  CAddonInstaller::GetInstance().InstallModal(addonid, addon, silent ? InstallModalPrompt::CHOICE_YES : InstallModalPrompt::CHOICE_NO);
 
   return 0;
 }

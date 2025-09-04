@@ -38,8 +38,8 @@ def enable_addon(addon_id):
         log(f"Failed to enable {addon_id}: {e}", xbmc.LOGERROR)
 
 def install_addon(addon_id, timeout_sec=120):
-    # Trigger install from repository
-    xbmc.executebuiltin(f"InstallAddon({addon_id})")
+    # Trigger silent install from repository
+    xbmc.executebuiltin(f"InstallAddon({addon_id},silent)")
     log(f"Requested installation for {addon_id}")
 
     monitor = xbmc.Monitor()
