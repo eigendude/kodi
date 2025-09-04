@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<addon id="service.weather.installer"
+       name="Weather Installer"
+       version="1.0.0"
+       provider-name="ChatGPT">
+  <requires>
+    <import addon="xbmc.python" version="3.0.0"/>
+  </requires>
+  <extension point="xbmc.service" library="service.py" start="startup"/>
+  <extension point="xbmc.addon.metadata">
+    <summary lang="en_GB">Installs the Open-Meteo weather add-on at Kodi startup.</summary>
+    <description lang="en_GB">Checks if Open-Meteo (weather.openmeteo) is installed and enabled. If missing, it installs it from the official Kodi repository. Handles the offline case by waiting for connectivity for a short period before giving up.</description>
+    <license>MIT</license>
+    <platform>all</platform>
+    <source>https://kodi.tv/addons/omega/weather.openmeteo/</source>
+    <assets>
+      <icon>resources/icon.png</icon>
+    </assets>
+  </extension>
+</addon>
