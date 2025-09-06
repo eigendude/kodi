@@ -24,6 +24,7 @@ from oasis.windows.ventura_hud import VenturaHUD
 HOME_WINDOW_ID: int = 10000  # WINDOW_HOME
 
 # Window properties
+WINDOW_PROPERTY_ADDON: str = "Addon.ID"
 WINDOW_PROPERTY_HOSTNAME: str = "hostname"
 
 
@@ -31,6 +32,7 @@ class OasisService:
     @staticmethod
     def run(hostname: str) -> None:
         addon: xbmcaddon.Addon = xbmcaddon.Addon()
+        addon_id = addon.getAddonInfo("id")
         addon_path: str = addon.getAddonInfo("path")
 
         xbmc.log(f"Running OASIS service on {hostname}", level=xbmc.LOGDEBUG)
@@ -48,10 +50,17 @@ class OasisService:
 
         if HAS_CAMERA:
             window = CameraView("CameraView1.xml", addon_path, "default", "1080i", False)
+        elif hostname == "patio":
+            window = SwellPatrolHUD("PatioHUD.xml", addon_path, "default", "1080i", False)
         else:
             window = SwellPatrolHUD("VideoHUD.xml", addon_path, "default", "1080i", False)
 
+        # Set the addon ID property for the window
+        window.setProperty(WINDOW_PROPERTY_ADDON, addon_id)
+
         window.doModal()
+
+        # Small delay to avoid issues when closing the window
         xbmc.sleep(100)
         del window
 

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<window>
+	<controls>
+		<control type="videowindow">
+			<description>Video background</description>
+		</control>
+		<control type="grouplist">
+			<visible>!String.IsEmpty(Weather.Data(Daily.IsFetched))</visible>
+			<orientation>vertical</orientation>
+			<itemgap>-80</itemgap>
+			<control type="group">
+				<description>Weather info</description>
+				<height>420</height>
+				<control type="label">
+					<top>194</top>
+					<height>24</height>
+					<width>300</width>
+					<right>110</right>
+					<align>right</align>
+					<aligny>center</aligny>
+					<font>WeatherTemp</font>
+					<label>$INFO[Weather.Data(Current.Temperature)]</label>
+					<shadowcolor>text_shadow</shadowcolor>
+				</control>
+				<control type="grouplist">
+					<top>140</top>
+					<left>120</left>
+					<right>800</right>
+					<align>justify</align>
+					<orientation>horizontal</orientation>
+					<include content="WeatherIconMyWeather">
+						<param name="label" value="Weather.Data(Current.Wind)" />
+						<param name="texture" value="icons/weather/wind.png" />
+						<param name="header" value="$LOCALIZE[404]" />
+					</include>
+					<include content="WeatherIconMyWeather">
+						<param name="label" value="Weather.Data(Current.Humidity)" />
+						<param name="texture" value="icons/weather/humidity.png" />
+						<param name="header" value="$LOCALIZE[406]" />
+					</include>
+					<include content="WeatherIconMyWeather">
+						<param name="label" value="Weather.Data(Current.Precipitation)" />
+						<param name="texture" value="icons/weather/rain.png" />
+						<param name="header" value="$LOCALIZE[33021]" />
+					</include>
+					<include content="WeatherIconMyWeather">
+						<param name="label" value="Weather.Data(Today.Sunrise)" />
+						<param name="texture" value="icons/weather/sunrise.png" />
+						<param name="header" value="$LOCALIZE[405]" />
+					</include>
+					<include content="WeatherIconMyWeather">
+						<param name="label" value="Weather.Data(Today.Sunset)" />
+						<param name="texture" value="icons/weather/sunset.png" />
+						<param name="header" value="$LOCALIZE[403]" />
+					</include>
+				</control>
+			</control>
+			<include content="WeatherWidget">
+				<param name="content_include" value="DailyItems" />
+				<param name="visible" value="!String.IsEmpty(Weather.Data(Daily.IsFetched))" />
+				<param name="width" value="258" />
+			</include>
+			<include content="WeatherWidget">
+				<param name="content_include" value="HourlyItems" />
+				<param name="visible" value="!String.IsEmpty(Weather.Data(Hourly.IsFetched))" />
+				<param name="width" value="258" />
+			</include>
+		</control>=
+	</controls>
+</window>
