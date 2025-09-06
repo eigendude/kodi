@@ -48,8 +48,10 @@ class OasisService:
 
         if HAS_CAMERA:
             window = CameraView("CameraView1.xml", addon_path, "default", "1080i", False)
+        elif hostname == "patio":
+            window = SwellPatrolHUD("PatioHUD.xml", addon_path, "default", "1080i", False)
         else:
-            window = SwellPatrolHUD("VideoHUD.xml", addon_path, "default", "1080i", False)
+            window = SwellPatrolHUD("WeatherHUD.xml", addon_path, "default", "1080i", False)
 
         window.doModal()
         xbmc.sleep(100)
