@@ -249,10 +249,14 @@ void CWeatherManager::OnSettingChanged(const std::shared_ptr<const CSetting>& se
   const std::string settingId = setting->GetId();
   if (settingId == CSettings::SETTING_WEATHER_ADDON && CServiceBroker::GetGUI() != nullptr)
   {
-    // clear "WeatherProviderLogo" property that some weather addons set
-    CGUIWindow* window = CServiceBroker::GetGUI()->GetWindowManager().GetWindow(WINDOW_WEATHER);
-    if (window != nullptr)
-      window->SetProperty("WeatherProviderLogo", "");
+    // Weather add-on to be used changed. Clear all weather data and refresh.
+    CGUIComponent* gui{CServiceBroker::GetGUI()};
+    if (gui)
+    {
+      CGUIMessage msg(GUI_MSG_NOTIFY_ALL, 0, 0, GUI_MSG_WEATHER_RESET);
+      gui->GetWindowManager().SendMessage(msg);
+    }
+    Reset();
     Refresh();
   }
 }
