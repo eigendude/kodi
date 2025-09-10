@@ -675,14 +675,6 @@
 						</control>
 						<control type="label">
 							<left>15</left>
-							<top>78</top>
-							<align>center</align>
-							<font>font12</font>
-							<label>$INFO[ListItem.Property(ShortDate)]</label>
-							<width>230</width>
-						</control>
-						<control type="label">
-							<left>15</left>
 							<top>236</top>
 							<align>center</align>
 							<label>$INFO[ListItem.Label2]</label>
@@ -737,14 +729,6 @@
 							<top>45</top>
 							<align>center</align>
 							<label>$INFO[ListItem.Label]</label>
-							<width>230</width>
-						</control>
-						<control type="label">
-							<left>15</left>
-							<top>78</top>
-							<align>center</align>
-							<font>font12</font>
-							<label>$INFO[ListItem.Property(ShortDate)]</label>
 							<width>230</width>
 						</control>
 						<control type="label">
