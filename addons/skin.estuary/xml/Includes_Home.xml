@@ -646,7 +646,7 @@
 					<control type="group">
 						<left>70</left>
 						<control type="image">
-							<visible>false</visible>
+							<visible>!String.IsEqual(Window.Property(Addon.ID),service.oasis)</visible>
 							<left>0</left>
 							<top>20</top>
 							<width>254</width>
@@ -694,7 +694,7 @@
 							<effect type="zoom" start="110" end="100" time="200" tween="sine" easing="inout" center="180,140" />
 						</animation>
 						<control type="image">
-							<visible>false</visible>
+							<visible>!String.IsEqual(Window.Property(Addon.ID),service.oasis)</visible>
 							<left>0</left>
 							<top>20</top>
 							<width>254</width>
@@ -704,7 +704,7 @@
 							<bordersize>20</bordersize>
 						</control>
 						<control type="image">
-							<visible>false</visible>
+							<visible>!String.IsEqual(Window.Property(Addon.ID),service.oasis)</visible>
 							<left>0</left>
 							<top>20</top>
 							<width>254</width>
