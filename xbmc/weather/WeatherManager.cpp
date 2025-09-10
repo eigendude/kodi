@@ -32,7 +32,7 @@ using namespace ADDON;
 using namespace KODI::WEATHER;
 
 CWeatherManager::CWeatherManager(ADDON::CAddonMgr& addonManager)
-  : CInfoLoader(30 * 60 * 1000), // 30 minutes
+  : CInfoLoader(1 * 60 * 1000), // 1 minute
     m_addonManager(addonManager)
 {
   const auto settingsComponent = CServiceBroker::GetSettingsComponent();
