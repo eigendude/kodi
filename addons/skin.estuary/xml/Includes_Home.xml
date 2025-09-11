@@ -644,7 +644,6 @@
 				<visible>$PARAM[visible]</visible>
 				<itemlayout width="$PARAM[width]" height="320">
 					<control type="group">
-						<left>70</left>
 						<control type="image">
 							<visible>false</visible>
 							<left>0</left>
@@ -672,6 +671,7 @@
 							<align>center</align>
 							<label>$INFO[ListItem.Label]</label>
 							<width>230</width>
+							<shadowcolor>text_shadow</shadowcolor>
 						</control>
 						<control type="label">
 							<left>15</left>
@@ -688,12 +688,12 @@
 							<label>$INFO[ListItem.Label2]</label>
 							<font>font12</font>
 							<width>230</width>
+							<shadowcolor>text_shadow</shadowcolor>
 						</control>
 					</control>
 				</itemlayout>
 				<focusedlayout width="$PARAM[width]" height="400">
 					<control type="group">
-						<left>70</left>
 						<depth>DepthContentPopout</depth>
 						<animation type="Focus">
 							<effect type="zoom" start="100" end="110" time="200" tween="sine" easing="inout" center="180,140" />
@@ -738,6 +738,7 @@
 							<align>center</align>
 							<label>$INFO[ListItem.Label]</label>
 							<width>230</width>
+							<shadowcolor>text_shadow</shadowcolor>
 						</control>
 						<control type="label">
 							<left>15</left>
@@ -754,6 +755,7 @@
 							<label>$INFO[ListItem.Label2]</label>
 							<font>font12</font>
 							<width>230</width>
+							<shadowcolor>text_shadow</shadowcolor>
 						</control>
 					</control>
 				</focusedlayout>
