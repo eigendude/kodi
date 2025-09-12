@@ -40,6 +40,7 @@
 #include "utils/MathUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/TimeUtils.h"
+#include "utils/XTimeUtils.h"
 #include "utils/log.h"
 #include "windowing/linux/OSScreenSaverFreedesktop.h"
 
@@ -155,8 +156,12 @@ bool CWinSystemWayland::InitWindowSystem()
 
   CLog::LogF(LOGINFO, "Connecting to Wayland server");
   m_connection = std::make_unique<CConnection>();
-  if (!m_connection->HasDisplay())
-    return false;
+  while (!m_connection->HasDisplay())
+  {
+    // Sleep for 1s
+    KODI::TIME::Sleep(1000ms);
+    m_connection = std::make_unique<CConnection>();
+  }
 
   VIDEOPLAYER::CProcessInfoWayland::Register();
   RETRO::CRPProcessInfoWayland::Register();
