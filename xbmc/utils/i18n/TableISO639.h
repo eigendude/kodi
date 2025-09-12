@@ -11,6 +11,7 @@
 #include "utils/StringUtils.h"
 
 #include <algorithm>
+#include <array>
 #include <cstdint>
 #include <string>
 #include <string_view>
@@ -38,23 +39,19 @@ constexpr uint32_t StringToLongCode(std::string_view a)
 /*!
  * \brief Converts a language code given as a long to its string representation.
  * \param[in] code The language code coded as a long
- * \return The string representation
+ * \return The string representation stored in a char array
  */
-std::string LongCodeToString(uint32_t code)
+constexpr std::array<char, 4> LongCodeToString(uint32_t code)
 {
-  // Build the string in reverse order since appending to a string is more efficient than inserting
-  // at position 0 and shifting the existing contents
-  std::string ret;
+  std::array<char, 4> ret{0, 0, 0, 0};
   for (unsigned int j = 0; j < 4; j++)
   {
     char c = static_cast<char>(code) & 0xFF;
     if (c == '\0')
       break;
-    ret.push_back(c);
+    ret[3 - j] = c;
     code >>= 8;
   }
-  // Reverse the string for the final result
-  std::reverse(ret.begin(), ret.end());
   return ret;
 }
 } // namespace

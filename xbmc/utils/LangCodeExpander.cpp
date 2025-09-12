@@ -19,7 +19,17 @@
 #include "utils/log.h"
 
 #include <algorithm>
+#include <array>
 #include <string_view>
+
+namespace
+{
+std::string ArrayToString(const std::array<char, 4>& arr)
+{
+  auto first = std::find_if(arr.begin(), arr.end(), [](char c) { return c != '\0'; });
+  return std::string(first, arr.end());
+}
+} // namespace
 
 CLangCodeExpander::CLangCodeExpander() = default;
 
@@ -167,9 +177,9 @@ bool CLangCodeExpander::ConvertToISO6392B(const std::string& strCharCode,
       auto itb = std::ranges::lower_bound(ISO639_2_TB_Mappings, itt->code, {},
                                           &ISO639_2_TB::terminological);
       if (itb != ISO639_2_TB_Mappings.end() && itb->terminological == itt->code)
-        strISO6392B = LongCodeToString(itb->bibliographic);
+        strISO6392B = ArrayToString(LongCodeToString(itb->bibliographic));
       else
-        strISO6392B = LongCodeToString(itt->code);
+        strISO6392B = ArrayToString(LongCodeToString(itt->code));
 
       return true;
     }
@@ -212,7 +222,6 @@ bool CLangCodeExpander::ConvertToISO6392T(const std::string& strCharCode,
   }
   return false;
 }
-
 
 bool CLangCodeExpander::LookupUserCode(const std::string& desc, std::string& userCode)
 {
@@ -369,7 +378,7 @@ bool CLangCodeExpander::ReverseLookup(const std::string& desc, std::string& code
         { return StringUtils::CompareNoCase(a, b) < 0; }, &LCENTRY::name);
     if (it != TableISO639_1ByName.end() && StringUtils::EqualsNoCase(it->name, name))
     {
-      code = LongCodeToString(it->code);
+      code = ArrayToString(LongCodeToString(it->code));
       return true;
     }
   }
@@ -380,7 +389,7 @@ bool CLangCodeExpander::ReverseLookup(const std::string& desc, std::string& code
         { return StringUtils::CompareNoCase(a, b) < 0; }, &LCENTRY::name);
     if (it != TableISO639_1_DeprByName.end() && StringUtils::EqualsNoCase(it->name, name))
     {
-      code = LongCodeToString(it->code);
+      code = ArrayToString(LongCodeToString(it->code));
       return true;
     }
   }
@@ -391,7 +400,7 @@ bool CLangCodeExpander::ReverseLookup(const std::string& desc, std::string& code
         { return StringUtils::CompareNoCase(a, b) < 0; }, &LCENTRY::name);
     if (it != TableISO639_2AllNames.end() && StringUtils::EqualsNoCase(it->name, name))
     {
-      code = LongCodeToString(it->code);
+      code = ArrayToString(LongCodeToString(it->code));
       return true;
     }
   }
@@ -518,15 +527,14 @@ std::vector<std::string> CLangCodeExpander::GetLanguageNames(
   if (format == CLangCodeExpander::ISO_639_2)
   {
     // ISO 639-2/T codes
-    std::ranges::transform(TableISO639_2AllNames, std::inserter(langMap, langMap.end()),
-                           [](const LCENTRY& e) {
-                             return std::make_pair(LongCodeToString(e.code), std::string{e.name});
-                           });
+    std::ranges::transform(
+        TableISO639_2AllNames, std::inserter(langMap, langMap.end()), [](const LCENTRY& e)
+        { return std::make_pair(ArrayToString(LongCodeToString(e.code)), std::string{e.name}); });
 
     // ISO 639-2/B codes that are different from the T code.
     for (const ISO639_2_TB& tb : ISO639_2_TB_Mappings)
     {
-      const std::string bCode = LongCodeToString(tb.bibliographic);
+      const std::string bCode = ArrayToString(LongCodeToString(tb.bibliographic));
 
       // Lookup the 639-2/T code
       //! @todo Maybe could be avoided by building a constexpr 639-2/B to name array at compile time.
@@ -541,20 +549,20 @@ std::vector<std::string> CLangCodeExpander::GetLanguageNames(
       {
         CLog::LogF(LOGERROR,
                    "unable to find a name for the ISO 639-2/B code {} using 639-2/T code {}", bCode,
-                   LongCodeToString(tb.terminological));
+                   ArrayToString(LongCodeToString(tb.terminological)));
       }
     }
   }
   else
   {
-    std::ranges::transform(TableISO639_1ByName, std::inserter(langMap, langMap.end()),
-                           [](const LCENTRY& e) {
-                             return std::make_pair(LongCodeToString(e.code), std::string{e.name});
-                           });
+    std::ranges::transform(
+        TableISO639_1ByName, std::inserter(langMap, langMap.end()), [](const LCENTRY& e)
+        { return std::make_pair(ArrayToString(LongCodeToString(e.code)), std::string{e.name}); });
 
     std::ranges::transform(TableISO639_1_DeprByName, std::inserter(langMap, langMap.end()),
-                           [](const LCENTRY& e) {
-                             return std::make_pair(LongCodeToString(e.code),
+                           [](const LCENTRY& e)
+                           {
+                             return std::make_pair(ArrayToString(LongCodeToString(e.code)),
                                                    std::string{e.name} + " (Deprecated)");
                            });
   }
