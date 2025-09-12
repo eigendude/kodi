@@ -620,10 +620,10 @@ constexpr std::array<struct LCENTRY, ISO639_2_ADDL_NAMES_COUNT> TableISO639_2_Na
 // clang-format on
 
 static_assert(std::ranges::is_sorted(TableISO639_2_Names, {}, &LCENTRY::code));
-
-// Concatenate and sort the main + additional names to enable lookup of 639-2/T code from any name
-static constexpr auto TableISO639_2AllNames =
-    CreateIso639ByName(concat(TableISO639_2ByCode, TableISO639_2_Names));
+// Split the main and additional name tables to avoid a large compile-time
+// concatenation and sort operation.
+static constexpr auto TableISO639_2ByName = CreateIso639ByName(TableISO639_2ByCode);
+static constexpr auto TableISO639_2_NamesByName = CreateIso639ByName(TableISO639_2_Names);
 
 // clang-format off
 static constexpr std::array<ISO639_2_TB, 22> ISO639_2_TB_Mappings = {{
