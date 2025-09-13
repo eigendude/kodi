@@ -27,15 +27,48 @@ HOME_WINDOW_ID: int = 10000  # WINDOW_HOME
 WINDOW_PROPERTY_ADDON: str = "Addon.ID"
 WINDOW_PROPERTY_HOSTNAME: str = "hostname"
 
+# Estuary add-on ID
+ESTUARY_ADDON_ID: str = "skin.estuary"
+
+# HD Animated Weather Icons add-on ID
+WEATHER_ICONS_ADDON_ID: str = "resource.images.weathericons.hd.animated"
 
 class OasisService:
     @staticmethod
-    def run(hostname: str) -> None:
+    def _configure_weather_icons() -> None:
+        """
+        Configure Estuary skin to use HD animated weather icons, if available.
+        """
+        try:
+            if xbmc.getCondVisibility(f"System.HasAddon({WEATHER_ICONS_ADDON_ID})"):
+                skin = xbmcaddon.Addon(id=ESTUARY_ADDON_ID)
+
+                hd_addon = xbmcaddon.Addon(id=WEATHER_ICONS_ADDON_ID)
+
+                hd_path = f"resource://{WEATHER_ICONS_ADDON_ID}/"
+                hd_name = hd_addon.getAddonInfo("name")
+
+                if not skin.getSettingBool("WeatherOutlookIcon.multi"):
+                    skin.setSettingBool("WeatherOutlookIcon.multi", True)
+                if skin.getSettingString("WeatherOutlookIcon.path") != hd_path:
+                    skin.setSettingString("WeatherOutlookIcon.path", hd_path)
+                if skin.getSettingString("WeatherOutlookIcon.name") != hd_name:
+                    skin.setSettingString("WeatherOutlookIcon.name", hd_name)
+        except Exception as exc:  # pylint: disable=broad-except
+            xbmc.log(
+                f"Failed to configure weather icons: {exc}", level=xbmc.LOGERROR
+            )
+
+    @classmethod
+    def run(cls, hostname: str) -> None:
         addon: xbmcaddon.Addon = xbmcaddon.Addon()
         addon_id = addon.getAddonInfo("id")
         addon_path: str = addon.getAddonInfo("path")
 
         xbmc.log(f"Running OASIS service on {hostname}", level=xbmc.LOGDEBUG)
+
+        # Set up weather icons
+        cls._configure_weather_icons()
 
         # Set the hostname property for the home window
         home_win = xbmcgui.Window(HOME_WINDOW_ID)
