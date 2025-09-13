@@ -30,12 +30,32 @@ WINDOW_PROPERTY_HOSTNAME: str = "hostname"
 
 class OasisService:
     @staticmethod
+    def _configure_weather_icons() -> None:
+        """Configure Estuary skin to use HD animated weather icons."""
+        try:
+            skin = xbmcaddon.Addon(id="skin.estuary")
+            skin.setSettingBool("WeatherOutlookIcon.multi", True)
+            skin.setSettingString(
+                "weatheroutlookicon.path",
+                "resource://resource.images.weathericons.hd.animated/",
+            )
+            skin.setSettingString(
+                "WeatherOutlookIcon.name", "Weather Icons - HD Animated"
+            )
+        except Exception as exc:  # pylint: disable=broad-except
+            xbmc.log(
+                f"Failed to configure weather icons: {exc}", level=xbmc.LOGERROR
+            )
+
+    @staticmethod
     def run(hostname: str) -> None:
         addon: xbmcaddon.Addon = xbmcaddon.Addon()
         addon_id = addon.getAddonInfo("id")
         addon_path: str = addon.getAddonInfo("path")
 
         xbmc.log(f"Running OASIS service on {hostname}", level=xbmc.LOGDEBUG)
+
+        OasisService._configure_weather_icons()
 
         # Set the hostname property for the home window
         home_win = xbmcgui.Window(HOME_WINDOW_ID)

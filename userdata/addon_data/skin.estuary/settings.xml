@@ -1,0 +1,19 @@
+<settings>
+    <setting id="album_onclick_play" type="bool">false</setting>
+    <setting id="album_onclick_playnext" type="bool">false</setting>
+    <setting id="album_onclick_queue" type="bool">false</setting>
+    <setting id="WeatherOutlookIcon.multi" type="bool">true</setting>
+    <setting id="MovieGenreFanart.ext" type="string"></setting>
+    <setting id="WeatherFanart.ext" type="string"></setting>
+    <setting id="homefanart.path" type="string"></setting>
+    <setting id="WeatherFanart.path" type="string"></setting>
+    <setting id="HomeFanart.ext" type="string"></setting>
+    <setting id="osdautoclosetime" type="string"></setting>
+    <setting id="weatheroutlookicon.path" type="string">resource://resource.images.weathericons.hd.animated/</setting>
+    <setting id="WeatherOutlookIcon.ext" type="string"></setting>
+    <setting id="background_overlay" type="string">1</setting>
+    <setting id="HomeFanart.name" type="string"></setting>
+    <setting id="WeatherFanart.name" type="string"></setting>
+    <setting id="MovieGenreFanart.Name" type="string"></setting>
+    <setting id="WeatherOutlookIcon.name" type="string">Weather Icons - HD Animated</setting>
+</settings>
