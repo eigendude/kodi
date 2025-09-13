@@ -48,12 +48,48 @@ class OasisService:
                 hd_path = f"resource://{WEATHER_ICONS_ADDON_ID}/"
                 hd_name = hd_addon.getAddonInfo("name")
 
-                if not skin.getSettingBool("WeatherOutlookIcon.multi"):
-                    skin.setSettingBool("WeatherOutlookIcon.multi", True)
-                if skin.getSettingString("WeatherOutlookIcon.path") != hd_path:
-                    skin.setSettingString("WeatherOutlookIcon.path", hd_path)
-                if skin.getSettingString("WeatherOutlookIcon.name") != hd_name:
-                    skin.setSettingString("WeatherOutlookIcon.name", hd_name)
+                # Log and validate the weather icon settings to help debug
+                try:
+                    current_multi = skin.getSetting("WeatherOutlookIcon.multi")
+                    xbmc.log(
+                        f"WeatherOutlookIcon.multi (raw): '{current_multi}'",
+                        level=xbmc.LOGDEBUG,
+                    )
+                    if not skin.getSettingBool("WeatherOutlookIcon.multi"):
+                        skin.setSettingBool("WeatherOutlookIcon.multi", True)
+                except Exception as exc:
+                    xbmc.log(
+                        f"Failed setting WeatherOutlookIcon.multi: {exc}",
+                        level=xbmc.LOGDEBUG,
+                    )
+
+                try:
+                    current_path = skin.getSetting("WeatherOutlookIcon.path")
+                    xbmc.log(
+                        f"WeatherOutlookIcon.path (raw): '{current_path}'",
+                        level=xbmc.LOGDEBUG,
+                    )
+                    if current_path != hd_path:
+                        skin.setSettingString("WeatherOutlookIcon.path", hd_path)
+                except Exception as exc:
+                    xbmc.log(
+                        f"Failed setting WeatherOutlookIcon.path: {exc}",
+                        level=xbmc.LOGDEBUG,
+                    )
+
+                try:
+                    current_name = skin.getSetting("WeatherOutlookIcon.name")
+                    xbmc.log(
+                        f"WeatherOutlookIcon.name (raw): '{current_name}'",
+                        level=xbmc.LOGDEBUG,
+                    )
+                    if current_name != hd_name:
+                        skin.setSettingString("WeatherOutlookIcon.name", hd_name)
+                except Exception as exc:
+                    xbmc.log(
+                        f"Failed setting WeatherOutlookIcon.name: {exc}",
+                        level=xbmc.LOGDEBUG,
+                    )
         except Exception as exc:  # pylint: disable=broad-except
             xbmc.log(
                 f"Failed to configure weather icons: {exc}", level=xbmc.LOGERROR
