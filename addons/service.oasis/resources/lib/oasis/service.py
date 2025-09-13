@@ -27,9 +27,6 @@ HOME_WINDOW_ID: int = 10000  # WINDOW_HOME
 WINDOW_PROPERTY_ADDON: str = "Addon.ID"
 WINDOW_PROPERTY_HOSTNAME: str = "hostname"
 
-# Estuary add-on ID
-ESTUARY_ADDON_ID: str = "skin.estuary"
-
 # HD Animated Weather Icons add-on ID
 WEATHER_ICONS_ADDON_ID: str = "resource.images.weathericons.hd.animated"
 
@@ -41,19 +38,27 @@ class OasisService:
         """
         try:
             if xbmc.getCondVisibility(f"System.HasAddon({WEATHER_ICONS_ADDON_ID})"):
-                skin = xbmcaddon.Addon(id=ESTUARY_ADDON_ID)
-
                 hd_addon = xbmcaddon.Addon(id=WEATHER_ICONS_ADDON_ID)
 
                 hd_path = f"resource://{WEATHER_ICONS_ADDON_ID}/"
                 hd_name = hd_addon.getAddonInfo("name")
 
-                if not skin.getSettingBool("WeatherOutlookIcon.multi"):
-                    skin.setSettingBool("WeatherOutlookIcon.multi", True)
-                if skin.getSettingString("WeatherOutlookIcon.path") != hd_path:
-                    skin.setSettingString("WeatherOutlookIcon.path", hd_path)
-                if skin.getSettingString("WeatherOutlookIcon.name") != hd_name:
-                    skin.setSettingString("WeatherOutlookIcon.name", hd_name)
+                if not xbmc.getCondVisibility(
+                    "Skin.HasSetting(WeatherOutlookIcon.multi)"
+                ):
+                    xbmc.executebuiltin("Skin.SetBool(WeatherOutlookIcon.multi)")
+                if xbmc.getInfoLabel(
+                    "Skin.String(WeatherOutlookIcon.path)"
+                ) != hd_path:
+                    xbmc.executebuiltin(
+                        f"Skin.SetString(WeatherOutlookIcon.path,{hd_path})"
+                    )
+                if xbmc.getInfoLabel(
+                    "Skin.String(WeatherOutlookIcon.name)"
+                ) != hd_name:
+                    xbmc.executebuiltin(
+                        f"Skin.SetString(WeatherOutlookIcon.name,{hd_name})"
+                    )
         except Exception as exc:  # pylint: disable=broad-except
             xbmc.log(
                 f"Failed to configure weather icons: {exc}", level=xbmc.LOGERROR
