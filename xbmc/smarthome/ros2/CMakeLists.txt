@@ -3,6 +3,7 @@ set(HEADERS IRos2.h)
 if (ENABLE_ROS2)
   list(APPEND SOURCES Ros2.cpp
                       Ros2InputPublisher.cpp
+                      Ros2Introspection.cpp
                       Ros2LabSubscriber.cpp
                       Ros2Node.cpp
                       Ros2NowPlayingPublisher.cpp
@@ -14,6 +15,7 @@ if (ENABLE_ROS2)
   )
   list(APPEND HEADERS Ros2.h
                       Ros2InputPublisher.h
+                      Ros2Introspection.h
                       Ros2LabSubscriber.h
                       Ros2Node.h
                       Ros2NowPlayingPublisher.h
