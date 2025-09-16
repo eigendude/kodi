@@ -214,6 +214,8 @@ void CRos2InputPublisher::AddPeripherals(const PERIPHERALS::PeripheralVector& pe
     infoMessage.product_id = peripheral->ProductId();
     if (peripheral->ControllerProfile())
       infoMessage.controller_profile = peripheral->ControllerProfile()->ID();
+    infoMessage.capturing_input =
+        m_inputManager.IsCapturingInput(peripheral->Location());
 
     peripheralScan.emplace_back(std::move(infoMessage));
   }

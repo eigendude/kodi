@@ -54,6 +54,8 @@ public:
                     ISmartHomeJoystickHandler& joystickHandler);
   void CloseJoystick(const std::string& peripheralLocation);
 
+  bool IsCapturingInput(const std::string& peripheralLocation) const;
+
 private:
   using PeripheralAddress = std::string;
   using JoystickMap = std::map<PeripheralAddress, std::unique_ptr<CSmartHomeJoystick>>;

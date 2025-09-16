@@ -111,3 +111,8 @@ void CSmartHomeInputManager::CloseJoystick(const std::string& peripheralLocation
   if (it != m_joysticks.end())
     m_joysticks.erase(it);
 }
+
+bool CSmartHomeInputManager::IsCapturingInput(const std::string& peripheralLocation) const
+{
+  return m_joysticks.find(peripheralLocation) != m_joysticks.end();
+}
