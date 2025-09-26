@@ -56,7 +56,7 @@ void CRos2LabSubscriber::Initialize()
 
   // QoS policy
   rclcpp::SensorDataQoS qos;
-  const size_t queueSize = 10;
+  const size_t queueSize = 1;
   qos.keep_last(queueSize);
 
   // Subscribers
