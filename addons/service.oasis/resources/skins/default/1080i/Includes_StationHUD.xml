@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <includes>
+    <variable name="OasisTrainSystemConductorIsActive">
+        <value condition="SmartHome.System(conductor).IsActive(1)">true</value>
+    </variable>
+    <variable name="OasisTrainSystemStationIsActive">
+        <value condition="SmartHome.System(station).IsActive(1)">true</value>
+    </variable>
+    <variable name="OasisTrainSystemOceanPlatformIsActive">
+        <value condition="SmartHome.System(oceanplatform).IsActive(1)">true</value>
+    </variable>
     <include name="OasisTrainSystemListItem">
         <control type="label">
             <description>System name</description>
@@ -18,7 +27,7 @@
             <shadowcolor>text_shadow</shadowcolor>
             <align>right</align>
             <aligny>center</aligny>
-            <visible>String.IsEqual(ListItem.Property(smarthome.isactive),true)</visible>
+            <visible>!String.IsEmpty(ListItem.Property(smarthome.isactive))</visible>
             <animation effect="fade" time="1500">VisibleChange</animation>
         </control>
         <control type="label">
@@ -29,7 +38,7 @@
             <shadowcolor>text_shadow</shadowcolor>
             <align>right</align>
             <aligny>center</aligny>
-            <visible>String.IsEqual(ListItem.Property(smarthome.isactive),true)</visible>
+            <visible>!String.IsEmpty(ListItem.Property(smarthome.isactive))</visible>
             <animation effect="fade" time="1500">VisibleChange</animation>
         </control>
         <control type="label">
@@ -40,7 +49,7 @@
             <shadowcolor>text_shadow</shadowcolor>
             <align>right</align>
             <aligny>center</aligny>
-            <visible>String.IsEqual(ListItem.Property(smarthome.isactive),true)</visible>
+            <visible>!String.IsEmpty(ListItem.Property(smarthome.isactive))</visible>
             <animation effect="fade" time="1500">VisibleChange</animation>
         </control>
         <control type="label">
@@ -64,13 +73,13 @@
         </item>
         <item>
             <label>Little Brain</label>
-            <property name="smarthome.isactive">$INFO[SmartHome.System(conductor).IsActive(1)]</property>
+            <property name="smarthome.isactive">$VAR[OasisTrainSystemConductorIsActive]</property>
             <property name="smarthome.ramutilization">$INFO[SmartHome.System(conductor).RAMUtilization]</property>
             <property name="smarthome.ramtotal">2048 B</property>
         </item>
         <item>
             <label>Big Brain</label>
-            <property name="smarthome.isactive">$INFO[SmartHome.System(station).IsActive(1)]</property>
+            <property name="smarthome.isactive">$VAR[OasisTrainSystemStationIsActive]</property>
             <property name="smarthome.cpuutilization">$INFO[SmartHome.System(station).CPUUtilization]</property>
             <property name="smarthome.cputemperature">$INFO[SmartHome.System(station).CPUTemperature]</property>
             <property name="smarthome.ramutilization">$INFO[SmartHome.System(station).RAMUtilization]</property>
@@ -78,7 +87,7 @@
         </item>
         <item>
             <label>Mega Brain</label>
-            <property name="smarthome.isactive">$INFO[SmartHome.System(oceanplatform).IsActive(1)]</property>
+            <property name="smarthome.isactive">$VAR[OasisTrainSystemOceanPlatformIsActive]</property>
             <property name="smarthome.cpuutilization">$INFO[SmartHome.System(oceanplatform).CPUUtilization]</property>
             <property name="smarthome.cputemperature">$INFO[SmartHome.System(oceanplatform).CPUTemperature]</property>
             <property name="smarthome.ramutilization">$INFO[SmartHome.System(oceanplatform).RAMUtilization]</property>
