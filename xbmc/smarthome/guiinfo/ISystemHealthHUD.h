@@ -10,6 +10,7 @@
 
 #include "utils/Temperature.h"
 
+#include <chrono>
 #include <string>
 
 namespace KODI
@@ -25,16 +26,28 @@ class ISystemHealthHUD
 public:
   virtual ~ISystemHealthHUD() = default;
 
+  static constexpr std::chrono::milliseconds DefaultActiveTimeout()
+  {
+    return std::chrono::milliseconds{10000};
+  }
+
   /*!
    * \brief Returns true if the system has been used recently, false otherwise
    *
    * The system will be subscribed to if not already subscribed.
    *
    * \param systemName The name of the system
+   * \param timeout The telemetry timeout window
    *
    * \return true if the system has been used recently, false otherwise
    */
-  virtual bool IsActive(const std::string& systemName) = 0;
+  virtual bool IsActive(const std::string& systemName,
+                        std::chrono::milliseconds timeout) = 0;
+
+  virtual bool IsActive(const std::string& systemName)
+  {
+    return IsActive(systemName, DefaultActiveTimeout());
+  }
 
   /*!
    * \brief Get the temperature of the system's CPU, in degrees Celsius

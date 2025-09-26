@@ -17,6 +17,7 @@
 #include "smarthome/guiinfo/ISystemHealthHUD.h"
 #include "utils/StringUtils.h"
 
+#include <chrono>
 #include <cmath>
 
 using namespace KODI;
@@ -154,7 +155,11 @@ bool CSmartHomeGuiInfo::GetBool(bool& value,
       const std::string systemName = info.GetData3();
       if (!systemName.empty())
       {
-        value = m_systemHealthHud.IsActive(systemName);
+        const int timeoutMs = info.GetData4();
+        if (timeoutMs > 0)
+          value = m_systemHealthHud.IsActive(systemName, std::chrono::milliseconds(timeoutMs));
+        else
+          value = m_systemHealthHud.IsActive(systemName);
         return true;
       }
       break;
