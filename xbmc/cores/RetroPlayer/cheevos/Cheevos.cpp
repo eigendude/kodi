@@ -45,7 +45,9 @@ constexpr int RESPONSE_SIZE = 64;
 CCheevos::CCheevos(GAME::CGameClient* gameClient,
                    const std::string& userName,
                    const std::string& loginToken)
-  : m_gameClient(gameClient), m_userName(userName), m_loginToken(loginToken)
+  : m_gameClient(gameClient),
+    m_userName(userName),
+    m_loginToken(loginToken)
 {
 }
 
