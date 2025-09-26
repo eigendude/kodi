@@ -5,6 +5,7 @@
             <label>$PARAM[label]</label>
             <property name="smarthome.isactive">
                 <value condition="$PARAM[isactivecondition]">true</value>
+                <value></value>
             </property>
             <property name="smarthome.cpuutilization">$PARAM[cpuutilization]</property>
             <property name="smarthome.cputemperature">$PARAM[cputemperature]</property>
