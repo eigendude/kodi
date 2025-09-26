@@ -10,6 +10,7 @@
 
 #include "smarthome/guiinfo/ISystemHealthHUD.h"
 
+#include <chrono>
 #include <map>
 #include <memory>
 #include <string>
@@ -39,7 +40,7 @@ public:
   void Deinitialize();
 
   // Implementation of ISystemHealthHUD
-  bool IsActive(const std::string& systemName) override;
+  bool IsActive(const std::string& systemName, std::chrono::milliseconds timeout) override;
   CTemperature CPUTemperature(const std::string& systemName) override;
   float CPUUtilization(const std::string& systemName) override;
 

@@ -40,7 +40,7 @@ public:
   void Deinitialize();
 
   // GUI functions
-  bool IsActive() const;
+  bool IsActive(std::chrono::milliseconds timeout) const;
   CTemperature CPUTemperature() const;
   float CPUUtilization() const;
 

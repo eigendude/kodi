@@ -22,7 +22,7 @@ namespace
 {
 constexpr const char* SUBSCRIBE_TELEMETRY_TOPIC = "system_telemetry";
 
-constexpr std::chrono::seconds ACTIVE_TIMEOUT_SECS = 10s;
+constexpr std::chrono::milliseconds DEFAULT_ACTIVE_TIMEOUT{10000};
 } // namespace
 
 CRos2SystemHealthSubscriber::CRos2SystemHealthSubscriber(std::string rosNamespace)
@@ -62,9 +62,12 @@ void CRos2SystemHealthSubscriber::Deinitialize()
   m_telemetrySubscriber.reset();
 }
 
-bool CRos2SystemHealthSubscriber::IsActive() const
+bool CRos2SystemHealthSubscriber::IsActive(std::chrono::milliseconds timeout) const
 {
   bool isActive = false;
+
+  if (timeout <= std::chrono::milliseconds::zero())
+    timeout = DEFAULT_ACTIVE_TIMEOUT;
 
   std::lock_guard<std::mutex> lock(m_mutex);
 
@@ -75,7 +78,7 @@ bool CRos2SystemHealthSubscriber::IsActive() const
     const auto now = std::chrono::steady_clock::now();
 
     // Check if the system is active
-    isActive = (now - m_lastActive) < ACTIVE_TIMEOUT_SECS;
+    isActive = (now - m_lastActive) < timeout;
   }
 
   return isActive;

@@ -36,9 +36,11 @@
 #include <algorithm>
 #include <array>
 #include <charconv>
+#include <chrono>
 #include <cmath>
 #include <functional>
 #include <iterator>
+#include <limits>
 #include <memory>
 #include <mutex>
 
@@ -4290,6 +4292,15 @@ constexpr std::array<InfoMap, 3> retroplayer = {{
 /// \subsection modules__infolabels_boolean_conditions_SmartHome SmartHome
 /// \table_start
 ///   \table_h3{ Labels, Type, Description }
+///   \table_row3{   <b>`SmartHome.System(name).IsActive(timeout)`</b>,
+///                  \anchor SmartHome_System_IsActive
+///                  _boolean_,
+///     @return Evaluates to true if the system has sent telemetry within the
+///     specified timeout, in seconds
+///     <p><hr>
+///     @skinning_v22 **[New Infolabel]** \link SmartHome_System_IsActive `SmartHome.System(name).IsActive(timeout)`\endlink
+///     <p>
+///   }
 ///   \table_row3{   <b>`SmartHome.System(name).CPUTemperature`</b>,
 ///                  \anchor SmartHome_System_CPUTemperature
 ///                  _string_,
@@ -4310,7 +4321,8 @@ constexpr std::array<InfoMap, 3> retroplayer = {{
 ///
 /// -----------------------------------------------------------------------------
 // clang-format off
-constexpr std::array<InfoMap, 2> smarthome = {{
+constexpr std::array<InfoMap, 3> smarthome = {{
+    {"isactive",            SMARTHOME_IS_ACTIVE},
     {"cputemperature",      SMARTHOME_CPU_TEMPERATURE},
     {"cpuutilization",      SMARTHOME_CPU_UTILIZATION},
 }};
@@ -11248,8 +11260,30 @@ int CGUIInfoManager::TranslateSingleString(const std::string &strCondition, bool
         for (const auto& systemLabel : smarthome)
         {
           if (info[2].Name() == systemLabel.str)
+          {
+            int timeoutMs = 0;
+            if (info[2].Name() == "isactive")
+            {
+              const std::string& timeoutParam = info[2].param();
+              if (!timeoutParam.empty())
+              {
+                const float timeoutSeconds = StringUtils::ToFloat(timeoutParam, 0.0f);
+                if (timeoutSeconds > 0.0f)
+                {
+                  const auto timeout = std::chrono::duration_cast<std::chrono::milliseconds>(
+                      std::chrono::duration<float>(timeoutSeconds));
+                  if (timeout.count() > 0)
+                  {
+                    const auto clampedTimeout = std::min(
+                        timeout, std::chrono::milliseconds{std::numeric_limits<int>::max()});
+                    timeoutMs = static_cast<int>(clampedTimeout.count());
+                  }
+                }
+              }
+            }
             return AddMultiInfo(
-                CGUIInfo(systemLabel.val, 2, systemName)); // 2 => absolute (0 used for not set)
+                CGUIInfo(systemLabel.val, 2, 0, 0, systemName, timeoutMs)); // 2 => absolute
+          }
         }
       }
     }

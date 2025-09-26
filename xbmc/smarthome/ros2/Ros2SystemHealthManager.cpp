@@ -33,7 +33,8 @@ void CRos2SystemHealthManager::Deinitialize()
   m_systemHealths.clear();
 }
 
-bool CRos2SystemHealthManager::IsActive(const std::string& systemName)
+bool CRos2SystemHealthManager::IsActive(const std::string& systemName,
+                                        std::chrono::milliseconds timeout)
 {
   auto it = m_systemHealths.find(systemName);
   if (it == m_systemHealths.end())
@@ -42,7 +43,10 @@ bool CRos2SystemHealthManager::IsActive(const std::string& systemName)
     it = m_systemHealths.find(systemName);
   }
 
-  return it->second.IsActive();
+  if (timeout <= std::chrono::milliseconds::zero())
+    timeout = ISystemHealthHUD::DefaultActiveTimeout();
+
+  return it->second.IsActive(timeout);
 }
 
 CTemperature CRos2SystemHealthManager::CPUTemperature(const std::string& systemName)
