@@ -39,7 +39,6 @@
 #include <chrono>
 #include <map>
 #include <memory>
-#include <set>
 #include <string>
 #include <vector>
 
@@ -298,6 +297,65 @@ void CSkinInfo::LoadIncludes()
   CLog::Log(LOGINFO, "Loading skin includes from {}", includesPath);
   m_includes.Clear();
   m_includes.Load(includesPath);
+}
+
+namespace
+{
+void CollectIncludeFileElements(const TiXmlNode* node,
+                                std::vector<const TiXmlElement*>& includeElements)
+{
+  if (!node)
+    return;
+
+  const auto* element = node->ToElement();
+  if (element != nullptr)
+  {
+    if (element->ValueStr() == "include" && element->Attribute("file"))
+      includeElements.emplace_back(element);
+  }
+
+  const TiXmlNode* child = node->FirstChild();
+  while (child)
+  {
+    CollectIncludeFileElements(child, includeElements);
+    child = child->NextSibling();
+  }
+}
+} // namespace
+
+void CSkinInfo::EnsureIncludesForNode(const TiXmlElement* element)
+{
+  if (element == nullptr)
+    return;
+
+  const TiXmlDocument* document = element->GetDocument();
+  if (document == nullptr)
+    return;
+
+  const TiXmlElement* root = document->RootElement();
+  if (root == nullptr)
+    return;
+
+  std::vector<const TiXmlElement*> includeElements;
+  CollectIncludeFileElements(root, includeElements);
+
+  for (const TiXmlElement* includeElement : includeElements)
+  {
+    const char* file = includeElement->Attribute("file");
+    if (file == nullptr)
+      continue;
+
+    const char* condition = includeElement->Attribute("condition");
+    if (condition != nullptr)
+    {
+      INFO::InfoPtr conditionID =
+          CServiceBroker::GetGUI()->GetInfoManager().Register(condition);
+      if (!conditionID || !conditionID->Get(INFO::DEFAULT_CONTEXT))
+        continue;
+    }
+
+    m_includes.Load(GetSkinPath(file));
+  }
 }
 
 void CSkinInfo::LoadTimers()

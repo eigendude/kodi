@@ -157,6 +157,8 @@ public:
   void ResolveIncludes(TiXmlElement* node,
                        std::map<INFO::InfoPtr, bool>* xmlIncludeConditions = nullptr);
 
+  void EnsureIncludesForNode(const TiXmlElement* element);
+
   float GetEffectsSlowdown() const { return m_effectsSlowDown; }
 
   const std::vector<CStartupWindow>& GetStartupWindows() const { return m_startupWindows; }

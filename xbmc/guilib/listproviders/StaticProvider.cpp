@@ -25,6 +25,8 @@ CStaticListProvider::CStaticListProvider(const TiXmlElement* element, int parent
 
   if (g_SkinInfo)
   {
+    g_SkinInfo->EnsureIncludesForNode(element);
+
     TiXmlNode* clone = doc.InsertEndChild(*element);
     if (clone != nullptr)
     {
