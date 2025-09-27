@@ -11,6 +11,8 @@
 
 #include "utils/log.h"
 
+#include <algorithm>
+
 #include <rclcpp/rclcpp.hpp>
 
 using namespace KODI;
@@ -21,6 +23,7 @@ using std::placeholders::_1;
 namespace
 {
 constexpr const char* SUBSCRIBE_TELEMETRY_TOPIC = "system_telemetry";
+constexpr const char* SUBSCRIBE_MCU_MEMORY_TOPIC = "mcu_memory";
 } // namespace
 
 CRos2SystemHealthSubscriber::CRos2SystemHealthSubscriber(std::string rosNamespace)
@@ -31,18 +34,15 @@ CRos2SystemHealthSubscriber::CRos2SystemHealthSubscriber(std::string rosNamespac
 void CRos2SystemHealthSubscriber::Initialize(std::shared_ptr<rclcpp::Node> node,
                                              const std::string& systemName)
 {
-  if (m_telemetrySubscriber)
-  {
-    // Already initialized
-    return;
-  }
-
-  // Calculate topic name
+  // Calculate topic names
   const std::string subscribeTelemetryTopic =
       std::string("/") + m_rosNamespace + "/" + systemName + "/" + SUBSCRIBE_TELEMETRY_TOPIC;
+  const std::string subscribeMCUMemoryTopic =
+      std::string("/") + m_rosNamespace + "/" + systemName + "/" + SUBSCRIBE_MCU_MEMORY_TOPIC;
 
   // Initialize ROS
   CLog::Log(LOGDEBUG, "ROS2: Subscribing to {}", subscribeTelemetryTopic);
+  CLog::Log(LOGDEBUG, "ROS2: Subscribing to {}", subscribeMCUMemoryTopic);
 
   // QoS policy
   rclcpp::SensorDataQoS qos;
@@ -53,11 +53,14 @@ void CRos2SystemHealthSubscriber::Initialize(std::shared_ptr<rclcpp::Node> node,
   m_telemetrySubscriber = node->create_subscription<SystemTelemetry>(
       subscribeTelemetryTopic, qos,
       std::bind(&CRos2SystemHealthSubscriber::OnSystemTelemetry, this, _1));
+  m_mcuMemorySubscriber = node->create_subscription<MCUMemory>(
+      subscribeMCUMemoryTopic, qos, std::bind(&CRos2SystemHealthSubscriber::OnMCUMemory, this, _1));
 }
 
 void CRos2SystemHealthSubscriber::Deinitialize()
 {
   m_telemetrySubscriber.reset();
+  m_mcuMemorySubscriber.reset();
 }
 
 bool CRos2SystemHealthSubscriber::IsActive(std::chrono::milliseconds timeout) const
@@ -119,4 +122,24 @@ void CRos2SystemHealthSubscriber::OnSystemTelemetry(const SystemTelemetry::Share
   m_cpuUtilization = msg->cpu_utilization;
   m_cpuFrequencyHz = msg->cpu_frequency_ghz * 1'000'000'000.0;
   m_memoryUtilization = msg->memory_utilization;
+}
+
+void CRos2SystemHealthSubscriber::OnMCUMemory(const MCUMemory::SharedPtr msg)
+{
+  std::lock_guard<std::mutex> lock(m_mutex);
+
+  m_lastActive = std::chrono::steady_clock::now();
+
+  if (msg->total_ram == 0)
+  {
+    m_memoryUtilization = 0.0f;
+    return;
+  }
+
+  const double usedBytes = static_cast<double>(msg->total_ram) -
+                           static_cast<double>(msg->free_ram) - static_cast<double>(msg->free_heap);
+  const double utilization =
+      std::clamp((usedBytes / static_cast<double>(msg->total_ram)) * 100.0, 0.0, 100.0);
+
+  m_memoryUtilization = static_cast<float>(utilization);
 }
