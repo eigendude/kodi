@@ -2,16 +2,19 @@
 <includes>
     <include name="OasisTrainSystemRow">
         <param name="label" />
-        <param name="system" />
-        <param name="ramtotal" />
+        <param name="isactivecondition" />
+        <param name="cpuutilization" default="" />
+        <param name="cputemperature" default="" />
+        <param name="ramutilization" default="" />
+        <param name="ramtotal" default="" />
         <item>
             <label>$PARAM[label]</label>
             <property name="smarthome.isactive">
-                <value condition="SmartHome.System($PARAM[system]).IsActive(2)">true</value>
+                <value condition="$PARAM[isactivecondition]">true</value>
             </property>
-            <property name="smarthome.cpuutilization">$INFO[SmartHome.System($PARAM[system]).CPUUtilization]</property>
-            <property name="smarthome.cputemperature">$INFO[SmartHome.System($PARAM[system]).CPUTemperature]</property>
-            <property name="smarthome.ramutilization">$INFO[SmartHome.System($PARAM[system]).RAMUtilization]</property>
+            <property name="smarthome.cpuutilization">$PARAM[cpuutilization]</property>
+            <property name="smarthome.cputemperature">$PARAM[cputemperature]</property>
+            <property name="smarthome.ramutilization">$PARAM[ramutilization]</property>
             <property name="smarthome.ramtotal">$PARAM[ramtotal]</property>
         </item>
     </include>
@@ -79,17 +82,24 @@
         </item>
         <include content="OasisTrainSystemRow">
             <param name="label" value="Little Brain" />
-            <param name="system" value="conductor" />
+            <param name="isactivecondition" value="SmartHome.System(conductor).IsActive(2)" />
+            <param name="ramutilization" value="$INFO[SmartHome.System(conductor).RAMUtilization]" />
             <param name="ramtotal" value="2048 B" />
         </include>
         <include content="OasisTrainSystemRow">
             <param name="label" value="Big Brain" />
-            <param name="system" value="station" />
+            <param name="isactivecondition" value="SmartHome.System(station).IsActive(2)" />
+            <param name="cpuutilization" value="$INFO[SmartHome.System(station).CPUUtilization]" />
+            <param name="cputemperature" value="$INFO[SmartHome.System(station).CPUTemperature]" />
+            <param name="ramutilization" value="$INFO[SmartHome.System(station).RAMUtilization]" />
             <param name="ramtotal" value="8 GB" />
         </include>
         <include content="OasisTrainSystemRow">
             <param name="label" value="Mega Brain" />
-            <param name="system" value="oceanplatform" />
+            <param name="isactivecondition" value="SmartHome.System(oceanplatform).IsActive(2)" />
+            <param name="cpuutilization" value="$INFO[SmartHome.System(oceanplatform).CPUUtilization]" />
+            <param name="cputemperature" value="$INFO[SmartHome.System(oceanplatform).CPUTemperature]" />
+            <param name="ramutilization" value="$INFO[SmartHome.System(oceanplatform).RAMUtilization]" />
             <param name="ramtotal" value="32 GB" />
         </include>
     </include>
