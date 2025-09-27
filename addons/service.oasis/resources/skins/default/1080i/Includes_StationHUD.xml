@@ -6,7 +6,9 @@
         <param name="ramtotal" />
         <item>
             <label>$PARAM[label]</label>
-            <property name="smarthome.isactive" condition="SmartHome.System($PARAM[system]).IsActive(2)">true</property>
+            <property name="smarthome.isactive">
+                <value condition="SmartHome.System($PARAM[system]).IsActive(2)">true</value>
+            </property>
             <property name="smarthome.cpuutilization">$INFO[SmartHome.System($PARAM[system]).CPUUtilization]</property>
             <property name="smarthome.cputemperature">$INFO[SmartHome.System($PARAM[system]).CPUTemperature]</property>
             <property name="smarthome.ramutilization">$INFO[SmartHome.System($PARAM[system]).RAMUtilization]</property>
