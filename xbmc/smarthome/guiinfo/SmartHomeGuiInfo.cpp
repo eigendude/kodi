@@ -87,6 +87,21 @@ bool CSmartHomeGuiInfo::GetLabel(std::string& value,
       }
       break;
     }
+    case SMARTHOME_RAM_UTILIZATION:
+    {
+      const std::string systemName = info.GetData3();
+      if (!systemName.empty())
+      {
+        if (m_systemHealthHud.IsActive(systemName))
+        {
+          const float memoryUtilization = m_systemHealthHud.MemoryUtilization(systemName);
+          value = StringUtils::Format(
+              "{} %", static_cast<unsigned int>(std::round(memoryUtilization)));
+        }
+        return true;
+      }
+      break;
+    }
     case SMARTHOME_LAB_CPU:
     {
       value = StringUtils::Format("{} %", m_labHud.CPUUtilization());

@@ -43,6 +43,7 @@ public:
   bool IsActive(const std::string& systemName, std::chrono::milliseconds timeout) override;
   CTemperature CPUTemperature(const std::string& systemName) override;
   float CPUUtilization(const std::string& systemName) override;
+  float MemoryUtilization(const std::string& systemName) override;
 
 private:
   // Utility functions

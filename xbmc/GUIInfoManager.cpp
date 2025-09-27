@@ -4317,6 +4317,14 @@ constexpr std::array<InfoMap, 3> retroplayer = {{
 ///     @skinning_v22 **[New Infolabel]** \link SmartHome_System_CPUUtilization `SmartHome.System(name).CPUUtilization`\endlink
 ///     <p>
 ///   }
+///   \table_row3{   <b>`SmartHome.System(name).RAMUtilization`</b>,
+///                  \anchor SmartHome_System_RAMUtilization
+///                  _string_,
+///     @return The RAM utilization of the given system, in percent
+///     <p><hr>
+///     @skinning_v24 **[New Infolabel]** \link SmartHome_System_RAMUtilization `SmartHome.System(name).RAMUtilization`\endlink
+///     <p>
+///   }
 ///   \table_row3{   <b>`SmartHome.HasLab`</b>,
 ///                  \anchor SmartHome_HasLab
 ///                  _boolean_,
@@ -4388,10 +4396,11 @@ constexpr std::array<InfoMap, 3> retroplayer = {{
 ///
 /// -----------------------------------------------------------------------------
 // clang-format off
-constexpr std::array<InfoMap, 14> smarthome = {{
+constexpr std::array<InfoMap, 15> smarthome = {{
     {"isactive",            SMARTHOME_IS_ACTIVE},
     {"cputemperature",      SMARTHOME_CPU_TEMPERATURE},
     {"cpuutilization",      SMARTHOME_CPU_UTILIZATION},
+    {"ramutilization",      SMARTHOME_RAM_UTILIZATION},
     {"haslab",              SMARTHOME_HAS_LAB},
     {"labcpu",              SMARTHOME_LAB_CPU},
     {"labmemory",           SMARTHOME_LAB_MEMORY},

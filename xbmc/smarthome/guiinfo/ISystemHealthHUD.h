@@ -69,6 +69,17 @@ public:
    * \return The CPU utilization, as a percent
    */
   virtual float CPUUtilization(const std::string& systemName) = 0;
+
+  /*!
+   * \brief Get the RAM utilization, as a percent
+   *
+   * The system will be subscribed to if not already subscribed.
+   *
+   * \param systemName The name of the system
+   *
+   * \return The RAM utilization, as a percent
+   */
+  virtual float MemoryUtilization(const std::string& systemName) = 0;
 };
 } // namespace SMART_HOME
 } // namespace KODI
