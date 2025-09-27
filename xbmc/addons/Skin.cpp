@@ -10,6 +10,7 @@
 
 #include "FileItem.h"
 #include "FileItemList.h"
+#include "GUIInfoManager.h"
 #include "ServiceBroker.h"
 #include "Util.h"
 #include "addons/addoninfo/AddonType.h"
@@ -20,6 +21,7 @@
 #include "guilib/GUIWindowManager.h"
 #include "guilib/LocalizeStrings.h"
 #include "guilib/WindowIDs.h"
+#include "interfaces/info/Info.h"
 #include "messaging/ApplicationMessenger.h"
 #include "messaging/helpers/DialogHelper.h"
 #include "settings/Settings.h"
