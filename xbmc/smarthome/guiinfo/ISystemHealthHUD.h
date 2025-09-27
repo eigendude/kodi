@@ -43,6 +43,16 @@ public:
    */
   virtual bool IsActive(const std::string& systemName, std::chrono::milliseconds timeout) = 0;
 
+  /*!
+   * \brief Returns true if the system has been used recently using the
+   * default timeout window
+   *
+   * The system will be subscribed to if not already subscribed.
+   *
+   * \param systemName The name of the system
+   *
+   * \return true if the system has been used recently, false otherwise
+   */
   virtual bool IsActive(const std::string& systemName)
   {
     return IsActive(systemName, DefaultActiveTimeout());
