@@ -8,16 +8,36 @@
 
 #include "StaticProvider.h"
 
+#include "addons/Skin.h"
 #include "utils/StringUtils.h"
 #include "utils/TimeUtils.h"
 #include "utils/XMLUtils.h"
+#include "utils/XBMCTinyXML.h"
 
 CStaticListProvider::CStaticListProvider(const TiXmlElement* element, int parentID)
   : IListProvider(parentID)
 {
   assert(element);
 
-  const TiXmlElement *item = element->FirstChildElement("item");
+  const TiXmlElement* resolvedRoot{element};
+  CXBMCTinyXML doc;
+  TiXmlElement* expandedRoot{nullptr};
+
+  if (g_SkinInfo)
+  {
+    TiXmlNode* clone = doc.InsertEndChild(*element);
+    if (clone != nullptr)
+    {
+      expandedRoot = clone->ToElement();
+      if (expandedRoot != nullptr)
+      {
+        g_SkinInfo->ResolveIncludes(expandedRoot);
+        resolvedRoot = expandedRoot;
+      }
+    }
+  }
+
+  const TiXmlElement* item = resolvedRoot->FirstChildElement("item");
   while (item)
   {
     if (item->FirstChild())

@@ -29,8 +29,12 @@ std::unique_ptr<IListProvider> IListProvider::Create(const TiXmlNode* node, int 
 
 std::unique_ptr<IListProvider> IListProvider::CreateSingle(const TiXmlNode* content, int parentID)
 {
-  const TiXmlElement *item = content->FirstChildElement("item");
+  const TiXmlElement* item = content->FirstChildElement("item");
   if (item)
+    return std::make_unique<CStaticListProvider>(content->ToElement(), parentID);
+
+  const TiXmlElement* include = content->FirstChildElement("include");
+  if (include)
     return std::make_unique<CStaticListProvider>(content->ToElement(), parentID);
 
   if (!content->NoChildren())
