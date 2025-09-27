@@ -21,6 +21,7 @@ using std::placeholders::_1;
 namespace
 {
 constexpr const char* SUBSCRIBE_TELEMETRY_TOPIC = "system_telemetry";
+constexpr const char* SUBSCRIPT_MCU_MEMORY = "mcu_memory";
 } // namespace
 
 CRos2SystemHealthSubscriber::CRos2SystemHealthSubscriber(std::string rosNamespace)
