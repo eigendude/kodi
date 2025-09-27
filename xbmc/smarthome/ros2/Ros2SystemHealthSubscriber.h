@@ -13,6 +13,7 @@
 #include <chrono>
 #include <mutex>
 
+#include <oasis_msgs/msg/mcu_memory.hpp>
 #include <oasis_msgs/msg/system_telemetry.hpp>
 #include <rclcpp/subscription.hpp>
 
@@ -49,13 +50,16 @@ public:
 private:
   // ROS messages
   using SystemTelemetry = oasis_msgs::msg::SystemTelemetry;
+  using MCUMemory = oasis_msgs::msg::MCUMemory;
 
   // ROS 2 subscriber callbacks
   void OnSystemTelemetry(const SystemTelemetry::SharedPtr msg);
+  void OnMCUMemory(const MCUMemory::SharedPtr msg);
 
   // ROS parameters
   const std::string m_rosNamespace;
   rclcpp::Subscription<SystemTelemetry>::SharedPtr m_telemetrySubscriber;
+  rclcpp::Subscription<MCUMemory>::SharedPtr m_mcuMemorySubscriber;
 
   // GUI parameters
   std::chrono::time_point<std::chrono::steady_clock> m_lastActive;
