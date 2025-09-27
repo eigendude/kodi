@@ -71,6 +71,17 @@ public:
   virtual float CPUUtilization(const std::string& systemName) = 0;
 
   /*!
+   * \brief Get the CPU frequency, in Hertz
+   *
+   * The system will be subscribed to if not already subscribed.
+   *
+   * \param systemName The name of the system
+   *
+   * \return The CPU frequency, in Hertz
+   */
+  virtual double CPUFrequencyHz(const std::string& systemName) = 0;
+
+  /*!
    * \brief Get the RAM utilization, as a percent
    *
    * The system will be subscribed to if not already subscribed.

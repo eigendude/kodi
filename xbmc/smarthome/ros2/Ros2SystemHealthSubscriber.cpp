@@ -98,6 +98,13 @@ float CRos2SystemHealthSubscriber::CPUUtilization() const
   return m_cpuUtilization;
 }
 
+double CRos2SystemHealthSubscriber::CPUFrequencyHz() const
+{
+  std::lock_guard<std::mutex> lock(m_mutex);
+
+  return m_cpuFrequencyHz;
+}
+
 float CRos2SystemHealthSubscriber::MemoryUtilization() const
 {
   std::lock_guard<std::mutex> lock(m_mutex);
@@ -115,5 +122,6 @@ void CRos2SystemHealthSubscriber::OnSystemTelemetry(const SystemTelemetry::Share
   // Update system health parameters
   m_cpuTemperature = CTemperature::CreateFromCelsius(msg->cpu_temperature);
   m_cpuUtilization = msg->cpu_utilization;
+  m_cpuFrequencyHz = msg->cpu_frequency_ghz * 1'000'000'000.0;
   m_memoryUtilization = msg->memory_utilization;
 }

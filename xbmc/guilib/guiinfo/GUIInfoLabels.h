@@ -537,6 +537,7 @@ constexpr uint32_t SMARTHOME_IS_ACTIVE               = 850;
 constexpr uint32_t SMARTHOME_CPU_TEMPERATURE         = 851;
 constexpr uint32_t SMARTHOME_CPU_UTILIZATION         = 852;
 constexpr uint32_t SMARTHOME_RAM_UTILIZATION         = 853;
+constexpr uint32_t SMARTHOME_CPU_FREQUENCY           = 854;
 
 constexpr uint32_t SMARTHOME_HAS_LAB                 = 860;
 constexpr uint32_t SMARTHOME_LAB_CPU                 = 861;

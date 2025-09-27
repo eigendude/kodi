@@ -73,6 +73,18 @@ float CRos2SystemHealthManager::CPUUtilization(const std::string& systemName)
   return it->second.CPUUtilization();
 }
 
+double CRos2SystemHealthManager::CPUFrequencyHz(const std::string& systemName)
+{
+  auto it = m_systemHealths.find(systemName);
+  if (it == m_systemHealths.end())
+  {
+    AddSystem(systemName);
+    it = m_systemHealths.find(systemName);
+  }
+
+  return it->second.CPUFrequencyHz();
+}
+
 float CRos2SystemHealthManager::MemoryUtilization(const std::string& systemName)
 {
   auto it = m_systemHealths.find(systemName);

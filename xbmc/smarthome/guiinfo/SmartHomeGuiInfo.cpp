@@ -19,9 +19,32 @@
 
 #include <chrono>
 #include <cmath>
-
 using namespace KODI;
 using namespace SMART_HOME;
+
+namespace
+{
+std::string FormatFrequency(double frequencyHz)
+{
+  if (frequencyHz <= 0.0)
+    return "";
+
+  constexpr double kHz = 1'000.0;
+  constexpr double MHz = 1'000'000.0;
+  constexpr double GHz = 1'000'000'000.0;
+
+  if (frequencyHz >= GHz)
+    return StringUtils::Format("{:.2f} GHz", frequencyHz / GHz);
+
+  if (frequencyHz >= MHz)
+    return StringUtils::Format("{:.1f} MHz", frequencyHz / MHz);
+
+  if (frequencyHz >= kHz)
+    return StringUtils::Format("{:.0f} KHz", frequencyHz / kHz);
+
+  return StringUtils::Format("{:.0f} Hz", frequencyHz);
+}
+} // namespace
 
 CSmartHomeGuiInfo::CSmartHomeGuiInfo(CGUIInfoManager& infoManager,
                                      ISystemHealthHUD& systemHealthHud,
@@ -75,6 +98,17 @@ bool CSmartHomeGuiInfo::GetLabel(std::string& value,
       {
         const float cpuUtilization = m_systemHealthHud.CPUUtilization(systemName);
         value = StringUtils::Format("{} %", static_cast<unsigned int>(std::round(cpuUtilization)));
+        return true;
+      }
+      break;
+    }
+    case SMARTHOME_CPU_FREQUENCY:
+    {
+      const std::string systemName = info.GetData3();
+      if (!systemName.empty())
+      {
+        const double cpuFrequencyHz = m_systemHealthHud.CPUFrequencyHz(systemName);
+        value = FormatFrequency(cpuFrequencyHz);
         return true;
       }
       break;

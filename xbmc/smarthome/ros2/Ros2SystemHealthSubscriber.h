@@ -43,6 +43,7 @@ public:
   bool IsActive(std::chrono::milliseconds timeout) const;
   CTemperature CPUTemperature() const;
   float CPUUtilization() const;
+  double CPUFrequencyHz() const;
   float MemoryUtilization() const;
 
 private:
@@ -60,6 +61,7 @@ private:
   std::chrono::time_point<std::chrono::steady_clock> m_lastActive;
   CTemperature m_cpuTemperature;
   float m_cpuUtilization{0.0f};
+  double m_cpuFrequencyHz{0.0};
   float m_memoryUtilization{0.0f};
 
   // Synchronization parameters
