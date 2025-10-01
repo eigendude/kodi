@@ -7,10 +7,10 @@
 		</control>
 		<control type="group">
 			<description>Train system area</description>
-			<top>50</top>
-			<height>440</height>
-			<left>50</left>
-			<right>50</right>
+			<top>40</top>
+			<height>400</height>
+			<left>40</left>
+			<right>40</right>
 			<control type="image">
 				<description>Train system content area background</description>
 				<top>-20</top>
@@ -22,10 +22,10 @@
 			<control type="list">
 				<description>System data list</description>
 				<orientation>vertical</orientation>
-				<itemlayout width="1820" height="110">
+				<itemlayout width="1820" height="100">
 					<include content="OasisTrainSystemListItem" />
 				</itemlayout>
-				<focusedlayout width="1820" height="110">
+				<focusedlayout width="1820" height="100">
 					<include content="OasisTrainSystemListItem" />
 				</focusedlayout>
 				<content>
@@ -35,9 +35,9 @@
 		</control>
 		<control type="group">
 			<description>Train sensor area</description>
-			<bottom>50</bottom>
-			<height>480</height>
-			<left>50</left>
+			<top>480</top>
+			<bottom>40</bottom>
+			<left>40</left>
 			<width>900</width>
 			<control type="image">
 				<description>Train sensor content area background</description>
@@ -49,11 +49,13 @@
 			</control>
 			<control type="list">
 				<description>Sensor data list</description>
+				<top>10</top>
+				<bottom>10</bottom>
 				<orientation>vertical</orientation>
-				<itemlayout width="900" height="160">
+				<itemlayout width="900" height="135">
 					<include content="OasisTrainSensorListItem" />
 				</itemlayout>
-				<focusedlayout width="900" height="160">
+				<focusedlayout width="900" height="135">
 					<include content="OasisTrainSensorListItem" />
 				</focusedlayout>
 				<content>
@@ -63,9 +65,9 @@
 		</control>
 		<control type="group">
 			<description>Train camera area</description>
-			<bottom>50</bottom>
+			<bottom>40</bottom>
 			<height>360</height>
-			<right>50</right>
+			<right>40</right>
 			<width>860</width>
 			<control type="image">
 				<description>Train camera content area background</description>

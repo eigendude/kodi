@@ -130,6 +130,11 @@
             <label2>$INFO[SmartHome.StationCurrent]</label2> <!-- 0.1 A -->
             <property name="smarthome.isactive">$VAR[OasisTrainSystemStationIsActive]</property>
         </item>
+        <item>
+            <label>Load</label>
+            <label2>$INFO[SmartHome.System(oceanplatform).BatteryLoad]</label2> <!-- 100 W -->
+            <property name="smarthome.isactive">$VAR[OasisTrainSystemOceanPlatformIsActive]</property>
+        </item>
     </include>
     <include name="OasisTrainCameraListItem">
         <control type="group">
@@ -159,7 +164,7 @@
         <item>
             <label>Camera</label>
             <property name="smarthome.isactive">$VAR[OasisTrainSystemStationIsActive]</property>
-            <property name="smarthome.cameratopic1">/oasis/station/image_rect</property>
+            <property name="smarthome.cameratopic1">/oasis/station/flow</property>
             <property name="smarthome.cameratopic2">/oasis/station/background</property>
             <property name="smarthome.cameratopic3">/oasis/station/foreground</property>
         </item>
