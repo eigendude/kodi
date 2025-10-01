@@ -4333,6 +4333,22 @@ constexpr std::array<InfoMap, 3> retroplayer = {{
 ///     @skinning_v24 **[New Infolabel]** \link SmartHome_System_RAMUtilization `SmartHome.System(name).RAMUtilization`\endlink
 ///     <p>
 ///   }
+///   \table_row3{   <b>`SmartHome.System(name).BatteryCharge`</b>,
+///                  \anchor SmartHome_System_BatteryCharge
+///                  _string_,
+///     @return The current charge of the system's battery, in percent
+///     <p><hr>
+///     @skinning_v24 **[New Infolabel]** \link SmartHome_System_BatteryCharge `SmartHome.System(name).BatteryCharge`\endlink
+///     <p>
+///   }
+///   \table_row3{   <b>`SmartHome.System(name).BatteryLoad`</b>,
+///                  \anchor SmartHome_System_BatteryLoad
+///                  _string_,
+///     @return The current load provided by the system's battery, in Watts
+///     <p><hr>
+///     @skinning_v24 **[New Infolabel]** \link SmartHome_System_BatteryLoad `SmartHome.System(name).BatteryLoad`\endlink
+///     <p>
+///   }
 ///   \table_row3{   <b>`SmartHome.HasLab`</b>,
 ///                  \anchor SmartHome_HasLab
 ///                  _boolean_,
@@ -4404,12 +4420,14 @@ constexpr std::array<InfoMap, 3> retroplayer = {{
 ///
 /// -----------------------------------------------------------------------------
 // clang-format off
-constexpr std::array<InfoMap, 16> smarthome = {{
+constexpr std::array<InfoMap, 18> smarthome = {{
     {"isactive",            SMARTHOME_IS_ACTIVE},
     {"cputemperature",      SMARTHOME_CPU_TEMPERATURE},
     {"cpuutilization",      SMARTHOME_CPU_UTILIZATION},
     {"cpufrequency",        SMARTHOME_CPU_FREQUENCY},
     {"ramutilization",      SMARTHOME_RAM_UTILIZATION},
+    {"batterycharge",       SMARTHOME_BATTERY_CHARGE},
+    {"batteryload",         SMARTHOME_BATTERY_LOAD},
     {"haslab",              SMARTHOME_HAS_LAB},
     {"labcpu",              SMARTHOME_LAB_CPU},
     {"labmemory",           SMARTHOME_LAB_MEMORY},
