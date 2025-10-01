@@ -15,6 +15,7 @@
 
 #include <oasis_msgs/msg/mcu_memory.hpp>
 #include <oasis_msgs/msg/system_telemetry.hpp>
+#include <oasis_msgs/msg/ups_status.hpp>
 #include <rclcpp/subscription.hpp>
 
 namespace rclcpp
@@ -46,20 +47,25 @@ public:
   float CPUUtilization() const;
   double CPUFrequencyHz() const;
   float MemoryUtilization() const;
+  unsigned int BatteryCharge() const;
+  float BatteryLoad() const;
 
 private:
   // ROS messages
   using SystemTelemetry = oasis_msgs::msg::SystemTelemetry;
   using MCUMemory = oasis_msgs::msg::MCUMemory;
+  using UPSStatus = oasis_msgs::msg::UPSStatus;
 
   // ROS 2 subscriber callbacks
   void OnSystemTelemetry(const SystemTelemetry::SharedPtr msg);
   void OnMCUMemory(const MCUMemory::SharedPtr msg);
+  void OnUPSStatus(const UPSStatus::SharedPtr msg);
 
   // ROS parameters
   const std::string m_rosNamespace;
   rclcpp::Subscription<SystemTelemetry>::SharedPtr m_telemetrySubscriber;
   rclcpp::Subscription<MCUMemory>::SharedPtr m_mcuMemorySubscriber;
+  rclcpp::Subscription<UPSStatus>::SharedPtr m_upsStatusSubscriber;
 
   // GUI parameters
   std::chrono::time_point<std::chrono::steady_clock> m_lastActive;
@@ -67,6 +73,8 @@ private:
   float m_cpuUtilization{0.0f};
   double m_cpuFrequencyHz{0.0};
   float m_memoryUtilization{0.0f};
+  unsigned int m_batteryCharge{0};
+  float m_batteryLoadWatts{0.0f};
 
   // Synchronization parameters
   mutable std::mutex m_mutex;
