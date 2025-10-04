@@ -9,6 +9,9 @@
     <variable name="OasisTrainSystemOceanPlatformIsActive">
         <value condition="SmartHome.System(oceanplatform).IsActive(2)">true</value>
     </variable>
+    <variable name="OasisTrainHasLab">
+        <value condition="SmartHome.HasLab">true</value>
+    </variable>
     <include name="OasisTrainSystemListItem">
         <control type="label">
             <description>System name</description>
@@ -126,9 +129,9 @@
             <property name="smarthome.isactive">$VAR[OasisTrainSystemStationIsActive]</property>
         </item>
         <item>
-            <label>Current</label>
-            <label2>$INFO[SmartHome.StationCurrent]</label2> <!-- 0.1 A -->
-            <property name="smarthome.isactive">$VAR[OasisTrainSystemStationIsActive]</property>
+            <label>IR</label>
+            <label2>$INFO[SmartHome.LabIR]</label2> <!-- 3.9 V -->
+            <property name="smarthome.isactive">$VAR[OasisTrainHasLab]</property>
         </item>
         <item>
             <label>Load</label>
