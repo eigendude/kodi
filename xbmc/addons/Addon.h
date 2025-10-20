@@ -37,6 +37,8 @@ public:
   explicit CAddon(const AddonInfoPtr& addonInfo, AddonType addonType);
   ~CAddon() override = default;
 
+  AddonInfoPtr AddonInfo() const override { return m_addonInfo; }
+
   /**
    * @brief To get the main type of this addon
    *

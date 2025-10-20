@@ -24,6 +24,7 @@ enum class AddonInstanceSupport;
 enum class AddonLifecycleState;
 enum class AddonType;
 
+class CAddonInfo;
 class CAddonMgr;
 class CAddonSettings;
 class CAddonVersion;
@@ -31,6 +32,7 @@ class CAddonVersion;
 struct DependencyInfo;
 
 using AddonInstanceId = uint32_t;
+using AddonInfoPtr = std::shared_ptr<CAddonInfo>;
 
 constexpr const char* ADDON_SETTING_INSTANCE_GROUP = "kodi_addon_instance";
 constexpr const char* ADDON_SETTING_INSTANCE_NAME_VALUE = "kodi_addon_instance_name";
@@ -73,6 +75,7 @@ class IAddon : public std::enable_shared_from_this<IAddon>
 {
 public:
   virtual ~IAddon() = default;
+  virtual AddonInfoPtr AddonInfo() const = 0;
   virtual AddonType MainType() const = 0;
   virtual AddonType Type() const = 0;
   virtual bool HasType(AddonType type) const = 0;

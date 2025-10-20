@@ -18,6 +18,7 @@
 #include "addons/Repository.h"
 #include "addons/Scraper.h"
 #include "addons/Service.h"
+#include "addons/SkinResource.h"
 #include "addons/Skin.h"
 #include "addons/UISoundsResource.h"
 #include "addons/Webinterface.h"
@@ -108,6 +109,8 @@ AddonPtr CAddonBuilder::Generate(const AddonInfoPtr& info, AddonType type)
       return std::make_shared<CLanguageResource>(info);
     case AddonType::RESOURCE_UISOUNDS:
       return std::make_shared<CUISoundsResource>(info);
+    case AddonType::RESOURCE_SKIN:
+      return std::make_shared<CSkinResource>(info);
     case AddonType::REPOSITORY:
       return std::make_shared<CRepository>(info);
     case AddonType::CONTEXTMENU_ITEM:
