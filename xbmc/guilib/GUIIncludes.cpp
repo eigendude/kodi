@@ -10,6 +10,7 @@
 
 #include "GUIInfoManager.h"
 #include "addons/Skin.h"
+#include "filesystem/ResourceFile.h"
 #include "guilib/GUIComponent.h"
 #include "guilib/guiinfo/GUIInfoLabel.h"
 #include "interfaces/info/SkinVariable.h"
@@ -194,7 +195,12 @@ void CGUIIncludes::LoadIncludes(const TiXmlElement *node)
     }
     else if (child->Attribute("file"))
     {
-      std::string file = g_SkinInfo->GetSkinPath(child->Attribute("file"));
+      const std::string includeFile{child->Attribute("file")};
+      std::string file;
+
+      if (!XFILE::CResourceFile::TranslatePath(includeFile, file))
+        file = g_SkinInfo->GetSkinPath(includeFile);
+
       const char *condition = child->Attribute("condition");
 
       if (condition)
