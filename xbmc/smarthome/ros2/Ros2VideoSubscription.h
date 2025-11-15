@@ -16,11 +16,6 @@
 
 struct SwsContext;
 
-namespace image_transport
-{
-class ImageTransport;
-}
-
 namespace rclcpp
 {
 class Node;
@@ -60,8 +55,7 @@ private:
   const std::string m_topic;
 
   // ROS parameters
-  std::unique_ptr<image_transport::ImageTransport> m_imgTransport;
-  std::unique_ptr<image_transport::Subscriber> m_imgSubscriber;
+  image_transport::Subscriber m_imgSubscriber;
 
   // Smart home parameters
   std::unique_ptr<CSmartHomeStreamManager> m_streamManager;

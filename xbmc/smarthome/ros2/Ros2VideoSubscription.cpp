@@ -21,6 +21,7 @@
 #include <image_transport/image_transport.hpp>
 #include <image_transport/transport_hints.hpp>
 #include <rclcpp/rclcpp.hpp>
+#include <rmw/qos_profiles.h>
 
 extern "C"
 {
@@ -49,23 +50,24 @@ void CRos2VideoSubscription::Initialize()
   // Initialize rendering
   m_renderer->Initialize();
 
-  // Initialize ROS
-  m_imgTransport = std::make_unique<image_transport::ImageTransport>(m_node);
-  m_imgSubscriber = std::make_unique<image_transport::Subscriber>();
-
   const auto transportHints = image_transport::TransportHints(m_node.get(), "compressed");
 
   CLog::Log(LOGDEBUG, "ROS2: Subscribing to {}", m_topic);
 
-  *m_imgSubscriber = m_imgTransport->subscribe(m_topic, 1, &CRos2VideoSubscription::ReceiveImage,
-                                               this, &transportHints);
+  // Initialize ROS subscription
+  rmw_qos_profile_t qos = rmw_qos_profile_default;
+  qos.depth = 1;
+
+  m_imgSubscriber = image_transport::create_subscription(
+      m_node.get(), m_topic,
+      [this](const sensor_msgs::msg::Image::ConstSharedPtr& msg) { ReceiveImage(msg); },
+      transportHints.getTransport(), qos);
 }
 
 void CRos2VideoSubscription::Deinitialize()
 {
   // Deinitialize ROS
-  m_imgSubscriber.reset();
-  m_imgTransport.reset();
+  m_imgSubscriber.shutdown();
 
   // Deinitialize stream
   if (m_stream)
