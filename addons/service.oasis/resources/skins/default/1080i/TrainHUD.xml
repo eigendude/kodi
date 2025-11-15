@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <window>
-	<include file="../../service.oasis/resources/skins/default/1080i/Includes_Train.xml" />
+	<include file="resource://service.oasis/skins/default/1080i/Includes_Train.xml" />
 	<controls>
 		<control type="videowindow">
 			<description>Video background</description>
