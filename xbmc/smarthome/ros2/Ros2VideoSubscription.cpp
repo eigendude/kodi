@@ -33,10 +33,12 @@ using namespace SMART_HOME;
 
 CRos2VideoSubscription::CRos2VideoSubscription(std::shared_ptr<rclcpp::Node> node,
                                                CSmartHomeGuiBridge& guiBridge,
-                                               const std::string& topic)
+                                               const std::string& topic,
+                                               const std::string& imageTransport)
   : m_node(std::move(node)),
     m_guiBridge(guiBridge),
     m_topic(topic),
+    m_imageTransport(imageTransport),
     m_streamManager(std::make_unique<CSmartHomeStreamManager>()),
     m_renderer(std::make_unique<CSmartHomeRenderer>(m_guiBridge, *m_streamManager))
 {
@@ -53,7 +55,7 @@ void CRos2VideoSubscription::Initialize()
   m_imgTransport = std::make_unique<image_transport::ImageTransport>(m_node);
   m_imgSubscriber = std::make_unique<image_transport::Subscriber>();
 
-  const auto transportHints = image_transport::TransportHints(m_node.get(), "compressed");
+  const auto transportHints = image_transport::TransportHints(m_node.get(), m_imageTransport);
 
   CLog::Log(LOGDEBUG, "ROS2: Subscribing to {}", m_topic);
 

@@ -40,7 +40,8 @@ class CRos2VideoSubscription
 public:
   CRos2VideoSubscription(std::shared_ptr<rclcpp::Node> node,
                          CSmartHomeGuiBridge& guiBridge,
-                         const std::string& topic);
+                         const std::string& topic,
+                         const std::string& imageTransport);
   ~CRos2VideoSubscription();
 
   // Lifecycle functions
@@ -58,6 +59,7 @@ private:
   const std::shared_ptr<rclcpp::Node> m_node;
   CSmartHomeGuiBridge& m_guiBridge;
   const std::string m_topic;
+  const std::string m_imageTransport;
 
   // ROS parameters
   std::unique_ptr<image_transport::ImageTransport> m_imgTransport;

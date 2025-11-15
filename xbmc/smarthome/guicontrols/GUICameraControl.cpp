@@ -48,7 +48,8 @@ CGUICameraControl::CGUICameraControl(const CGUICameraControl& other)
     m_bHasStretchMode(other.m_bHasStretchMode),
     m_bHasRotation(other.m_bHasRotation),
     m_stretchModeInfo(other.m_stretchModeInfo),
-    m_rotationInfo(other.m_rotationInfo)
+    m_rotationInfo(other.m_rotationInfo),
+    m_imageTransportInfo(other.m_imageTransportInfo)
 {
   m_renderSettings->SetDimensions(CRect(CPoint(m_posX, m_posY), CSize(m_width, m_height)));
 
@@ -91,6 +92,17 @@ void CGUICameraControl::SetRotation(const GUILIB::GUIINFO::CGUIInfoLabel& rotati
   const std::string strRotation = m_rotationInfo.GetItemLabel(&empty);
   if (!strRotation.empty())
     UpdateRotation(strRotation);
+}
+
+void CGUICameraControl::SetImageTransport(const GUILIB::GUIINFO::CGUIInfoLabel& imageTransport)
+{
+  m_imageTransportInfo = imageTransport;
+
+  // Check if an image transport is available without a listitem
+  CFileItem empty;
+  const std::string strImageTransport = m_imageTransportInfo.GetItemLabel(&empty);
+  if (!strImageTransport.empty())
+    UpdateImageTransport(strImageTransport);
 }
 
 void CGUICameraControl::Process(unsigned int currentTime, CDirtyRegionList& dirtyregions)
@@ -154,6 +166,10 @@ void CGUICameraControl::UpdateInfo(const CGUIListItem* item /* = nullptr */)
     std::string strRotation = m_rotationInfo.GetItemLabel(item);
     if (!strRotation.empty())
       UpdateRotation(strRotation);
+
+    std::string strImageTransport = m_imageTransportInfo.GetItemLabel(item);
+    if (!strImageTransport.empty())
+      UpdateImageTransport(strImageTransport);
   }
 }
 
@@ -182,6 +198,12 @@ void CGUICameraControl::UpdateRotation(const std::string& strRotation)
   m_bHasRotation = true;
 }
 
+void CGUICameraControl::UpdateImageTransport(const std::string& strImageTransport)
+{
+  if (strImageTransport != m_cameraConfig->GetImageTransport())
+    m_cameraConfig->SetImageTransport(strImageTransport);
+}
+
 void CGUICameraControl::ResetInfo()
 {
   m_bHasStretchMode = false;
@@ -194,7 +216,8 @@ void CGUICameraControl::RegisterControl(const std::string& topic)
 
   IRos2* ros2 = CServiceBroker::GetSmartHomeServices().Ros2();
   if (ros2 != nullptr)
-    CServiceBroker::GetSmartHomeServices().Ros2()->RegisterImageTopic(topic);
+    CServiceBroker::GetSmartHomeServices().Ros2()->RegisterImageTopic(
+        topic, m_cameraConfig->GetImageTransport());
 
   m_renderHandle = CServiceBroker::GetSmartHomeServices().GuiBridge(topic).RegisterControl(*this);
 }
