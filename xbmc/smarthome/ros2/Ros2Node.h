@@ -48,8 +48,10 @@ public:
   void Deinitialize();
 
   // GUI interface
-  void RegisterImageTopic(CSmartHomeGuiBridge& guiBridge, const std::string& topic);
-  void UnregisterImageTopic(const std::string& topic);
+  void RegisterImageTopic(CSmartHomeGuiBridge& guiBridge,
+                          const std::string& topic,
+                          const std::string& imageTransport);
+  void UnregisterImageTopic(const std::string& topic, const std::string& imageTransport);
   ISystemHealthHUD* GetSystemHealthHUD() const;
   ILabHUD* GetLabHUD() const;
   IStationHUD* GetStationHUD() const;
@@ -67,7 +69,7 @@ private:
   // ROS parameters
   std::shared_ptr<rclcpp::Node> m_node;
   std::unique_ptr<CRos2SystemHealthManager> m_systemHealthManager;
-  std::map<std::string, std::unique_ptr<CRos2VideoSubscription>> m_videoSubs; // Topic -> subscriber
+  std::map<std::string, std::unique_ptr<CRos2VideoSubscription>> m_videoSubs;
   std::unique_ptr<CRos2InputPublisher> m_peripheralPublisher;
   std::unique_ptr<CRos2NowPlayingPublisher> m_nowPlayingPublisher;
   std::unique_ptr<CRos2LabSubscriber> m_labSubscriber;
