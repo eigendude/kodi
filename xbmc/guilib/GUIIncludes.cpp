@@ -208,6 +208,8 @@ void CGUIIncludes::LoadIncludes(const TiXmlElement *node)
           child = child->NextSiblingElement("include");
           continue;
         }
+
+        CLog::Log(LOGDEBUG, "Includes: resolved resource include '{}' to '{}'", includeFile, file);
       }
       else
       {
