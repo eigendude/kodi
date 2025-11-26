@@ -17,6 +17,7 @@
 #include "utils/log.h"
 
 #include <cstring>
+#include <exception>
 
 #include <image_transport/image_transport.hpp>
 #include <image_transport/transport_hints.hpp>
@@ -55,9 +56,24 @@ void CRos2VideoSubscription::Initialize()
   CLog::Log(LOGDEBUG, "ROS2: Subscribing to {} using transport {}", m_topic, m_imageTransport);
 
   // Create subscriber
-  m_imgSubscriber = image_transport::create_subscription(
-      m_node.get(), m_topic, [this](const sensor_msgs::msg::Image::ConstSharedPtr& msg)
-      { ReceiveImage(msg); }, m_imageTransport);
+  try
+  {
+    m_imgSubscriber = image_transport::create_subscription(
+        m_node.get(), m_topic, [this](const sensor_msgs::msg::Image::ConstSharedPtr& msg)
+        { ReceiveImage(msg); }, m_imageTransport);
+  }
+  catch (const std::exception& e)
+  {
+    CLog::Log(LOGERROR, "ROS2: Failed to subscribe to {} using transport {}: {}", m_topic,
+              m_imageTransport, e.what());
+    throw;
+  }
+  catch (...)
+  {
+    CLog::Log(LOGERROR, "ROS2: Failed to subscribe to {} using transport {}: unknown error",
+              m_topic, m_imageTransport);
+    throw;
+  }
 }
 
 void CRos2VideoSubscription::Deinitialize()
