@@ -9,6 +9,7 @@
 #include "GUIIncludes.h"
 
 #include "GUIInfoManager.h"
+#include "URL.h"
 #include "addons/Skin.h"
 #include "filesystem/ResourceFile.h"
 #include "guilib/GUIComponent.h"
@@ -198,8 +199,20 @@ void CGUIIncludes::LoadIncludes(const TiXmlElement *node)
       const std::string includeFile{child->Attribute("file")};
       std::string file;
 
-      if (!XFILE::CResourceFile::TranslatePath(includeFile, file))
+      const CURL includeUrl{includeFile};
+      if (includeUrl.IsProtocol("resource"))
+      {
+        if (!XFILE::CResourceFile::TranslatePath(includeUrl, file))
+        {
+          CLog::Log(LOGERROR, "Unable to translate resource include file: {}", includeFile);
+          child = child->NextSiblingElement("include");
+          continue;
+        }
+      }
+      else
+      {
         file = g_SkinInfo->GetSkinPath(includeFile);
+      }
 
       const char *condition = child->Attribute("condition");
 
