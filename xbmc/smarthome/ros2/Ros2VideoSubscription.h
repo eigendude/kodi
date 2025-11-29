@@ -9,10 +9,12 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <string>
 
 #include <image_transport/subscriber.hpp>
 #include <sensor_msgs/msg/image.hpp>
+#include <rclcpp/time.hpp>
 
 struct SwsContext;
 
@@ -66,6 +68,7 @@ private:
 
   // Video parameters
   SwsContext* m_pixelScaler = nullptr;
+  std::optional<rclcpp::Time> m_lastTimestamp;
 };
 } // namespace SMART_HOME
 } // namespace KODI
