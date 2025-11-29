@@ -92,10 +92,12 @@ void CRos2VideoSubscription::ReceiveImage(const std::shared_ptr<const sensor_msg
   const rclcpp::Time msgTimestamp{msg->header.stamp};
   if (m_lastTimestamp && msgTimestamp <= *m_lastTimestamp)
   {
+    const rclcpp::Duration latency = *m_lastTimestamp - msgTimestamp;
+    const double latencyMs = static_cast<double>(latency.nanoseconds()) / 1'000'000.0;
     CLog::Log(LOGDEBUG,
-              "ROS2 Video: Dropping out-of-order frame {}.{:09} (last {}.{:09})",
+              "ROS2 Video: Dropping out-of-order frame {}.{:09} (last {}.{:09}, late by {:.3f} ms)",
               msg->header.stamp.sec, msg->header.stamp.nanosec, m_lastTimestamp->seconds(),
-              m_lastTimestamp->nanoseconds());
+              m_lastTimestamp->nanoseconds(), latencyMs);
     return;
   }
   m_lastTimestamp = msgTimestamp;
