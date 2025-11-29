@@ -347,7 +347,7 @@ void CGUIIncludes::ResolveConstants(TiXmlElement *node)
   if (child && child->Type() == TiXmlNode::TINYXML_TEXT &&
       std::ranges::binary_search(CONSTANT_NODES, node->ValueStr()))
   {
-    child->SetValue(ResolveConstant(child->ValueStr()));
+    child->SetValue(ResolveStaticValue(child->ValueStr()));
   }
   else
   {
@@ -355,7 +355,7 @@ void CGUIIncludes::ResolveConstants(TiXmlElement *node)
     while (attribute)
     {
       if (std::ranges::binary_search(CONSTANT_ATTRIBUTES, attribute->Name()))
-        attribute->SetValue(ResolveConstant(attribute->ValueStr()));
+        attribute->SetValue(ResolveStaticValue(attribute->ValueStr()));
 
       attribute = attribute->Next();
     }
@@ -669,6 +669,33 @@ std::string CGUIIncludes::ResolveConstant(const std::string &constant) const
       i = it->second;
   }
   return StringUtils::Join(values, ",");
+}
+
+std::string CGUIIncludes::ResolveStaticValue(const std::string& value) const
+{
+  const std::string resolvedConstant = ResolveConstant(value);
+
+  std::string resolvedValue;
+
+  // Allow using skin variables in attributes that expect static (non-dynamic) values
+  if (GUIINFO::CGUIInfoLabel::ReplaceSpecialKeywordReferences(
+          resolvedConstant, "VAR",
+          [this](const std::string& variableName) -> std::string
+          {
+            const INFO::CSkinVariableString* variable =
+                CreateSkinVariable(variableName, INFO::DEFAULT_CONTEXT);
+
+            if (variable != nullptr)
+              return variable->GetValue(INFO::DEFAULT_CONTEXT);
+
+            return std::string();
+          },
+          resolvedValue))
+  {
+    return resolvedValue;
+  }
+
+  return resolvedConstant;
 }
 
 std::string CGUIIncludes::ResolveExpressions(const std::string &expression) const

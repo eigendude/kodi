@@ -118,6 +118,7 @@ private:
   static void ResolveParametersForNode(TiXmlElement *node, const Params& params);
   static ResolveParamsResult ResolveParameters(const std::string& strInput, std::string& strOutput, const Params& params);
 
+  std::string ResolveStaticValue(const std::string& value) const;
   std::string ResolveConstant(const std::string &constant) const;
   std::string ResolveExpressions(const std::string &expression) const;
 
