@@ -1,19 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <window>
+	<include file="resource://service.oasis/skins/default/1080i/Includes_SmartHome.xml" />
 	<include file="resource://service.oasis/skins/default/1080i/Includes_Train.xml" />
 	<controls>
-		<control type="videowindow">
-			<description>Video background</description>
-		</control>
+		<include content="UnclickableVideoWindow"/>
 		<control type="cameraview">
-			<topic>/oasis/falcon/image_raw</topic>
+			<topic>/oasis/falcon/hd/image_raw</topic>
 			<imagetransport>compressed</imagetransport>
 			<stretchmode>zoom</stretchmode>
 			<visible>SmartHome.System(falcon).IsActive(2)</visible>
 			<animation effect="fade" time="1500">VisibleChange</animation>
 		</control>
 		<control type="cameraview">
-			<topic>/oasis/falcon/slam_map_image</topic>
+			<topic>/oasis/falcon/hd720/apriltags_slam_map_image</topic>
 			<imagetransport>raw</imagetransport>
 			<stretchmode>zoom</stretchmode>
 			<visible>SmartHome.System(falcon).IsActive(2)</visible>
@@ -29,7 +28,7 @@
 		<control type="group">
 			<description>Train system area</description>
 			<top>20</top>
-			<height>340</height>
+			<height>390</height>
 			<left>20</left>
 			<right>20</right>
 			<control type="image">
@@ -47,10 +46,10 @@
 				<top>10</top>
 				<bottom>10</bottom>
 				<orientation>vertical</orientation>
-				<itemlayout width="1860" height="80">
+				<itemlayout width="1860" height="75">
 					<include content="OasisTrainSystemListItem" />
 				</itemlayout>
-				<focusedlayout width="1860" height="80">
+				<focusedlayout width="1860" height="75">
 					<include content="OasisTrainSystemListItem" />
 				</focusedlayout>
 				<content>
@@ -59,11 +58,11 @@
 			</control>
 		</control>
 		<control type="group">
-			<description>Train sensor area</description>
-			<height>415</height>
+			<description>Train sensor area for Volts</description>
+			<height>290</height>
 			<bottom>20</bottom>
 			<left>20</left>
-			<width>650</width>
+			<width>610</width>
 			<control type="image">
 				<description>Train sensor content area background</description>
 				<top>-20</top>
@@ -74,19 +73,51 @@
 				<visible>!SmartHome.System(falcon).IsActive(2)</visible>
 				<animation effect="fade" time="1500">VisibleChange</animation>
 			</control>
-			<control type="list">
-				<description>Sensor data list</description>
+			<control type="panel">
+				<description>Sensor data panel</description>
 				<top>10</top>
 				<bottom>10</bottom>
-				<orientation>vertical</orientation>
-				<itemlayout width="650" height="135">
-					<include content="OasisTrainSensorListItem" />
+				<orientation>horizontal</orientation>
+				<itemlayout width="610" height="135">
+					<include content="OasisTrainSensorListItemVolts" />
 				</itemlayout>
-				<focusedlayout width="650" height="135">
-					<include content="OasisTrainSensorListItem" />
+				<focusedlayout width="610" height="135">
+					<include content="OasisTrainSensorListItemVolts" />
 				</focusedlayout>
 				<content>
-					<include content="OasisTrainSensorContent" />
+					<include content="OasisTrainSensorContentVolts" />
+				</content>
+			</control>
+		</control>
+		<control type="group">
+			<description>Train sensor area for Watts</description>
+			<height>290</height>
+			<bottom>20</bottom>
+			<left>660</left>
+			<width>600</width>
+			<control type="image">
+				<description>Train sensor content area background</description>
+				<top>-20</top>
+				<bottom>-20</bottom>
+				<left>-20</left>
+				<right>-20</right>
+				<texture border="40">buttons/dialogbutton-nofo.png</texture>
+				<visible>!SmartHome.System(falcon).IsActive(2)</visible>
+				<animation effect="fade" time="1500">VisibleChange</animation>
+			</control>
+			<control type="panel">
+				<description>Sensor data panel</description>
+				<top>10</top>
+				<bottom>10</bottom>
+				<orientation>horizontal</orientation>
+				<itemlayout width="600" height="135">
+					<include content="OasisTrainSensorListItemWatts" />
+				</itemlayout>
+				<focusedlayout width="600" height="135">
+					<include content="OasisTrainSensorListItemWatts" />
+				</focusedlayout>
+				<content>
+					<include content="OasisTrainSensorContentWatts" />
 				</content>
 			</control>
 		</control>
@@ -108,6 +139,7 @@
 				<visible>!SmartHome.System(falcon).IsActive(2)</visible>
 				<animation effect="fade" time="1500">VisibleChange</animation>
 			</control>
+			<!--
 			<control type="label">
 				<description>Camera title</description>
 				<height>100</height>
@@ -117,6 +149,7 @@
 				<align>center</align>
 				<aligny>center</aligny>
 			</control>
+			-->
 			<control type="list">
 				<description>Camera data list</description>
 				<bottom>0</bottom>

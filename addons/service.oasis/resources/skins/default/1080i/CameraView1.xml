@@ -58,22 +58,22 @@
 				<item>
 					<visible>String.IsEqual(Window(Home).Property(hostname),bar)</visible>
 					<label>Bar AI</label>
-					<property name="smarthome.cameratopic">/oasis/bar/pose_image</property>
+					<property name="smarthome.cameratopic">/oasis/bar/sd/pose_image</property>
 				</item>
 				<item>
 					<visible>String.IsEqual(Window(Home).Property(hostname),cinder)</visible>
 					<label>Hallway AI</label>
-					<property name="smarthome.cameratopic">/oasis/hallway/pose_image</property>
+					<property name="smarthome.cameratopic">/oasis/hallway/sd/pose_image</property>
 				</item>
 				<item>
 					<visible>String.IsEqual(Window(Home).Property(hostname),kitchen)</visible>
 					<label>Kitchen AI</label>
-					<property name="smarthome.cameratopic">/oasis/kitchen/pose_image</property>
+					<property name="smarthome.cameratopic">/oasis/kitchen/sd/pose_image</property>
 				</item>
 				<item>
 					<visible>String.IsEqual(Window(Home).Property(hostname),megapegasus)</visible>
 					<label>Living Room AI</label>
-					<property name="smarthome.cameratopic">/oasis/livingroom/pose_image</property>
+					<property name="smarthome.cameratopic">/oasis/livingroom/sd/pose_image</property>
 				</item>
 			</content>
 		</control>
