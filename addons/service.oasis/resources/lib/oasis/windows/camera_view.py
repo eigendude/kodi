@@ -10,6 +10,8 @@
 
 import xbmcgui  # pylint: disable=import-error
 
+from oasis.windows.oasis_window import OasisWindow
 
-class CameraView(xbmcgui.WindowXML):
+
+class CameraView(OasisWindow):
     pass

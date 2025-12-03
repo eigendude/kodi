@@ -14,6 +14,7 @@ import xbmc  # pylint: disable=import-error
 import xbmcgui  # pylint: disable=import-error
 
 from oasis.utils.playlist_player import PlaylistPlayer
+from oasis.windows.oasis_window import OasisWindow
 
 
 # Get the current user's home directory and set the path to the fireworks video
@@ -26,7 +27,7 @@ FIREWORKS_VIDEO = os.path.join(
 )
 
 
-class FireworksHUD(xbmcgui.WindowXML):
+class FireworksHUD(OasisWindow):
     def onInit(self) -> None:
         self._play()
 

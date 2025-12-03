@@ -18,6 +18,7 @@ import xbmc  # pylint: disable=import-error
 import xbmcgui  # pylint: disable=import-error
 
 from oasis.utils.playlist_player import PlaylistPlayer
+from oasis.windows.oasis_window import OasisWindow
 
 
 # Get the current user's home directory and set the asset directory
@@ -25,7 +26,7 @@ HOME_DIR = os.path.expanduser("~")
 ASSET_DIR = os.path.join(HOME_DIR, "Videos", "ATV-4K-SDR")
 
 
-class StationHUD(xbmcgui.WindowXML):
+class StationHUD(OasisWindow):
     def onInit(self) -> None:
         self._play()
 
