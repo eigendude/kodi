@@ -20,6 +20,7 @@
 
 #include <sstream>
 
+#include <rclcpp/executors/multi_threaded_executor.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 using namespace KODI;
@@ -58,6 +59,8 @@ void CRos2Node::Initialize()
 
   // Can't make virtual calls from constructor
   m_node = std::make_shared<rclcpp::Node>(NODE_NAME_PREFIX + hostname);
+  m_executor = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
+  m_executor->add_node(m_node);
   m_thread = std::make_unique<CThread>(this, THREAD_NAME);
 
   // Managers
@@ -82,11 +85,17 @@ void CRos2Node::Initialize()
 void CRos2Node::Deinitialize()
 {
   // Deinitialize ROS
+  if (m_executor)
+    m_executor->cancel();
+
   rclcpp::shutdown();
 
   // Stop thread
   if (m_thread)
     m_thread->StopThread(true);
+
+  if (m_executor && m_node)
+    m_executor->remove_node(m_node);
 
   m_systemHealthManager->Deinitialize();
 
@@ -119,6 +128,7 @@ void CRos2Node::Deinitialize()
   }
 
   m_thread.reset();
+  m_executor.reset();
   m_node.reset();
 }
 
@@ -163,5 +173,6 @@ void CRos2Node::FrameMove()
 void CRos2Node::Run()
 {
   // Enter ROS main loop
-  rclcpp::spin(m_node);
+  if (m_executor)
+    m_executor->spin();
 }

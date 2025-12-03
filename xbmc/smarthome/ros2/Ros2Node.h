@@ -19,7 +19,11 @@ class CThread;
 namespace rclcpp
 {
 class Node;
-}
+namespace executors
+{
+class MultiThreadedExecutor;
+} // namespace executors
+} // namespace rclcpp
 
 namespace KODI
 {
@@ -65,6 +69,7 @@ private:
   CSmartHomeInputManager& m_inputManager;
 
   // ROS parameters
+  std::shared_ptr<rclcpp::executors::MultiThreadedExecutor> m_executor;
   std::shared_ptr<rclcpp::Node> m_node;
   std::unique_ptr<CRos2SystemHealthManager> m_systemHealthManager;
   std::map<std::string, std::unique_ptr<CRos2VideoSubscription>> m_videoSubs; // Topic -> subscriber
