@@ -12,23 +12,32 @@
 			<animation effect="fade" time="1500">VisibleChange</animation>
 		</control>
 		<control type="cameraview">
-			<topic>/oasis/falcon/hd/apriltags_slam_map_image</topic>
+			<topic>/oasis/falcon/hd/apriltags_image</topic>
+			<imagetransport>raw</imagetransport>
+			<stretchmode>zoom</stretchmode>
+			<visible>SmartHome.System(falcon).IsActive(2)</visible>
+			<animation effect="fade" time="1500">VisibleChange</animation>
+		</control>
+		<!--
+		<control type="cameraview">
+			<topic>/oasis/falcon/hd/slam_map_image</topic>
 			<imagetransport>raw</imagetransport>
 			<stretchmode>zoom</stretchmode>
 			<visible>SmartHome.System(falcon).IsActive(2)</visible>
 			<animation effect="fade" time="1500">VisibleChange</animation>
 		</control>
 		<control type="cameraview">
-			<topic>/oasis/falcon/calibration_image</topic>
+			<topic>/oasis/falcon/sd/calibration_image</topic>
 			<imagetransport>raw</imagetransport>
 			<stretchmode>zoom</stretchmode>
 			<visible>SmartHome.System(falcon).IsActive(2)</visible>
 			<animation effect="fade" time="1500">VisibleChange</animation>
 		</control>
+		-->
 		<control type="group">
 			<description>Train system area</description>
 			<top>20</top>
-			<height>390</height>
+			<height>385</height>
 			<left>20</left>
 			<right>20</right>
 			<control type="image">
@@ -46,10 +55,10 @@
 				<top>10</top>
 				<bottom>10</bottom>
 				<orientation>vertical</orientation>
-				<itemlayout width="1860" height="75">
+				<itemlayout width="1860" height="73">
 					<include content="OasisTrainSystemListItem" />
 				</itemlayout>
-				<focusedlayout width="1860" height="75">
+				<focusedlayout width="1860" height="73">
 					<include content="OasisTrainSystemListItem" />
 				</focusedlayout>
 				<content>
@@ -124,11 +133,11 @@
 		<control type="group">
 			<description>Train camera area</description>
 			<bottom>0</bottom>
-			<height>460</height>
+			<height>600</height>
 			<right>0</right>
-			<width>640</width>
-			<visible>SmartHome.System(falcon).IsActive(2)</visible>
+			<width>560</width>
 			<animation effect="fade" time="1500">VisibleChange</animation>
+			<!--
 			<control type="image">
 				<description>Train camera content area background</description>
 				<top>-20</top>
@@ -139,6 +148,7 @@
 				<visible>!SmartHome.System(falcon).IsActive(2)</visible>
 				<animation effect="fade" time="1500">VisibleChange</animation>
 			</control>
+			-->
 			<!--
 			<control type="label">
 				<description>Camera title</description>
@@ -153,12 +163,12 @@
 			<control type="list">
 				<description>Camera data list</description>
 				<bottom>0</bottom>
-				<height>360</height>
+				<height>620</height>
 				<orientation>vertical</orientation>
-				<itemlayout width="640" height="360">
+				<itemlayout width="560" height="310">
 					<include content="OasisTrainCameraListItem" />
 				</itemlayout>
-				<focusedlayout width="640" height="360">
+				<focusedlayout width="560" height="310">
 					<include content="OasisTrainCameraListItem" />
 				</focusedlayout>
 				<content>

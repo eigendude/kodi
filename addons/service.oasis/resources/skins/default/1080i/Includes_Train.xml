@@ -76,7 +76,7 @@
             <property name="smarthome.cpuutilization">$INFO[SmartHome.System(falcon).CPUUtilization]</property>
             <property name="smarthome.cputemperature">$INFO[SmartHome.System(falcon).CPUTemperature]</property>
             <property name="smarthome.ramutilization">$INFO[SmartHome.System(falcon).RAMUtilization]</property>
-            <property name="smarthome.ramtotal">16 GB</property>
+            <property name="smarthome.ramtotal">8 GB</property>
         </item>
         <!--
         <item>
@@ -96,11 +96,11 @@
         </item>
         <item>
             <label>Visual Cortex</label>
-            <property name="smarthome.isactive">$VAR[SmartHomeSystemNasIsActive]</property>
-            <property name="smarthome.cpuutilization">$INFO[SmartHome.System(nas).CPUUtilization]</property>
-            <property name="smarthome.cputemperature">$INFO[SmartHome.System(nas).CPUTemperature]</property>
-            <property name="smarthome.ramutilization">$INFO[SmartHome.System(nas).RAMUtilization]</property>
-            <property name="smarthome.ramtotal">32 GB</property>
+            <property name="smarthome.isactive">$VAR[SmartHomeSystemVisionIsActive]</property>
+            <property name="smarthome.cpuutilization">$INFO[SmartHome.System(vision).CPUUtilization]</property>
+            <property name="smarthome.cputemperature">$INFO[SmartHome.System(vision).CPUTemperature]</property>
+            <property name="smarthome.ramutilization">$INFO[SmartHome.System(vision).RAMUtilization]</property>
+            <property name="smarthome.ramtotal">128 GB</property>
         </item>
         <item>
             <label>Motor Control</label>
@@ -166,14 +166,12 @@
     </include>
     <include name="OasisTrainSensorContentWatts">
         <item>
+            <label/>
+        </item>
+        <item>
             <label>Load</label>
             <label2>$INFO[SmartHome.System(oceanplatform).BatteryLoad]</label2> <!-- 100 W -->
             <property name="smarthome.isactive">$VAR[SmartHomeSystemOceanPlatformIsActive]</property>
-        </item>
-        <item>
-            <label>Vision</label>
-            <label2>$INFO[SmartHome.System(hallway).BatteryLoad]</label2> <!-- 100 W -->
-            <property name="smarthome.isactive">$VAR[SmartHomeSystemNasIsActive]</property>
         </item>
     </include>
     <include name="OasisTrainCameraListItem">
@@ -186,8 +184,11 @@
     </include>
     <include name="OasisTrainCameraContent">
         <item>
-            <property name="smarthome.isactive">$VAR[SmartHomeSystemFalconIsActive]</property>
-            <property name="smarthome.cameratopic">/oasis/falcon/hd/apriltags_image</property>
+            <label/>
+        </item>
+        <item>
+            <property name="smarthome.isactive">$VAR[SmartHomeSystemStationIsActive]</property>
+            <property name="smarthome.cameratopic">/oasis/station/sd/calibration_image</property>
         </item>
         <!--
         <item>
