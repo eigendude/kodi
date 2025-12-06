@@ -56,7 +56,7 @@ public:
   ~CControllerState() = default;
 
   // Operators
-  bool operator==(const CControllerState& rhs) const = default;
+  bool operator==(const CControllerState& rhs) const;
 
   // Controller state
   const std::string& ID() const { return m_controllerId; }

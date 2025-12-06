@@ -105,6 +105,42 @@ TEST(TestControllerState, EqualityOperator)
 }
 
 //
+// Spec: Equality should compare feature maps regardless of insertion order
+//
+TEST(TestControllerState, EqualityIgnoresOrder)
+{
+  using namespace ADDON;
+
+  AddonInfoPtr addon =
+      CAddonInfoBuilder::Generate("test.controller", ADDON::AddonType::GAME_CONTROLLER);
+  CController controller(addon);
+
+  CControllerState first(controller);
+  first.SetAnalogStick("stick", {0.5f, -0.5f});
+  first.SetDigitalButton("btn", true);
+  first.SetAnalogButton("analog", 1.0f);
+
+  CControllerState second(controller);
+  second.SetDigitalButton("btn", true);
+  second.SetAnalogButton("analog", 1.0f);
+  second.SetAnalogStick("stick", {0.5f, -0.5f});
+
+  EXPECT_EQ(first, second);
+}
+
+//
+// Spec: Default-constructed states with no inputs should compare equal
+//
+TEST(TestControllerState, EqualityEmptyState)
+{
+  CControllerState lhs;
+  CControllerState rhs;
+
+  EXPECT_EQ(lhs, rhs);
+  EXPECT_FALSE(lhs != rhs);
+}
+
+//
 // Spec: Unknown features should return default values
 //
 TEST(TestControllerState, DefaultValues)

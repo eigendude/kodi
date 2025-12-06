@@ -54,6 +54,19 @@ CControllerState::CControllerState(const CController& controller) : m_controller
   }
 }
 
+bool CControllerState::operator==(const CControllerState& rhs) const
+{
+  // clang-format off
+  return m_controllerId == rhs.m_controllerId &&
+         m_digitalButtons == rhs.m_digitalButtons &&
+         m_analogButtons == rhs.m_analogButtons &&
+         m_analogSticks == rhs.m_analogSticks &&
+         m_accelerometers == rhs.m_accelerometers &&
+         m_throttles == rhs.m_throttles &&
+         m_wheels == rhs.m_wheels;
+  // clang-format on
+}
+
 CControllerState::DigitalButton CControllerState::GetDigitalButton(
     const std::string& featureName) const
 {
