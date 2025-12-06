@@ -107,10 +107,13 @@ void CRos2InputPublisher::OnInputFrame(const PERIPHERALS::CPeripheral& periphera
 {
   using Header = std_msgs::msg::Header;
 
+  const std::string& peripheralAddress = peripheral.Location();
+
   // Compare states and ignore if state hasn't changed
-  if (controllerState == m_previousState)
+  const auto it = m_previousStates.find(peripheralAddress);
+  if (it != m_previousStates.end() && controllerState == it->second)
     return;
-  m_previousState = controllerState;
+  m_previousStates[peripheralAddress] = controllerState;
 
   // Build message
   auto inputMessage = PeripheralInput();

@@ -13,6 +13,7 @@
 #include "smarthome/input/ISmartHomeJoystickHandler.h"
 #include "utils/Observer.h"
 
+#include <map>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -102,7 +103,7 @@ private:
   rclcpp::TimerBase::SharedPtr m_publishPeripheralsTimer;
 
   // Input parameters
-  GAME::CControllerState m_previousState;
+  std::map<std::string, GAME::CControllerState> m_previousStates;
 
   // Threading parameters
   std::mutex m_publishMutex;
