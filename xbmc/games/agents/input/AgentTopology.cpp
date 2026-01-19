@@ -32,8 +32,13 @@ void CAgentTopology::UpdateDigest()
     std::string strDigest = m_controllerTree->GetDigest(UTILITY::CDigest::Type::SHA256);
     m_digest = StringUtils::ToHexadecimal(strDigest);
 
-    // Take a timestamp of the system clock
+    // Take a timestamp of the system clock and truncate to whole seconds so it survives XML
+    // round-tripping (W3C date time strings don't include sub-second precision).
     m_digestCreationUtc = CDateTime::GetUTCDateTime();
+    KODI::TIME::SystemTime systemTime{};
+    m_digestCreationUtc.GetAsSystemTime(systemTime);
+    systemTime.milliseconds = 0;
+    m_digestCreationUtc = CDateTime(systemTime);
   }
 }
 
