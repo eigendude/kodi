@@ -94,7 +94,7 @@ bool CAgentTopologyXML::DeserializeTopology(const tinyxml2::XMLElement& topology
   if (digestCreation != nullptr)
   {
     CDateTime digestCreationUtc;
-    if (!digestCreationUtc.SetFromW3CDateTime(digestCreation, false))
+    if (!digestCreationUtc.SetFromW3CDateTime(digestCreation, true))
     {
       CLog::Log(LOGERROR, "Invalid attribute \"{}\": \"{}\"", XML_ATTR_DIGTEST_CREATION,
                 digestCreation);
