@@ -55,7 +55,7 @@ std::string FormatSpeed(double speedMps)
   if (!speed.IsValid())
     return "";
 
-  return g_langInfo.GetSpeedAsString(speed);
+  return g_langInfo.GetSpeedAsString(speed, 2);
 }
 } // namespace
 
