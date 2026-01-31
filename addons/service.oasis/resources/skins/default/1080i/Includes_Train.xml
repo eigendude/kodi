@@ -124,7 +124,7 @@
         <control type="label">
             <right>30</right>
             <label>$INFO[ListItem.Label2]</label>
-            <font>WeatherTemp</font>
+            <font>font_MainMenu</font>
             <shadowcolor>text_shadow</shadowcolor>
             <align>right</align>
             <aligny>center</aligny>
@@ -144,7 +144,7 @@
         <control type="label">
             <right>30</right>
             <label>$INFO[ListItem.Label2]</label>
-            <font>WeatherTemp</font>
+            <font>font_MainMenu</font>
             <shadowcolor>text_shadow</shadowcolor>
             <align>right</align>
             <aligny>center</aligny>
@@ -171,13 +171,19 @@
     </include>
     <include name="OasisTrainSensorContentSpeed">
         <item>
-            <label>Speed</label>
-            <label2>$INFO[SmartHome.System(falcon).ForwardSpeed]</label2> <!-- 10 mph -->
+            <label2>$INFO[SmartHome.Vehicle(falcon).ForwardSpeed]</label2> <!-- 10mph -->
             <property name="smarthome.isactive">$VAR[SmartHomeSystemFalconIsActive]</property>
         </item>
         <item>
-            <label>Uncertainty</label>
-            <label2>±$INFO[SmartHome.System(falcon).ForwardSpeedStdDev]</label2> <!-- ±1 mph -->
+            <label2>±$INFO[SmartHome.Vehicle(falcon).ForwardSpeedStdDev]</label2> <!-- ±1mph -->
+            <property name="smarthome.isactive">$VAR[SmartHomeSystemFalconIsActive]</property>
+        </item>
+        <item>
+            <label2>$INFO[SmartHome.Vehicle(falcon).Tilt]</label2> <!-- 10° -->
+            <property name="smarthome.isactive">$VAR[SmartHomeSystemFalconIsActive]</property>
+        </item>
+        <item>
+            <label2>$INFO[SmartHome.Vehicle(falcon).TiltStdDev]</label2> <!-- ±1° -->
             <property name="smarthome.isactive">$VAR[SmartHomeSystemFalconIsActive]</property>
         </item>
     </include>

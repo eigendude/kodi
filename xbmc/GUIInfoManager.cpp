@@ -4361,6 +4361,22 @@ constexpr std::array<InfoMap, 3> retroplayer = {{
 ///     @skinning_v24 **[New Infolabel]** \link SmartHome_System_BatteryLoad `SmartHome.System(name).BatteryLoad`\endlink
 ///     <p>
 ///   }
+///   \table_row3{   <b>`SmartHome.Vehicle(name).ForwardSpeed`</b>,
+///                  \anchor SmartHome_Vehicle_ForwardSpeed
+///                  _string_,
+///     @return The current forward speed of the movable vehicle, in m/s
+///     <p><hr>
+///     @skinning_v24 **[New Infolabel]** \link SmartHome_Vehicle_ForwardSpeed `SmartHome.Vehicle(name).ForwardSpeed`\endlink
+///     <p>
+///   }
+///   \table_row3{   <b>`SmartHome.Vehicle(name).ForwardSpeedStdDev`</b>,
+///                  \anchor SmartHome_Vehicle_ForwardSpeedStdDev
+///                  _string_,
+///     @return The standard deviation (1-sigma uncertainty) of the forward speed, in m/s
+///     <p><hr>
+///     @skinning_v24 **[New Infolabel]** \link SmartHome_Vehicle_ForwardSpeedStdDev `SmartHome.Vehicle(name).ForwardSpeedStdDev`\endlink
+///     <p>
+///   }
 ///   \table_row3{   <b>`SmartHome.HasLab`</b>,
 ///                  \anchor SmartHome_HasLab
 ///                  _boolean_,
@@ -4432,7 +4448,7 @@ constexpr std::array<InfoMap, 3> retroplayer = {{
 ///
 /// -----------------------------------------------------------------------------
 // clang-format off
-constexpr std::array<InfoMap, 18> smarthome = {{
+constexpr std::array<InfoMap, 20> smarthome = {{
     {"isactive",            SMARTHOME_IS_ACTIVE},
     {"cputemperature",      SMARTHOME_CPU_TEMPERATURE},
     {"cpuutilization",      SMARTHOME_CPU_UTILIZATION},
@@ -4440,6 +4456,8 @@ constexpr std::array<InfoMap, 18> smarthome = {{
     {"ramutilization",      SMARTHOME_RAM_UTILIZATION},
     {"batterycharge",       SMARTHOME_BATTERY_CHARGE},
     {"batteryload",         SMARTHOME_BATTERY_LOAD},
+    {"forwardspeed",        SMARTHOME_FORWARD_SPEED},
+    {"forwardspeedstddev",  SMARTHOME_FORWARD_SPEED_STD_DEV},
     {"haslab",              SMARTHOME_HAS_LAB},
     {"labcpu",              SMARTHOME_LAB_CPU},
     {"labmemory",           SMARTHOME_LAB_MEMORY},
@@ -11452,6 +11470,21 @@ int CGUIInfoManager::TranslateSingleString(const std::string &strCondition, bool
             }
             return AddMultiInfo(
                 CGUIInfo(systemLabel.val, 2, 0, 0, systemName, timeoutMs)); // 2 => absolute
+          }
+        }
+      }
+      else if (info[1].Name() == "vehicle")
+      {
+        // Parameter is vehicle name
+        const std::string vehicleName = info[1].param();
+
+        // Get next info
+        for (const auto& vehicleLabel : smarthome)
+        {
+          if (info[2].Name() == vehicleLabel.str)
+          {
+            return AddMultiInfo(
+                CGUIInfo(vehicleLabel.val, 2, 0, 0, vehicleName, 0)); // 2 => absolute
           }
         }
       }
