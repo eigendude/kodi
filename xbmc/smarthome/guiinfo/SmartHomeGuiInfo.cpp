@@ -51,8 +51,11 @@ std::string FormatSpeed(double speedMps)
   if (!std::isfinite(speedMps))
     return "";
 
-  // Keep it simple and generic: m/s
-  return StringUtils::Format("{:.2f} m/s", speedMps);
+  const CSpeed speed = CSpeed::CreateFromMetresPerSecond(speedMps);
+  if (!speed.IsValid())
+    return "";
+
+  return g_langInfo.GetSpeedAsString(speed);
 }
 } // namespace
 
