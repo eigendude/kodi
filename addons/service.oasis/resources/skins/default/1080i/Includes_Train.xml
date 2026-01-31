@@ -112,7 +112,7 @@
             <property name="smarthome.cameratopic">/oasis/station/image_raw</property>
         </item>
     </include>
-    <include name="OasisTrainSensorListItemVolts">
+    <include name="OasisTrainSensorListItemPower">
         <control type="label">
             <left>30</left>
             <label>$INFO[ListItem.Label]</label>
@@ -132,7 +132,7 @@
             <animation effect="fade" time="1500">VisibleChange</animation>
         </control>
     </include>
-    <include name="OasisTrainSensorListItemWatts">
+    <include name="OasisTrainSensorListItemSpeed">
         <control type="label">
             <left>30</left>
             <label>$INFO[ListItem.Label]</label>
@@ -152,7 +152,7 @@
             <animation effect="fade" time="1500">VisibleChange</animation>
         </control>
     </include>
-    <include name="OasisTrainSensorContentVolts">
+    <include name="OasisTrainSensorContentPower">
         <item>
             <label>Supply</label>
             <label2>$INFO[SmartHome.StationSupply]</label2> <!-- 12.0 V -->
@@ -163,15 +163,22 @@
             <label2>$INFO[SmartHome.StationMotor]</label2> <!-- 7.8 V -->
             <property name="smarthome.isactive">$VAR[SmartHomeSystemStationIsActive]</property>
         </item>
-    </include>
-    <include name="OasisTrainSensorContentWatts">
-        <item>
-            <label/>
-        </item>
         <item>
             <label>Load</label>
             <label2>$INFO[SmartHome.System(oceanplatform).BatteryLoad]</label2> <!-- 100 W -->
             <property name="smarthome.isactive">$VAR[SmartHomeSystemOceanPlatformIsActive]</property>
+        </item>
+    </include>
+    <include name="OasisTrainSensorContentSpeed">
+        <item>
+            <label>Speed</label>
+            <label2>$INFO[SmartHome.System(falcon).ForwardSpeed]</label2> <!-- 10 mph -->
+            <property name="smarthome.isactive">$VAR[SmartHomeSystemFalconIsActive]</property>
+        </item>
+        <item>
+            <label>Uncertainty</label>
+            <label2>±$INFO[SmartHome.System(falcon).ForwardSpeedStdDev]</label2> <!-- ±1 mph -->
+            <property name="smarthome.isactive">$VAR[SmartHomeSystemFalconIsActive]</property>
         </item>
     </include>
     <include name="OasisTrainCameraListItem">

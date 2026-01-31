@@ -4,6 +4,7 @@
 	<include file="resource://service.oasis/skins/default/1080i/Includes_Train.xml" />
 	<controls>
 		<include content="UnclickableVideoWindow"/>
+		<!--
 		<control type="cameraview">
 			<topic>/oasis/falcon/hd/image_raw</topic>
 			<imagetransport>compressed</imagetransport>
@@ -18,7 +19,7 @@
 			<visible>SmartHome.System(falcon).IsActive(2)</visible>
 			<animation effect="fade" time="1500">VisibleChange</animation>
 		</control>
-		<!--
+		-->
 		<control type="cameraview">
 			<topic>/oasis/falcon/hd/slam_map_image</topic>
 			<imagetransport>raw</imagetransport>
@@ -33,7 +34,6 @@
 			<visible>SmartHome.System(falcon).IsActive(2)</visible>
 			<animation effect="fade" time="1500">VisibleChange</animation>
 		</control>
-		-->
 		<control type="group">
 			<description>Train system area</description>
 			<top>20</top>
@@ -67,8 +67,8 @@
 			</control>
 		</control>
 		<control type="group">
-			<description>Train sensor area for Volts</description>
-			<height>290</height>
+			<description>Train sensor area for volts and power</description>
+			<height>425</height>
 			<bottom>20</bottom>
 			<left>20</left>
 			<width>610</width>
@@ -88,18 +88,18 @@
 				<bottom>10</bottom>
 				<orientation>horizontal</orientation>
 				<itemlayout width="610" height="135">
-					<include content="OasisTrainSensorListItemVolts" />
+					<include content="OasisTrainSensorListItemPower" />
 				</itemlayout>
 				<focusedlayout width="610" height="135">
-					<include content="OasisTrainSensorListItemVolts" />
+					<include content="OasisTrainSensorListItemPower" />
 				</focusedlayout>
 				<content>
-					<include content="OasisTrainSensorContentVolts" />
+					<include content="OasisTrainSensorContentPower" />
 				</content>
 			</control>
 		</control>
 		<control type="group">
-			<description>Train sensor area for Watts</description>
+			<description>Train sensor area for speed</description>
 			<height>290</height>
 			<bottom>20</bottom>
 			<left>660</left>
@@ -120,13 +120,13 @@
 				<bottom>10</bottom>
 				<orientation>horizontal</orientation>
 				<itemlayout width="600" height="135">
-					<include content="OasisTrainSensorListItemWatts" />
+					<include content="OasisTrainSensorListItemSpeed" />
 				</itemlayout>
 				<focusedlayout width="600" height="135">
-					<include content="OasisTrainSensorListItemWatts" />
+					<include content="OasisTrainSensorListItemSpeed" />
 				</focusedlayout>
 				<content>
-					<include content="OasisTrainSensorContentWatts" />
+					<include content="OasisTrainSensorContentSpeed" />
 				</content>
 			</control>
 		</control>
