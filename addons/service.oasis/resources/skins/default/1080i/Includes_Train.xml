@@ -171,13 +171,11 @@
     </include>
     <include name="OasisTrainSensorContentSpeed">
         <item>
-            <label>Speed</label>
-            <label2>$INFO[SmartHome.System(falcon).ForwardSpeed]</label2> <!-- 10 mph -->
+            <label2>$INFO[SmartHome.Vehicle(falcon).ForwardSpeed]</label2> <!-- 10 mph -->
             <property name="smarthome.isactive">$VAR[SmartHomeSystemFalconIsActive]</property>
         </item>
         <item>
-            <label>Uncertainty</label>
-            <label2>±$INFO[SmartHome.System(falcon).ForwardSpeedStdDev]</label2> <!-- ±1 mph -->
+            <label2>±$INFO[SmartHome.Vehicle(falcon).ForwardSpeedStdDev]</label2> <!-- ±1 mph -->
             <property name="smarthome.isactive">$VAR[SmartHomeSystemFalconIsActive]</property>
         </item>
     </include>

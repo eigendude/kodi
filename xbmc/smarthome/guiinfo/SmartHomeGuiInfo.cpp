@@ -15,6 +15,7 @@
 #include "smarthome/guiinfo/ILabHUD.h"
 #include "smarthome/guiinfo/IStationHUD.h"
 #include "smarthome/guiinfo/ISystemHealthHUD.h"
+#include "smarthome/guiinfo/IVehicleHUD.h"
 #include "utils/StringUtils.h"
 
 #include <chrono>
@@ -44,14 +45,25 @@ std::string FormatFrequency(double frequencyHz)
 
   return StringUtils::Format("{:.0f} Hz", frequencyHz);
 }
+
+std::string FormatSpeed(double speedMps)
+{
+  if (!std::isfinite(speedMps))
+    return "";
+
+  // Keep it simple and generic: m/s
+  return StringUtils::Format("{:.2f} m/s", speedMps);
+}
 } // namespace
 
 CSmartHomeGuiInfo::CSmartHomeGuiInfo(CGUIInfoManager& infoManager,
                                      ISystemHealthHUD& systemHealthHud,
+                                     IVehicleHUD& vehicleHud,
                                      ILabHUD& labHud,
                                      IStationHUD& stationHud)
   : m_infoManager(infoManager),
     m_systemHealthHud(systemHealthHud),
+    m_vehicleHud(vehicleHud),
     m_labHud(labHud),
     m_stationHud(stationHud)
 {
@@ -144,6 +156,28 @@ bool CSmartHomeGuiInfo::GetLabel(std::string& value,
         const float batteryLoadWatts = m_systemHealthHud.BatteryLoad(systemName);
         value =
             StringUtils::Format("{} W", static_cast<unsigned int>(std::round(batteryLoadWatts)));
+        return true;
+      }
+      break;
+    }
+    case SMARTHOME_FORWARD_SPEED:
+    {
+      const std::string vehicleName = info.GetData3();
+      if (!vehicleName.empty())
+      {
+        const float speedMps = m_vehicleHud.ForwardSpeed(vehicleName);
+        value = FormatSpeed(static_cast<double>(speedMps));
+        return true;
+      }
+      break;
+    }
+    case SMARTHOME_FORWARD_SPEED_STD_DEV:
+    {
+      const std::string vehicleName = info.GetData3();
+      if (!vehicleName.empty())
+      {
+        const float stdDevMps = m_vehicleHud.ForwardSpeedStdDev(vehicleName);
+        value = FormatSpeed(static_cast<double>(stdDevMps));
         return true;
       }
       break;
