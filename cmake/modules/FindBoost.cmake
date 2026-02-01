@@ -61,10 +61,17 @@ if(NOT TARGET ${APP_NAME_LC}::${CMAKE_FIND_PACKAGE_NAME})
       set(CMAKE_EXTRA_ARGS "-DCMAKE_ASM_FLAGS=${CMAKE_C_FLAGS}")
     endif()
 
-    # Ensure the ARM assembler sees the same flags as the C compiler so it
-    # enables the correct FPU/ABI settings for Boost.Context.
+    # Ensure the ARM assembler sees the correct FPU/ABI settings for
+    # Boost.Context on hard-float toolchains.
     if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(arm|armv[7-8]|armel|armhf)$")
-      list(APPEND CMAKE_EXTRA_ARGS "-DCMAKE_ASM_FLAGS=${CMAKE_ASM_FLAGS}")
+      set(_boost_arm_asm_flags "${CMAKE_ASM_FLAGS}")
+      if(CMAKE_LIBRARY_ARCHITECTURE MATCHES "gnueabihf"
+         OR CMAKE_C_COMPILER_TARGET MATCHES "gnueabihf"
+         OR CMAKE_C_COMPILER MATCHES "gnueabihf")
+        string(APPEND _boost_arm_asm_flags " -mfpu=vfp -mfloat-abi=hard")
+      endif()
+      list(APPEND CMAKE_EXTRA_ARGS "-DCMAKE_ASM_FLAGS=${_boost_arm_asm_flags}")
+      unset(_boost_arm_asm_flags)
     endif()
 
     # For our own sanity, just use unversioned system layout. Lib names then also
