@@ -61,6 +61,12 @@ if(NOT TARGET ${APP_NAME_LC}::${CMAKE_FIND_PACKAGE_NAME})
       set(CMAKE_EXTRA_ARGS "-DCMAKE_ASM_FLAGS=${CMAKE_C_FLAGS}")
     endif()
 
+    # Ensure the ARM assembler sees the same flags as the C compiler so it
+    # enables the correct FPU/ABI settings for Boost.Context.
+    if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(arm|armv[7-8]|armel|armhf)$")
+      list(APPEND CMAKE_EXTRA_ARGS "-DCMAKE_ASM_FLAGS=${CMAKE_ASM_FLAGS}")
+    endif()
+
     # For our own sanity, just use unversioned system layout. Lib names then also
     # dont append toolset info eg.
     #   versioned: libboost_container-vc142-mt-x64-1_85.lib
