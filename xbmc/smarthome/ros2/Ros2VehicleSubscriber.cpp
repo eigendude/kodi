@@ -11,6 +11,7 @@
 
 #include "utils/log.h"
 
+#include <algorithm>
 #include <cmath>
 
 #include <rclcpp/rclcpp.hpp>
@@ -36,22 +37,26 @@ void CRos2VehicleSubscriber::Initialize(std::shared_ptr<rclcpp::Node> node,
   // Calculate topic names
   const std::string subscribeForwardTwistTopic =
       std::string("/") + m_rosNamespace + "/" + vehicleName + "/" + SUBSCRIBE_FORWARD_TWIST_TOPIC;
+  const std::string subscribeTiltTopic =
+      std::string("/") + m_rosNamespace + "/" + vehicleName + "/" + SUBSCRIBE_TILT_TOPIC;
 
   // Initialize ROS
   CLog::Log(LOGDEBUG, "ROS2: Subscribing to {}", subscribeForwardTwistTopic);
+  CLog::Log(LOGDEBUG, "ROS2: Subscribing to {}", subscribeTiltTopic);
 
   // Subscribers
   m_forwardTwistSubscriber = node->create_subscription<TwistWithCovarianceStamped>(
       subscribeForwardTwistTopic, rclcpp::SensorDataQoS{},
       std::bind(&CRos2VehicleSubscriber::OnForwardTwist, this, _1));
-  m_tiltSubscriber = node->create_subscription<TwistWithCovarianceStamped>(
-      subscribeForwardTwistTopic, rclcpp::SensorDataQoS{},
+  m_tiltSubscriber = node->create_subscription<Imu>(
+      subscribeTiltTopic, rclcpp::SensorDataQoS{},
       std::bind(&CRos2VehicleSubscriber::OnTilt, this, _1));
 }
 
 void CRos2VehicleSubscriber::Deinitialize()
 {
   m_forwardTwistSubscriber.reset();
+  m_tiltSubscriber.reset();
 }
 
 float CRos2VehicleSubscriber::ForwardSpeed() const
@@ -120,12 +125,48 @@ void CRos2VehicleSubscriber::OnTilt(const Imu::SharedPtr msg)
   if (!msg)
     return;
 
-  //! @todo
+  constexpr double RAD_TO_DEG = 180.0 / std::acos(-1.0);
+
+  // Tilt is the angular deviation from gravity (vehicle z-axis against world z-axis)
+  // derived from the orientation quaternion.
+  const double qx = msg->orientation.x;
+  const double qy = msg->orientation.y;
+  const double qz = msg->orientation.z;
+  const double qw = msg->orientation.w;
+
+  float tilt = 0.0f;
+  float stddev = 0.0f;
+
+  const double norm = qx * qx + qy * qy + qz * qz + qw * qw;
+  if (std::isfinite(norm) && norm > 0.0)
+  {
+    const double invNorm = 1.0 / std::sqrt(norm);
+    const double nx = qx * invNorm;
+    const double ny = qy * invNorm;
+    const double nz = qz * invNorm;
+
+    // R(2,2) for quaternion -> rotation matrix.
+    const double r33 = std::clamp(1.0 - 2.0 * (nx * nx + ny * ny), -1.0, 1.0);
+    const double tiltRad = std::acos(r33);
+
+    if (std::isfinite(tiltRad))
+      tilt = static_cast<float>(tiltRad * RAD_TO_DEG);
+  }
+
+  // If covariance is present for orientation (not all zeros, and not unknown sentinel),
+  // estimate a tilt variance from roll/pitch variances.
+  if (msg->orientation_covariance.size() >= 5 && msg->orientation_covariance[0] >= 0.0)
+  {
+    const double rollVariance = msg->orientation_covariance[0];
+    const double pitchVariance = msg->orientation_covariance[4];
+    const double tiltVariance = rollVariance + pitchVariance;
+
+    if (std::isfinite(tiltVariance) && tiltVariance >= 0.0)
+      stddev = static_cast<float>(std::sqrt(tiltVariance) * RAD_TO_DEG);
+  }
 
   std::lock_guard<std::mutex> lock(m_mutex);
 
-  /*
   m_tilt = tilt;
   m_tiltStdDev = stddev;
-  */
 }
