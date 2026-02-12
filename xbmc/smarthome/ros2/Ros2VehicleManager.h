@@ -42,6 +42,8 @@ public:
   // Implementation of IVehicleHUD
   float ForwardSpeed(const std::string& vehicleName) override;
   float ForwardSpeedStdDev(const std::string& vehicleName) override;
+  float Tilt(const std::string& vehicleName) override;
+  float TiltStdDev(const std::string& vehicleName) override;
 
 private:
   // Utility functions

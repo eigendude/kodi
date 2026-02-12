@@ -57,6 +57,30 @@ float CRos2VehicleManager::ForwardSpeedStdDev(const std::string& vehicleName)
   return it->second.ForwardSpeedStdDev();
 }
 
+float CRos2VehicleManager::Tilt(const std::string& vehicleName)
+{
+  auto it = m_vehicles.find(vehicleName);
+  if (it == m_vehicles.end())
+  {
+    AddVehicle(vehicleName);
+    it = m_vehicles.find(vehicleName);
+  }
+
+  return it->second.Tilt();
+}
+
+float CRos2VehicleManager::TiltStdDev(const std::string& vehicleName)
+{
+  auto it = m_vehicles.find(vehicleName);
+  if (it == m_vehicles.end())
+  {
+    AddVehicle(vehicleName);
+    it = m_vehicles.find(vehicleName);
+  }
+
+  return it->second.TiltStdDev();
+}
+
 void CRos2VehicleManager::AddVehicle(const std::string& vehicleName)
 {
   if (!m_node)

@@ -15,6 +15,7 @@
 
 #include <geometry_msgs/msg/twist_with_covariance_stamped.hpp>
 #include <rclcpp/subscription.hpp>
+#include <sensor_msgs/msg/imu.hpp>
 
 namespace rclcpp
 {
@@ -42,21 +43,28 @@ public:
   // GUI functions
   float ForwardSpeed() const;
   float ForwardSpeedStdDev() const;
+  float Tilt() const;
+  float TiltStdDev() const;
 
 private:
   // ROS messages
   using TwistWithCovarianceStamped = geometry_msgs::msg::TwistWithCovarianceStamped;
+  using Imu = sensor_msgs::msg::Imu;
 
   // ROS 2 subscriber callbacks
   void OnForwardTwist(const TwistWithCovarianceStamped::SharedPtr msg);
+  void OnTilt(const Imu::SharedPtr msg);
 
   // ROS parameters
   const std::string m_rosNamespace;
   rclcpp::Subscription<TwistWithCovarianceStamped>::SharedPtr m_forwardTwistSubscriber;
+  rclcpp::Subscription<Imu>::SharedPtr m_tiltSubscriber;
 
   // GUI parameters
   float m_forwardSpeed{0.0f}; // m/s
   float m_forwardSpeedStdDev{0.0f}; // m/s
+  float m_tilt{0.0f}; // degrees
+  float m_tiltStdDev{0.0f}; // degrees
 
   // Synchronization parameters
   mutable std::mutex m_mutex;

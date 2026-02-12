@@ -4377,6 +4377,22 @@ constexpr std::array<InfoMap, 3> retroplayer = {{
 ///     @skinning_v24 **[New Infolabel]** \link SmartHome_Vehicle_ForwardSpeedStdDev `SmartHome.Vehicle(name).ForwardSpeedStdDev`\endlink
 ///     <p>
 ///   }
+///   \table_row3{   <b>`SmartHome.Vehicle(name).Tilt`</b>,
+///                  \anchor SmartHome_Vehicle_TiltSpeed
+///                  _string_,
+///     @return The current tilt deviated from gravity, in degrees
+///     <p><hr>
+///     @skinning_v24 **[New Infolabel]** \link SmartHome_Vehicle_Tilt `SmartHome.Vehicle(name).Tilt`\endlink
+///     <p>
+///   }
+///   \table_row3{   <b>`SmartHome.Vehicle(name).TiltStdDev`</b>,
+///                  \anchor SmartHome_Vehicle_TiltStdDev
+///                  _string_,
+///     @return The standard deviation (1-sigma uncertainty) of the current tilt, in degrees
+///     <p><hr>
+///     @skinning_v24 **[New Infolabel]** \link SmartHome_Vehicle_TiltStdDev `SmartHome.Vehicle(name).TiltStdDev`\endlink
+///     <p>
+///   }
 ///   \table_row3{   <b>`SmartHome.HasLab`</b>,
 ///                  \anchor SmartHome_HasLab
 ///                  _boolean_,
@@ -4458,6 +4474,8 @@ constexpr std::array<InfoMap, 20> smarthome = {{
     {"batteryload",         SMARTHOME_BATTERY_LOAD},
     {"forwardspeed",        SMARTHOME_FORWARD_SPEED},
     {"forwardspeedstddev",  SMARTHOME_FORWARD_SPEED_STD_DEV},
+    {"tilt",                SMARTHOME_TILT},
+    {"tiltstddev",          SMARTHOME_TILT_STD_DEV},
     {"haslab",              SMARTHOME_HAS_LAB},
     {"labcpu",              SMARTHOME_LAB_CPU},
     {"labmemory",           SMARTHOME_LAB_MEMORY},

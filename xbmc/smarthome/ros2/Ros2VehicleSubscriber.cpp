@@ -22,6 +22,7 @@ using std::placeholders::_1;
 namespace
 {
 constexpr const char* SUBSCRIBE_FORWARD_TWIST_TOPIC = "forward_twist";
+constexpr const char* SUBSCRIBE_TILT_TOPIC = "tilt";
 } // namespace
 
 CRos2VehicleSubscriber::CRos2VehicleSubscriber(std::string rosNamespace)
@@ -43,6 +44,9 @@ void CRos2VehicleSubscriber::Initialize(std::shared_ptr<rclcpp::Node> node,
   m_forwardTwistSubscriber = node->create_subscription<TwistWithCovarianceStamped>(
       subscribeForwardTwistTopic, rclcpp::SensorDataQoS{},
       std::bind(&CRos2VehicleSubscriber::OnForwardTwist, this, _1));
+  m_tiltSubscriber = node->create_subscription<TwistWithCovarianceStamped>(
+      subscribeForwardTwistTopic, rclcpp::SensorDataQoS{},
+      std::bind(&CRos2VehicleSubscriber::OnTilt, this, _1));
 }
 
 void CRos2VehicleSubscriber::Deinitialize()
@@ -62,6 +66,20 @@ float CRos2VehicleSubscriber::ForwardSpeedStdDev() const
   std::lock_guard<std::mutex> lock(m_mutex);
 
   return m_forwardSpeedStdDev;
+}
+
+float CRos2VehicleSubscriber::Tilt() const
+{
+  std::lock_guard<std::mutex> lock(m_mutex);
+
+  return m_tilt;
+}
+
+float CRos2VehicleSubscriber::TiltStdDev() const
+{
+  std::lock_guard<std::mutex> lock(m_mutex);
+
+  return m_tiltStdDev;
 }
 
 void CRos2VehicleSubscriber::OnForwardTwist(const TwistWithCovarianceStamped::SharedPtr msg)
@@ -95,4 +113,19 @@ void CRos2VehicleSubscriber::OnForwardTwist(const TwistWithCovarianceStamped::Sh
 
   m_forwardSpeed = speed;
   m_forwardSpeedStdDev = stddev;
+}
+
+void CRos2VehicleSubscriber::OnTilt(const Imu::SharedPtr msg)
+{
+  if (!msg)
+    return;
+
+  //! @todo
+
+  std::lock_guard<std::mutex> lock(m_mutex);
+
+  /*
+  m_tilt = tilt;
+  m_tiltStdDev = stddev;
+  */
 }

@@ -29,7 +29,7 @@ public:
    *
    * The vehicle will be subscribed to if not already subscribed.
    *
-   * \param systemName The name of the system
+   * \param vehicleName The name of the vehicle
    *
    * \return The vehicle's forward speed, in meters per second
    */
@@ -41,11 +41,34 @@ public:
    *
    * The vehicle will be subscribed to if not already subscribed.
    *
-   * \param systemName The name of the system
+   * \param vehicleName The name of the vehicle
    *
    * \return The forward speed standard deviation, in meters per second
    */
   virtual float ForwardSpeedStdDev(const std::string& vehicleName) = 0;
+
+  /*!
+   * \brief Get the tilt (deviation from gravity) of the vehicle, in degrees
+   *
+   * The vehicle will be subscribed to if not already subscribed.
+   *
+   * \param vehicleName The name of the vehicle
+   *
+   * \return The tilt, in degrees
+   */
+  virtual float Tilt(const std::string& vehicleName) = 0;
+
+  /*!
+   * \brief Get the standard deviation (1-sigma uncertainty) of the tilt, in
+   * degrees
+   *
+   * The vehicle will be subscribed to if not already subscribed.
+   *
+   * \param vehicleName The name of the vehicle
+   *
+   * \return The tilt standard deviation, in degrees
+   */
+  virtual float TiltStdDev(const std::string& vehicleName) = 0;
 };
 } // namespace SMART_HOME
 } // namespace KODI
