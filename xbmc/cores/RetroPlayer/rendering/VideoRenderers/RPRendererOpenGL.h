@@ -21,6 +21,8 @@ namespace KODI
 {
 namespace SHADER
 {
+class CShaderTextureGL;
+
 class CShaderTextureGLRef;
 } // namespace SHADER
 
@@ -72,7 +74,7 @@ protected:
   struct RenderBufferTextures
   {
     std::shared_ptr<SHADER::CShaderTextureGLRef> source;
-    std::shared_ptr<SHADER::CShaderTextureGLRef> target;
+    std::shared_ptr<SHADER::CShaderTextureGL> target;
   };
 
   // implementation of CRPBaseRenderer
