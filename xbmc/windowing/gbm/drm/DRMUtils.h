@@ -75,7 +75,7 @@ protected:
   bool OpenDrm(bool needConnector);
   drm_fb* DrmFbGetFromBo(struct gbm_bo* bo);
 
-  int m_fd;
+  int m_fd{-1};
   CDRMConnector* m_connector{nullptr};
   CDRMEncoder* m_encoder{nullptr};
   CDRMCrtc* m_crtc{nullptr};
@@ -102,7 +102,7 @@ private:
   RESOLUTION_INFO GetResolutionInfo(drmModeModeInfoPtr mode);
   void PrintDrmDeviceInfo(drmDevicePtr device);
 
-  int m_renderFd;
+  int m_renderFd{-1};
   const char* m_renderDevicePath{nullptr};
 
   std::vector<std::unique_ptr<CDRMConnector>> m_connectors;

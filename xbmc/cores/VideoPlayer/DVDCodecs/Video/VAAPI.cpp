@@ -24,7 +24,11 @@
 #include "windowing/WinSystem.h"
 
 #include <array>
+#include <cerrno>
+#include <cstdlib>
 #include <mutex>
+#include <optional>
+#include <string_view>
 
 #include <drm_fourcc.h>
 #include <va/va_drm.h>
@@ -64,6 +68,31 @@ constexpr auto SETTING_VIDEOPLAYER_USEVAAPIVC1 = "videoplayer.usevaapivc1";
 constexpr auto SETTING_VIDEOPLAYER_USEVAAPIVP8 = "videoplayer.usevaapivp8";
 constexpr auto SETTING_VIDEOPLAYER_USEVAAPIVP9 = "videoplayer.usevaapivp9";
 constexpr auto SETTING_VIDEOPLAYER_PREFERVAAPIRENDER = "videoplayer.prefervaapirender";
+constexpr auto GAMESCOPE_LOG_PREFIX = "GAMESCOPE-BLACKSCREEN";
+
+std::optional<bool> ReadBooleanEnv(const char* name)
+{
+  const char* value = std::getenv(name);
+  if (!value)
+    return std::nullopt;
+
+  if (std::string_view{value} == "1")
+    return true;
+
+  if (std::string_view{value} == "0")
+    return false;
+
+  return std::nullopt;
+}
+
+bool IsNestedWayland()
+{
+  const char* waylandDisplay = std::getenv("WAYLAND_DISPLAY");
+  const char* xdgSessionType = std::getenv("XDG_SESSION_TYPE");
+
+  return waylandDisplay && *waylandDisplay && xdgSessionType &&
+         std::string_view{xdgSessionType} == "wayland";
+}
 
 void VAAPI::VaErrorCallback(void *user_context, const char *message)
 {
@@ -163,7 +192,19 @@ void CVAAPIContext::SetValidDRMVaDisplayFromRenderNode()
   {
     snprintf(name, buf_size, "/dev/dri/renderD%d", i);
 
+    errno = 0;
     fd = open(name, O_RDWR);
+    if (fd < 0)
+    {
+      CLog::Log(LOGDEBUG,
+                "{} PatchB scan open(path={}, flags=O_RDWR) -> fd={}, errno={} ({})",
+                GAMESCOPE_LOG_PREFIX, name, fd, errno, strerror(errno));
+    }
+    else
+    {
+      CLog::Log(LOGDEBUG, "{} PatchB scan open(path={}, flags=O_RDWR) -> fd={}",
+                GAMESCOPE_LOG_PREFIX, name, fd);
+    }
 
     if (fd < 0)
     {
@@ -171,26 +212,76 @@ void CVAAPIContext::SetValidDRMVaDisplayFromRenderNode()
     }
 
     auto display = vaGetDisplayDRM(fd);
+    CLog::Log(LOGDEBUG, "{} PatchB vaGetDisplayDRM(fd={}, path={}) -> {}", GAMESCOPE_LOG_PREFIX,
+              fd, name, display ? "non-null" : "null");
 
     if (display != nullptr)
     {
       m_renderNodeFD = fd;
+      m_renderNodePath = name;
       m_display = display;
+      CLog::Log(LOGINFO, "{} PatchB selected: {}", GAMESCOPE_LOG_PREFIX, m_renderNodePath);
       return;
     }
     close(fd);
   }
 
-  CLog::Log(LOGERROR, "Failed to find any open render nodes in /dev/dri/renderD<num>");
+  CLog::Log(LOGERROR, "{} Failed to find any open render nodes in /dev/dri/renderD<num>",
+            GAMESCOPE_LOG_PREFIX);
 }
 
 void CVAAPIContext::SetVaDisplayForSystem()
 {
+  const std::optional<bool> forceDrmRender = ReadBooleanEnv("KODI_VAAPI_FORCE_DRM_RENDER");
+  const std::optional<bool> forceWayland = ReadBooleanEnv("KODI_VAAPI_FORCE_WL");
+  const bool nestedWayland = IsNestedWayland();
+  const bool patchBEnabled = forceWayland.value_or(false) ? false
+                                                           : (forceDrmRender.value_or(false) ||
+                                                              nestedWayland);
+  const char* patchBReason = forceWayland.value_or(false)
+                                 ? "forced-wayland-env"
+                                 : (forceDrmRender.value_or(false) ? "forced-drm-render-env"
+                                                                    : (nestedWayland
+                                                                           ? "nested-wayland-detected"
+                                                                           : "default-wayland"));
+
+  CLog::Log(LOGINFO,
+            "{} PatchB={}, reason={}, WAYLAND_DISPLAY={}, XDG_SESSION_TYPE={}, GAMESCOPE_WAYLAND_DISPLAY={}",
+            GAMESCOPE_LOG_PREFIX, patchBEnabled ? "ON" : "OFF", patchBReason,
+            std::getenv("WAYLAND_DISPLAY") ? "set" : "unset",
+            std::getenv("XDG_SESSION_TYPE") ? std::getenv("XDG_SESSION_TYPE") : "unset",
+            std::getenv("GAMESCOPE_WAYLAND_DISPLAY") ? "set" : "unset");
+
+  const char* chosenPath = "WAYLAND";
+
+  if (patchBEnabled)
+  {
+    SetValidDRMVaDisplayFromRenderNode();
+    if (m_display)
+    {
+      CLog::Log(LOGINFO, "{} PatchB=ON, reason={}, chosen=DRM_RENDER", GAMESCOPE_LOG_PREFIX,
+                patchBReason);
+      return;
+    }
+
+    CLog::Log(LOGINFO, "{} PatchB fell back to vaGetDisplayWl", GAMESCOPE_LOG_PREFIX);
+    chosenPath = "WAYLAND_FALLBACK";
+  }
+  else
+  {
+    chosenPath = "WAYLAND_FORCED";
+  }
+
+  CLog::Log(LOGINFO, "{} PatchB={}, reason={}, chosen={}", GAMESCOPE_LOG_PREFIX,
+            patchBEnabled ? "ON" : "OFF", patchBReason, chosenPath);
+  CLog::Log(LOGINFO, "{} PatchB selected: WAYLAND", GAMESCOPE_LOG_PREFIX);
   m_display = CDecoder::m_pWinSystem->GetVADisplay();
 
   // Fallback to DRM
   if (!m_display)
   {
+    CLog::Log(LOGINFO, "{} VAAPI fallback: Wayland display unavailable, trying DRM render node",
+              GAMESCOPE_LOG_PREFIX);
     // Render nodes depends on kernel >= 3.15
     SetValidDRMVaDisplayFromRenderNode();
   }

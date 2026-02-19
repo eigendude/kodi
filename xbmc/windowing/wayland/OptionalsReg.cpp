@@ -14,6 +14,7 @@
 #if defined(HAVE_LIBVA) && defined(HAS_EGL)
 #include <va/va_wayland.h>
 #include "cores/VideoPlayer/DVDCodecs/Video/VAAPI.h"
+#include "utils/log.h"
 #if defined(HAS_GL)
 #include "cores/VideoPlayer/VideoRenderers/HwDecRender/RendererVAAPIGL.h"
 #endif
@@ -28,12 +29,24 @@ namespace WINDOWING
 namespace WAYLAND
 {
 
+namespace
+{
+constexpr auto GAMESCOPE_LOG_PREFIX = "GAMESCOPE-BLACKSCREEN";
+}
+
 class CVaapiProxy : public VAAPI::IVaapiWinSystem
 {
 public:
   CVaapiProxy() = default;
   virtual ~CVaapiProxy() = default;
-  VADisplay GetVADisplay() override { return vaGetDisplayWl(dpy); };
+  VADisplay GetVADisplay() override
+  {
+    CLog::Log(LOGDEBUG, "{} Wayland VAAPI path: calling vaGetDisplayWl", GAMESCOPE_LOG_PREFIX);
+    auto* display = vaGetDisplayWl(dpy);
+    CLog::Log(LOGDEBUG, "{} Wayland VAAPI path: vaGetDisplayWl -> {}", GAMESCOPE_LOG_PREFIX,
+              display ? "non-null" : "null");
+    return display;
+  };
   void *GetEGLDisplay() override { return eglDisplay; };
 
   wl_display *dpy;
@@ -65,7 +78,7 @@ void VAAPIRegister(CVaapiProxy* winSystem, bool deepColor)
 void VAAPIRegisterRenderGL(CVaapiProxy* winSystem, bool& general, bool& deepColor)
 {
   EGLDisplay eglDpy = winSystem->eglDisplay;
-  VADisplay vaDpy = vaGetDisplayWl(winSystem->dpy);
+  VADisplay vaDpy = winSystem->GetVADisplay();
   CRendererVAAPIGL::Register(winSystem, vaDpy, eglDpy, general, deepColor);
 }
 #endif
@@ -74,7 +87,7 @@ void VAAPIRegisterRenderGL(CVaapiProxy* winSystem, bool& general, bool& deepColo
 void VAAPIRegisterRenderGLES(CVaapiProxy* winSystem, bool& general, bool& deepColor)
 {
   EGLDisplay eglDpy = winSystem->eglDisplay;
-  VADisplay vaDpy = vaGetDisplayWl(winSystem->dpy);
+  VADisplay vaDpy = winSystem->GetVADisplay();
   CRendererVAAPIGLES::Register(winSystem, vaDpy, eglDpy, general, deepColor);
 }
 #endif
@@ -133,4 +146,3 @@ void VAAPIRegisterRenderGLES(CVaapiProxy* winSystem, bool& general, bool& deepCo
 } // namespace KODI
 
 #endif
-

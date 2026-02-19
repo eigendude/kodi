@@ -18,11 +18,41 @@
 
 #include "PlatformDefs.h"
 
+#include <cerrno>
+#include <cstdlib>
+#include <optional>
+#include <string_view>
+
 using namespace KODI::WINDOWING::GBM;
 
 namespace
 {
 const std::string SETTING_VIDEOSCREEN_LIMITGUISIZE = "videoscreen.limitguisize";
+
+constexpr auto GAMESCOPE_LOG_PREFIX = "GAMESCOPE-BLACKSCREEN";
+
+std::optional<bool> ReadBooleanEnv(const char* name)
+{
+  const char* value = std::getenv(name);
+  if (!value)
+    return std::nullopt;
+
+  if (std::string_view{value} == "1")
+    return true;
+
+  if (std::string_view{value} == "0")
+    return false;
+
+  return std::nullopt;
+}
+
+bool IsNestedWayland()
+{
+  const char* waylandDisplay = std::getenv("WAYLAND_DISPLAY");
+  const char* xdgSessionType = std::getenv("XDG_SESSION_TYPE");
+
+  return waylandDisplay && *waylandDisplay && xdgSessionType && std::string_view{xdgSessionType} == "wayland";
+}
 
 void DrmFbDestroyCallback(gbm_bo* bo, void* data)
 {
@@ -298,6 +328,21 @@ void CDRMUtils::PrintDrmDeviceInfo(drmDevicePtr device)
 
 bool CDRMUtils::OpenDrm(bool needConnector)
 {
+  const std::optional<bool> renderOnlyOverride = ReadBooleanEnv("KODI_DRM_RENDER_ONLY");
+  const bool nestedWayland = IsNestedWayland();
+  const bool patchAEnabled = renderOnlyOverride.value_or(nestedWayland && !needConnector);
+  const char* patchAReason = renderOnlyOverride ? (*renderOnlyOverride ? "forced-by-env"
+                                                                        : "disabled-by-env")
+                                                 : (nestedWayland ? "nested-wayland-detected"
+                                                                  : "default-non-nested");
+
+  CLog::LogF(LOGINFO,
+             "{} PatchA={}, reason={}, needConnector={}, WAYLAND_DISPLAY={}, XDG_SESSION_TYPE={}, GAMESCOPE_WAYLAND_DISPLAY={}",
+             GAMESCOPE_LOG_PREFIX, patchAEnabled ? "ON" : "OFF", patchAReason,
+             needConnector ? "true" : "false", std::getenv("WAYLAND_DISPLAY") ? "set" : "unset",
+             std::getenv("XDG_SESSION_TYPE") ? std::getenv("XDG_SESSION_TYPE") : "unset",
+             std::getenv("GAMESCOPE_WAYLAND_DISPLAY") ? "set" : "unset");
+
   int numDevices = drmGetDevices2(0, nullptr, 0);
   if (numDevices <= 0)
   {
@@ -318,13 +363,60 @@ bool CDRMUtils::OpenDrm(bool needConnector)
 
   for (const auto device : devices)
   {
-    if (!(device->available_nodes & 1 << DRM_NODE_PRIMARY))
-      continue;
+    CLog::LogF(LOGDEBUG, "{} candidate available_nodes={:#x}", GAMESCOPE_LOG_PREFIX,
+               device->available_nodes);
+    for (int i = 0; i < DRM_NODE_MAX; ++i)
+    {
+      if (device->available_nodes & (1 << i))
+      {
+        CLog::LogF(LOGDEBUG, "{} candidate node[{}]={}", GAMESCOPE_LOG_PREFIX, i,
+                   device->nodes[i]);
+      }
+    }
 
     close(m_fd);
+
+    if (patchAEnabled)
+    {
+      if (!(device->available_nodes & (1 << DRM_NODE_RENDER)))
+      {
+        CLog::LogF(LOGDEBUG, "{} PatchA candidate skipped: no DRM render node", GAMESCOPE_LOG_PREFIX);
+        continue;
+      }
+
+      errno = 0;
+      m_fd = open(device->nodes[DRM_NODE_RENDER], O_RDWR | O_CLOEXEC);
+      if (m_fd < 0)
+      {
+        CLog::LogF(LOGDEBUG,
+                   "{} open(path={}, flags=O_RDWR|O_CLOEXEC) -> fd={}, errno={} ({})",
+                   GAMESCOPE_LOG_PREFIX, device->nodes[DRM_NODE_RENDER], m_fd, errno,
+                   strerror(errno));
+        continue;
+      }
+
+      m_renderDevicePath = device->nodes[DRM_NODE_RENDER];
+      m_renderFd = -1;
+      CLog::LogF(LOGINFO, "{} PatchA opened: {}", GAMESCOPE_LOG_PREFIX, device->nodes[DRM_NODE_RENDER]);
+      drmFreeDevices(devices.data(), devices.size());
+      return true;
+    }
+
+    if (!(device->available_nodes & (1 << DRM_NODE_PRIMARY)))
+      continue;
+
+    errno = 0;
     m_fd = open(device->nodes[DRM_NODE_PRIMARY], O_RDWR | O_CLOEXEC);
     if (m_fd < 0)
+    {
+      CLog::LogF(LOGDEBUG, "{} open(path={}, flags=O_RDWR|O_CLOEXEC) -> fd={}, errno={} ({})",
+                 GAMESCOPE_LOG_PREFIX, device->nodes[DRM_NODE_PRIMARY], m_fd, errno,
+                 strerror(errno));
       continue;
+    }
+
+    CLog::LogF(LOGDEBUG, "{} open(path={}, flags=O_RDWR|O_CLOEXEC) -> fd={}", GAMESCOPE_LOG_PREFIX,
+               device->nodes[DRM_NODE_PRIMARY], m_fd);
 
     if (needConnector)
     {
@@ -346,7 +438,11 @@ bool CDRMUtils::OpenDrm(bool needConnector)
 
     PrintDrmDeviceInfo(device);
 
+    CLog::LogF(LOGDEBUG, "{} deriving render node from primary fd={}", GAMESCOPE_LOG_PREFIX, m_fd);
     const char* renderPath = drmGetRenderDeviceNameFromFd(m_fd);
+
+    CLog::LogF(LOGDEBUG, "{} drmGetRenderDeviceNameFromFd(fd={}) -> {}", GAMESCOPE_LOG_PREFIX, m_fd,
+               renderPath ? renderPath : "(null)");
 
     if (!renderPath)
       renderPath = drmGetDeviceNameFromFd2(m_fd);
@@ -357,9 +453,19 @@ bool CDRMUtils::OpenDrm(bool needConnector)
     if (renderPath)
     {
       m_renderDevicePath = renderPath;
+      errno = 0;
       m_renderFd = open(renderPath, O_RDWR | O_CLOEXEC);
-      if (m_renderFd != 0)
+      if (m_renderFd >= 0)
+      {
+        CLog::LogF(LOGDEBUG, "{} open(path={}, flags=O_RDWR|O_CLOEXEC) -> fd={}", GAMESCOPE_LOG_PREFIX,
+                   renderPath, m_renderFd);
         CLog::LogF(LOGDEBUG, "Opened render node: {}", renderPath);
+      }
+      else
+      {
+        CLog::LogF(LOGDEBUG, "{} open(path={}, flags=O_RDWR|O_CLOEXEC) -> fd={}, errno={} ({})",
+                   GAMESCOPE_LOG_PREFIX, renderPath, m_renderFd, errno, strerror(errno));
+      }
     }
 
     drmFreeDevices(devices.data(), devices.size());

@@ -24,6 +24,7 @@
 #include <map>
 #include <memory>
 #include <mutex>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -428,6 +429,7 @@ private:
   VAProfile *m_profiles;
   std::vector<CDecoder*> m_decoders;
   int m_renderNodeFD{-1};
+  std::string m_renderNodePath;
 };
 
 //-----------------------------------------------------------------------------

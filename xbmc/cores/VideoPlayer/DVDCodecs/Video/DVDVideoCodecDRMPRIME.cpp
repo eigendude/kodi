@@ -21,6 +21,8 @@
 #include "utils/StringUtils.h"
 #include "utils/log.h"
 
+#include <cstdlib>
+
 #if defined(HAVE_GBM)
 #include "windowing/gbm/WinSystemGbm.h"
 #endif
@@ -38,6 +40,7 @@ namespace
 {
 
 constexpr const char* SETTING_VIDEOPLAYER_USEPRIMEDECODERFORHW{"videoplayer.useprimedecoderforhw"};
+constexpr auto GAMESCOPE_LOG_PREFIX = "GAMESCOPE-BLACKSCREEN";
 
 static void ReleaseBuffer(void* opaque, uint8_t* data)
 {
@@ -303,8 +306,13 @@ bool CDVDVideoCodecDRMPRIME::Open(CDVDStreamInfo& hints, CDVDCodecOptions& optio
 
     if (pConfig->device_type == AV_HWDEVICE_TYPE_DRM)
     {
-      if (getenv("KODI_RENDER_NODE"))
-        device = getenv("KODI_RENDER_NODE");
+      const char* envRenderNode = std::getenv("KODI_RENDER_NODE");
+      if (envRenderNode)
+      {
+        device = envRenderNode;
+        CLog::Log(LOGINFO, "{} DRMPRIME env override KODI_RENDER_NODE={}", GAMESCOPE_LOG_PREFIX,
+                  device);
+      }
 
 #if defined(HAVE_GBM)
       auto winSystem =
@@ -325,6 +333,10 @@ bool CDVDVideoCodecDRMPRIME::Open(CDVDStreamInfo& hints, CDVDCodecOptions& optio
       //! @todo: fix with proper device when dma-hints wayland protocol works
       if (!device)
         device = "/dev/dri/renderD128";
+
+      CLog::Log(LOGINFO, "{} DRMPRIME final AV_HWDEVICE_TYPE_DRM device={}, env_override={}",
+                GAMESCOPE_LOG_PREFIX, device ? device : "(null)",
+                envRenderNode ? "true" : "false");
     }
 
     CLog::Log(LOGDEBUG,
