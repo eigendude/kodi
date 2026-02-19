@@ -15,6 +15,8 @@
 #include "utils/EGLUtils.h"
 #include "windowing/linux/WinSystemEGL.h"
 
+#include <chrono>
+
 #include <wayland-egl.hpp>
 
 namespace KODI
@@ -66,6 +68,11 @@ protected:
   virtual bool CreateContext() = 0;
 
   wayland::egl_window_t m_nativeWindow;
+
+  bool m_glClearTestEnabled{false};
+  bool m_glClearTestStarted{false};
+  std::chrono::steady_clock::time_point m_glClearTestStart{};
+  bool m_glClearTestLoggedRenderer{false};
 };
 
 }
