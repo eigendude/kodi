@@ -303,6 +303,13 @@ bool CWinSystemWayland::CreateNewWindow(const std::string& name,
   // Use AppName as the desktop file name. This is required to lookup the app icon of the same name.
   m_shellSurface.reset(CreateShellSurface(name));
 
+  // Just remember initial width/height for context creation in OnConfigure
+  // This is used for sizing the EGLSurface
+  m_shellSurfaceInitializing = true;
+  m_shellSurface->Initialize();
+  m_shellSurfaceInitializing = false;
+
+  // Now request fullscreen AFTER initial configure/commit
   if (fullScreen)
   {
     // Try to start on correct monitor and with correct buffer scale
@@ -316,12 +323,6 @@ bool CWinSystemWayland::CreateNewWindow(const std::string& name,
       ApplyBufferScale();
     }
   }
-
-  // Just remember initial width/height for context creation in OnConfigure
-  // This is used for sizing the EGLSurface
-  m_shellSurfaceInitializing = true;
-  m_shellSurface->Initialize();
-  m_shellSurfaceInitializing = false;
 
   // Apply window decorations if necessary
   m_windowDecorator->SetState(m_configuredSize, m_scale, m_shellSurfaceState);
