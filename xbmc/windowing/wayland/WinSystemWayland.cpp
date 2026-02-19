@@ -47,10 +47,21 @@
 #include "platform/linux/TimeUtils.h"
 
 #include <algorithm>
+#include <cerrno>
+#include <cstring>
+#include <fcntl.h>
 #include <limits>
+#include <linux/memfd.h>
 #include <memory>
 #include <mutex>
 #include <numeric>
+#include <string>
+#include <string_view>
+#include <thread>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <sys/syscall.h>
+#include <unistd.h>
 
 using namespace KODI::WINDOWING;
 using namespace KODI::WINDOWING::WAYLAND;
@@ -59,6 +70,35 @@ using namespace std::chrono_literals;
 
 namespace
 {
+
+int CreateShmFd(std::size_t size)
+{
+#if defined(SYS_memfd_create) && defined(MFD_CLOEXEC)
+  int memfd = static_cast<int>(syscall(SYS_memfd_create, "kodi-wayland-shm-test", MFD_CLOEXEC));
+  if (memfd >= 0)
+  {
+    if (ftruncate(memfd, static_cast<off_t>(size)) == 0)
+      return memfd;
+
+    close(memfd);
+  }
+#endif
+
+  const std::string shmName =
+      StringUtils::Format("/kodi-wayland-shm-test-{}-{}", getpid(), KODI::TIME::GetTimeMS());
+  int fd = shm_open(shmName.c_str(), O_CREAT | O_EXCL | O_RDWR | O_CLOEXEC, 0600);
+  if (fd < 0)
+    return -1;
+
+  shm_unlink(shmName.c_str());
+  if (ftruncate(fd, static_cast<off_t>(size)) != 0)
+  {
+    close(fd);
+    return -1;
+  }
+
+  return fd;
+}
 
 RESOLUTION FindMatchingCustomResolution(CSizeInt size, float refreshRate)
 {
@@ -364,14 +404,100 @@ bool CWinSystemWayland::CreateNewWindow(const std::string& name,
 
   m_colorManager->SetSurface(m_surface);
 
+  RunWaylandShmTestIfEnabled();
+
   return true;
 }
 
 IShellSurface* CWinSystemWayland::CreateShellSurface(const std::string& name)
 {
-  CLog::LogF(LOGWARNING, "DEBUG: forcing wl_shell (skipping xdg_shell)");
+  auto shellSurfaceXdg =
+      CShellSurfaceXdgShell::TryCreate(*this, *m_connection, m_surface, name,
+                                       std::string(CCompileInfo::GetAppName()));
+  if (shellSurfaceXdg)
+    return shellSurfaceXdg;
+
+  auto shellSurfaceXdgUnstableV6 =
+      CShellSurfaceXdgShellUnstableV6::TryCreate(*this, *m_connection, m_surface, name,
+                                                 std::string(CCompileInfo::GetAppName()));
+  if (shellSurfaceXdgUnstableV6)
+    return shellSurfaceXdgUnstableV6;
+
   return new CShellSurfaceWlShell(*this, *m_connection, m_surface, name,
                                   std::string(CCompileInfo::GetAppName()));
+}
+
+void CWinSystemWayland::RunWaylandShmTestIfEnabled()
+{
+  if (m_waylandShmTestCommitted)
+    return;
+
+  const char* env = getenv("KODI_WAYLAND_SHM_TEST");
+  if (env == nullptr || std::string_view{env} != "1")
+    return;
+
+  m_waylandShmTestCommitted = true;
+  CLog::Log(LOGINFO, "KODI_WAYLAND_SHM_TEST enabled");
+
+  int width = m_configuredSize.Width();
+  int height = m_configuredSize.Height();
+  if (width <= 0 || height <= 0)
+  {
+    width = 1280;
+    height = 720;
+  }
+
+  const std::size_t stride = static_cast<std::size_t>(width) * 4;
+  const std::size_t size = stride * static_cast<std::size_t>(height);
+
+  int fd = CreateShmFd(size);
+  if (fd < 0)
+  {
+    CLog::Log(LOGERROR, "Failed to create SHM fd for Wayland SHM test: {}", std::strerror(errno));
+    return;
+  }
+
+  void* map = mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  if (map == MAP_FAILED)
+  {
+    CLog::Log(LOGERROR, "Failed to map Wayland SHM test buffer: {}", std::strerror(errno));
+    close(fd);
+    return;
+  }
+
+  auto* pixels = static_cast<std::uint32_t*>(map);
+  for (int y = 0; y < height; ++y)
+  {
+    for (int x = 0; x < width; ++x)
+    {
+      std::uint32_t color = 0xFFFF00FF; // magenta
+      if (x == y || x == (width - 1 - y))
+        color = 0xFF00FF00; // green diagonals
+      pixels[static_cast<std::size_t>(y) * static_cast<std::size_t>(width) +
+             static_cast<std::size_t>(x)] = color;
+    }
+  }
+
+  auto pool = m_shm.create_pool(fd, static_cast<std::int32_t>(size));
+  auto buffer = pool.create_buffer(0, width, height, static_cast<std::int32_t>(stride),
+                                   wayland::shm_format::argb8888);
+
+  CLog::Log(LOGINFO, "Committing wl_shm test buffer {}x{} format=argb8888", width, height);
+  m_surface.attach(buffer, 0, 0);
+  m_surface.damage_buffer(0, 0, width, height);
+  m_surface.commit();
+  m_connection->GetDisplay().flush();
+  m_connection->GetDisplay().roundtrip();
+
+  CLog::Log(LOGINFO, "Committed wl_shm test buffer, sleeping 2 seconds");
+  std::this_thread::sleep_for(2s);
+
+  buffer.proxy_release();
+  pool.proxy_release();
+  munmap(map, size);
+  close(fd);
+
+  CServiceBroker::GetAppMessenger()->PostMsg(TMSG_QUIT);
 }
 
 bool CWinSystemWayland::DestroyWindow()

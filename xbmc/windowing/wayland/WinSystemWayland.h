@@ -188,6 +188,7 @@ private:
 
   void ProcessMessages();
   void AckConfigure(std::uint32_t serial);
+  void RunWaylandShmTestIfEnabled();
 
   timespec GetPresentationClockTime();
 
@@ -304,6 +305,7 @@ private:
   std::uint32_t m_lastAckedSerial{0u};
   /// Whether this is the first call to SetFullScreen
   bool m_isInitialSetFullScreen{true};
+  bool m_waylandShmTestCommitted{false};
 
   std::unique_ptr<CColorManager> m_colorManager;
 };
