@@ -17,6 +17,8 @@
 
 #include <wayland-egl.hpp>
 
+#include <chrono>
+
 namespace KODI
 {
 namespace WINDOWING
@@ -66,6 +68,11 @@ protected:
   virtual bool CreateContext() = 0;
 
   wayland::egl_window_t m_nativeWindow;
+
+  bool m_glClearTestEnabled{false};
+  bool m_glClearTestInitialized{false};
+  bool m_glClearTestLoggedRenderer{false};
+  std::chrono::steady_clock::time_point m_glClearTestStart{};
 };
 
 }

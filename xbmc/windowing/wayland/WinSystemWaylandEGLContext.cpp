@@ -14,7 +14,12 @@
 #include "utils/log.h"
 #include "windowing/GraphicContext.h"
 
+#include "system_gl.h"
+
 #include <EGL/eglext.h>
+
+#include <cstdlib>
+#include <string_view>
 
 using namespace KODI::WINDOWING::WAYLAND;
 using namespace KODI::WINDOWING::LINUX;
@@ -80,6 +85,16 @@ bool CWinSystemWaylandEGLContext::CreateNewWindow(const std::string& name,
     return false;
   }
 
+  const char* glClearTestEnv = std::getenv("KODI_WAYLAND_GL_CLEAR_TEST");
+  m_glClearTestEnabled = glClearTestEnv != nullptr && std::string_view{glClearTestEnv} == "1";
+  m_glClearTestInitialized = false;
+  m_glClearTestLoggedRenderer = false;
+
+  if (m_glClearTestEnabled)
+  {
+    CLog::Log(LOGINFO, "KODI_WAYLAND_GL_CLEAR_TEST enabled");
+  }
+
   // Never enable the vsync of the EGL implementation, we handle that ourselves
   // in WinSystemWayland
   m_eglContext.SetVSync(false);
@@ -137,6 +152,56 @@ void CWinSystemWaylandEGLContext::SetContextSize(CSizeInt size)
 void CWinSystemWaylandEGLContext::PresentFrame(bool rendered)
 {
   PrepareFramePresentation();
+
+  if (m_glClearTestEnabled)
+  {
+    if (!m_glClearTestInitialized)
+    {
+      m_glClearTestStart = std::chrono::steady_clock::now();
+      m_glClearTestInitialized = true;
+    }
+
+    const EGLDisplay display = m_eglContext.GetEGLDisplay();
+    const EGLSurface surface = m_eglContext.GetEGLSurface();
+
+    EGLint width{0};
+    EGLint height{0};
+    if (!eglQuerySurface(display, surface, EGL_WIDTH, &width) ||
+        !eglQuerySurface(display, surface, EGL_HEIGHT, &height))
+    {
+      CLog::Log(LOGERROR, "GL clear test: eglQuerySurface failed, eglGetError={:#x}", eglGetError());
+    }
+
+    if (!m_glClearTestLoggedRenderer)
+    {
+      const char* vendor = reinterpret_cast<const char*>(glGetString(GL_VENDOR));
+      const char* renderer = reinterpret_cast<const char*>(glGetString(GL_RENDERER));
+      CLog::Log(LOGINFO, "GL clear test: GL_VENDOR='{}' GL_RENDERER='{}'", vendor ? vendor : "unknown",
+                renderer ? renderer : "unknown");
+      m_glClearTestLoggedRenderer = true;
+    }
+
+    CLog::Log(LOGINFO, "GL clear test: EGL surface size {}x{}", width, height);
+
+    glViewport(0, 0, width, height);
+    glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    if (!eglSwapBuffers(display, surface))
+    {
+      const EGLint error = eglGetError();
+      CLog::Log(LOGERROR, "GL clear test: eglSwapBuffers failed, eglGetError={:#x}", error);
+      throw std::runtime_error("eglSwapBuffers failed");
+    }
+
+    CLog::Log(LOGINFO, "GL clear test: eglSwapBuffers succeeded, eglGetError={:#x}", eglGetError());
+
+    if (std::chrono::steady_clock::now() - m_glClearTestStart < std::chrono::seconds{2})
+    {
+      FinishFramePresentation();
+      return;
+    }
+  }
 
   if (rendered)
   {
