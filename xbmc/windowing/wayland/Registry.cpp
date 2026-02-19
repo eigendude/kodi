@@ -13,10 +13,14 @@
 
 #include <wayland-client-protocol.h>
 
+#include <string_view>
+
 using namespace KODI::WINDOWING::WAYLAND;
 
 namespace
 {
+
+constexpr std::string_view WAYLAND_PROTOCOL_LINUX_DMABUF_V1{"zwp_linux_dmabuf_v1"};
 
 void TryBind(wayland::registry_t& registry, wayland::proxy_t& target, std::uint32_t name, std::string const& interface, std::uint32_t minVersion, std::uint32_t maxVersion, std::uint32_t offeredVersion)
 {
@@ -87,6 +91,12 @@ void CRegistry::Bind()
 
   m_registry.on_global() = [this](std::uint32_t name, const std::string& interface,
                                   std::uint32_t version) {
+    if (interface == WAYLAND_PROTOCOL_LINUX_DMABUF_V1)
+    {
+      CLog::Log(LOGDEBUG, "Ignoring Wayland protocol {} by debug override", interface);
+      return;
+    }
+
     {
       auto it = m_singletonBinds.find(interface);
       if (it != m_singletonBinds.end())
