@@ -13,10 +13,19 @@
 
 #include <wayland-client-protocol.h>
 
+#include <string_view>
+
 using namespace KODI::WINDOWING::WAYLAND;
 
 namespace
 {
+
+constexpr std::string_view WAYLAND_EXPLICIT_SYNC_MANAGER_INTERFACE{"wp_linux_drm_syncobj_manager_v1"};
+
+bool IsExplicitSyncInterface(const std::string& interface)
+{
+  return interface == WAYLAND_EXPLICIT_SYNC_MANAGER_INTERFACE;
+}
 
 void TryBind(wayland::registry_t& registry, wayland::proxy_t& target, std::uint32_t name, std::string const& interface, std::uint32_t minVersion, std::uint32_t maxVersion, std::uint32_t offeredVersion)
 {
@@ -50,6 +59,13 @@ void CRegistry::RequestSingletonInternal(wayland::proxy_t& target, std::string c
   {
     throw std::logic_error("Cannot request more binds from registry after binding has started");
   }
+  if (IsExplicitSyncInterface(interfaceName))
+  {
+    // Debug: disable explicit sync binding.
+    CLog::Log(LOGDEBUG, "Wayland protocol {} binding disabled", interfaceName);
+    return;
+  }
+
   m_singletonBinds.emplace(std::piecewise_construct, std::forward_as_tuple(interfaceName), std::forward_as_tuple(target, minVersion, maxVersion, required));
 }
 
@@ -59,6 +75,13 @@ void CRegistry::RequestInternal(std::function<wayland::proxy_t()> constructor, c
   {
     throw std::logic_error("Cannot request more binds from registry after binding has started");
   }
+  if (IsExplicitSyncInterface(interfaceName))
+  {
+    // Debug: disable explicit sync binding.
+    CLog::Log(LOGDEBUG, "Wayland protocol {} binding disabled", interfaceName);
+    return;
+  }
+
   m_binds.emplace(std::piecewise_construct, std::forward_as_tuple(interfaceName), std::forward_as_tuple(constructor, minVersion, maxVersion, addHandler, removeHandler));
 }
 
@@ -87,6 +110,13 @@ void CRegistry::Bind()
 
   m_registry.on_global() = [this](std::uint32_t name, const std::string& interface,
                                   std::uint32_t version) {
+    if (IsExplicitSyncInterface(interface))
+    {
+      // Debug: disable explicit sync binding.
+      CLog::Log(LOGDEBUG, "Ignoring Wayland protocol {} announcement", interface);
+      return;
+    }
+
     {
       auto it = m_singletonBinds.find(interface);
       if (it != m_singletonBinds.end())
