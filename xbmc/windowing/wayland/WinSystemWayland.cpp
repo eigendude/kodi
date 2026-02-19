@@ -671,7 +671,7 @@ void CWinSystemWayland::ApplyOpaqueRegion()
 
 void CWinSystemWayland::ApplyWindowGeometry()
 {
-  m_shellSurface->SetWindowGeometry(m_windowDecorator->GetWindowGeometry());
+  CLog::LogF(LOGDEBUG, "DEBUG: Skipping SetWindowGeometry due to debug override");
 }
 
 void CWinSystemWayland::ProcessMessages()
@@ -983,19 +983,11 @@ CWinSystemWayland::Sizes CWinSystemWayland::CalculateSizes(CSizeInt size, int sc
     size.SetHeight(MIN_HEIGHT);
   }
 
-  // Depending on whether the size has decorations included (i.e. comes from the
-  // compositor or from Kodi), we need to calculate differently
-  if (sizeIncludesDecoration)
-  {
-    result.configuredSize = size;
-    result.surfaceSize = m_windowDecorator->CalculateMainSurfaceSize(size, state);
-  }
-  else
-  {
-    result.surfaceSize = size;
-    result.configuredSize = m_windowDecorator->CalculateFullSurfaceSize(size, state);
-  }
-
+  CLog::LogF(LOGDEBUG,
+             "DEBUG: Skipping window decorator size math override (includesDecoration={}, state={})",
+             sizeIncludesDecoration, IShellSurface::StateToString(state));
+  result.configuredSize = size;
+  result.surfaceSize = size;
   result.bufferSize = result.surfaceSize * scale;
 
   return result;
