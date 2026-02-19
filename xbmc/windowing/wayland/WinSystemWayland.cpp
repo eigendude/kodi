@@ -6,6 +6,8 @@
  *  See LICENSES/README.md for more information.
  */
 
+// Run command for SHM test: KODI_WAYLAND_SHM_TEST=1 gamescope -f -b --expose-wayland -- ./kodi-wayland
+
 #include "WinSystemWayland.h"
 
 #include "CompileInfo.h"
@@ -47,10 +49,24 @@
 #include "platform/linux/TimeUtils.h"
 
 #include <algorithm>
+#include <cerrno>
+#include <cstdint>
+#include <cstring>
 #include <limits>
 #include <memory>
 #include <mutex>
 #include <numeric>
+#include <string_view>
+
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
+#if defined(__linux__)
+#include <linux/memfd.h>
+#include <sys/syscall.h>
+#endif
 
 using namespace KODI::WINDOWING;
 using namespace KODI::WINDOWING::WAYLAND;
@@ -59,6 +75,18 @@ using namespace std::chrono_literals;
 
 namespace
 {
+
+#if defined(__linux__)
+int CreateMemfd(const char* name, unsigned int flags)
+{
+#ifdef SYS_memfd_create
+  return static_cast<int>(syscall(SYS_memfd_create, name, flags));
+#else
+  errno = ENOSYS;
+  return -1;
+#endif
+}
+#endif
 
 RESOLUTION FindMatchingCustomResolution(CSizeInt size, float refreshRate)
 {
@@ -242,6 +270,17 @@ bool CWinSystemWayland::CreateNewWindow(const std::string& name,
   CLog::LogF(LOGINFO, "Starting {} size {}x{}", fullScreen ? "full screen" : "windowed", res.iWidth,
              res.iHeight);
 
+  const char* shmTestEnv = getenv("KODI_WAYLAND_SHM_TEST");
+  m_shmTestEnabled = shmTestEnv != nullptr && std::string_view(shmTestEnv) == "1";
+  m_shmTestCommitted = false;
+  m_shmTestBufferReleased = false;
+  m_shmTestQuitRequested = false;
+  m_shmTestCommitTime = {};
+  if (m_shmTestEnabled)
+  {
+    CLog::Log(LOGINFO, "CWinSystemWayland::{} - KODI_WAYLAND_SHM_TEST enabled", __FUNCTION__);
+  }
+
   m_surface = m_compositor.create_surface();
   m_surface.on_enter() = [this](const wayland::output_t& wloutput) {
     if (auto output = FindOutputByWaylandOutput(wloutput))
@@ -378,6 +417,8 @@ bool CWinSystemWayland::DestroyWindow()
 {
   // Make sure no more events get processed when we kill the instances
   CWinEventsWayland::SetDisplay(nullptr);
+
+  CleanupShmTestBuffer();
 
   m_shellSurface.reset();
   // waylandpp automatically calls wl_surface_destroy when the last reference is removed
@@ -720,6 +761,23 @@ void CWinSystemWayland::ProcessMessages()
     }
   }
 
+  if (m_shmTestCommitted)
+  {
+    if (!m_shmTestQuitRequested &&
+        std::chrono::steady_clock::now() - m_shmTestCommitTime >= 2s)
+    {
+      CLog::Log(LOGINFO, "CWinSystemWayland::{} - SHM test timeout reached, requesting quit",
+                __FUNCTION__);
+      CServiceBroker::GetAppMessenger()->PostMsg(TMSG_QUIT);
+      m_shmTestQuitRequested = true;
+    }
+
+    if (m_shmTestBufferReleased)
+    {
+      CleanupShmTestBuffer();
+    }
+  }
+
   if (lastConfigureMessage)
   {
     if (skippedConfigures > 0)
@@ -793,6 +851,8 @@ void CWinSystemWayland::OnConfigure(std::uint32_t serial, CSizeInt size, IShellS
   }
   else
   {
+    CLog::LogF(LOGINFO, "Configure received serial {}: size {}x{} state {}", serial, size.Width(),
+               size.Height(), IShellSurface::StateToString(state));
     WinSystemWaylandProtocol::MsgConfigure msg{serial, size, state};
     m_protocol.SendOutMessage(WinSystemWaylandProtocol::CONFIGURE, &msg, sizeof(msg));
   }
@@ -804,11 +864,134 @@ void CWinSystemWayland::AckConfigure(std::uint32_t serial)
   // this function is called
   if (serial != m_lastAckedSerial || !m_firstSerialAcked)
   {
-    CLog::LogF(LOGDEBUG, "Acking serial {}", serial);
+    CLog::LogF(LOGINFO, "Acking configure serial {} with configured size {}x{}", serial,
+               m_configuredSize.Width(), m_configuredSize.Height());
     m_shellSurface->AckConfigure(serial);
     m_lastAckedSerial = serial;
     m_firstSerialAcked = true;
   }
+
+  if (m_firstSerialAcked && !m_configuredSize.IsZero())
+  {
+    MaybeCommitShmTestBuffer();
+  }
+}
+
+void CWinSystemWayland::MaybeCommitShmTestBuffer()
+{
+  if (!m_shmTestEnabled || m_shmTestCommitted)
+  {
+    return;
+  }
+
+  int width = m_configuredSize.Width();
+  int height = m_configuredSize.Height();
+  if (width <= 0 || height <= 0)
+  {
+    width = 1280;
+    height = 720;
+  }
+
+  constexpr std::size_t bytesPerPixel{4};
+  m_shmTestSize = static_cast<std::size_t>(width) * static_cast<std::size_t>(height) * bytesPerPixel;
+
+#if defined(__linux__)
+  m_shmTestFd = CreateMemfd("kodi-wayland-shm-test", MFD_CLOEXEC);
+  if (m_shmTestFd < 0)
+  {
+    CLog::Log(LOGWARNING,
+              "CWinSystemWayland::{} - memfd_create failed with errno {} ({}), falling back to shm_open",
+              __FUNCTION__, errno, strerror(errno));
+  }
+#endif
+
+  if (m_shmTestFd < 0)
+  {
+    const std::string shmName =
+        StringUtils::Format("/kodi-wayland-shm-test-{}-{}", static_cast<long>(getpid()),
+                            static_cast<long long>(std::time(nullptr)));
+    m_shmTestFd = shm_open(shmName.c_str(), O_RDWR | O_CREAT | O_EXCL, 0600);
+    if (m_shmTestFd >= 0)
+    {
+      shm_unlink(shmName.c_str());
+    }
+  }
+
+  if (m_shmTestFd < 0)
+  {
+    CLog::Log(LOGERROR, "CWinSystemWayland::{} - Failed to create SHM fd: errno {} ({})",
+              __FUNCTION__, errno, strerror(errno));
+    return;
+  }
+
+  if (ftruncate(m_shmTestFd, static_cast<off_t>(m_shmTestSize)) != 0)
+  {
+    CLog::Log(LOGERROR, "CWinSystemWayland::{} - ftruncate failed: errno {} ({})", __FUNCTION__,
+              errno, strerror(errno));
+    CleanupShmTestBuffer();
+    return;
+  }
+
+  m_shmTestMap = mmap(nullptr, m_shmTestSize, PROT_READ | PROT_WRITE, MAP_SHARED, m_shmTestFd, 0);
+  if (m_shmTestMap == MAP_FAILED)
+  {
+    m_shmTestMap = nullptr;
+    CLog::Log(LOGERROR, "CWinSystemWayland::{} - mmap failed: errno {} ({})", __FUNCTION__, errno,
+              strerror(errno));
+    CleanupShmTestBuffer();
+    return;
+  }
+
+  auto* pixels = static_cast<std::uint32_t*>(m_shmTestMap);
+  for (int y = 0; y < height; ++y)
+  {
+    for (int x = 0; x < width; ++x)
+    {
+      const bool diagonal = ((x + y) % 64) < 8 || ((x - y + width) % 64) < 8;
+      pixels[y * width + x] = diagonal ? 0xFF00FF00u : 0xFFFF00FFu;
+    }
+  }
+
+  m_shmTestPool = m_shm.create_pool(m_shmTestFd, static_cast<int>(m_shmTestSize));
+  m_shmTestBuffer = m_shmTestPool.create_buffer(0, width, height, width * bytesPerPixel,
+                                                WL_SHM_FORMAT_ARGB8888);
+  m_shmTestBuffer.on_release() = [this]()
+  {
+    m_shmTestBufferReleased = true;
+    CLog::Log(LOGINFO, "SHM test buffer released");
+  };
+
+  CLog::Log(LOGINFO,
+            "CWinSystemWayland::{} - Committing SHM test buffer at {}x{} configured size {}x{}",
+            __FUNCTION__, width, height, m_configuredSize.Width(), m_configuredSize.Height());
+  m_surface.attach(m_shmTestBuffer, 0, 0);
+  m_surface.damage(0, 0, width, height);
+  m_surface.commit();
+  m_connection->GetDisplay().flush();
+
+  m_shmTestCommitted = true;
+  m_shmTestCommitTime = std::chrono::steady_clock::now();
+}
+
+void CWinSystemWayland::CleanupShmTestBuffer()
+{
+  m_shmTestBuffer = wayland::buffer_t{};
+  m_shmTestPool = wayland::shm_pool_t{};
+
+  if (m_shmTestMap)
+  {
+    munmap(m_shmTestMap, m_shmTestSize);
+    m_shmTestMap = nullptr;
+  }
+
+  if (m_shmTestFd >= 0)
+  {
+    close(m_shmTestFd);
+    m_shmTestFd = -1;
+  }
+
+  m_shmTestSize = 0;
+  m_shmTestBufferReleased = false;
 }
 
 /**

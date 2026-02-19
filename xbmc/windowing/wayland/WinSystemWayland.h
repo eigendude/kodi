@@ -188,6 +188,8 @@ private:
 
   void ProcessMessages();
   void AckConfigure(std::uint32_t serial);
+  void MaybeCommitShmTestBuffer();
+  void CleanupShmTestBuffer();
 
   timespec GetPresentationClockTime();
 
@@ -304,6 +306,19 @@ private:
   std::uint32_t m_lastAckedSerial{0u};
   /// Whether this is the first call to SetFullScreen
   bool m_isInitialSetFullScreen{true};
+
+  // SHM test buffer state
+  // ---------------------
+  bool m_shmTestEnabled{false};
+  bool m_shmTestCommitted{false};
+  int m_shmTestFd{-1};
+  void* m_shmTestMap{nullptr};
+  size_t m_shmTestSize{0};
+  wayland::shm_pool_t m_shmTestPool;
+  wayland::buffer_t m_shmTestBuffer;
+  bool m_shmTestBufferReleased{false};
+  std::chrono::steady_clock::time_point m_shmTestCommitTime{};
+  bool m_shmTestQuitRequested{false};
 
   std::unique_ptr<CColorManager> m_colorManager;
 };
