@@ -370,22 +370,9 @@ bool CWinSystemWayland::CreateNewWindow(const std::string& name,
 
 IShellSurface* CWinSystemWayland::CreateShellSurface(const std::string& name)
 {
-  IShellSurface* shell = CShellSurfaceXdgShell::TryCreate(*this, *m_connection, m_surface, name,
-                                                          std::string(CCompileInfo::GetAppName()));
-  if (!shell)
-  {
-    shell = CShellSurfaceXdgShellUnstableV6::TryCreate(*this, *m_connection, m_surface, name,
-                                                       std::string(CCompileInfo::GetAppName()));
-  }
-  if (!shell)
-  {
-    CLog::LogF(LOGWARNING, "Compositor does not support xdg_shell protocol (stable or unstable v6) "
-                           "- falling back to wl_shell, not all features might work");
-    shell = new CShellSurfaceWlShell(*this, *m_connection, m_surface, name,
-                                     std::string(CCompileInfo::GetAppName()));
-  }
-
-  return shell;
+  CLog::LogF(LOGWARNING, "DEBUG: forcing wl_shell (skipping xdg_shell)");
+  return new CShellSurfaceWlShell(*this, *m_connection, m_surface, name,
+                                  std::string(CCompileInfo::GetAppName()));
 }
 
 bool CWinSystemWayland::DestroyWindow()
