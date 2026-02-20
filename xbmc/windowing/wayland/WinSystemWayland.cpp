@@ -312,10 +312,16 @@ bool CWinSystemWayland::CreateNewWindow(const std::string& name,
   {
     // Try to start on correct monitor and with correct buffer scale
     auto output = FindOutputByUserFriendlyName(CServiceBroker::GetSettingsComponent()->GetSettings()->GetString(CSettings::SETTING_VIDEOSCREEN_MONITOR));
+    if (!output)
+      output = FindOutputByUserFriendlyName(res.strOutput);
+
     auto wlOutput = output ? output->GetWaylandOutput() : wayland::output_t{};
     m_lastSetOutput = wlOutput;
-    m_shellSurfaceState.set(IShellSurface::STATE_FULLSCREEN);
     m_shellSurface->SetFullScreen(wlOutput, res.fRefreshRate);
+    m_shellSurfaceState.set(IShellSurface::STATE_FULLSCREEN);
+    m_surface.commit();
+    m_connection->GetDisplay().roundtrip();
+
     if (output && m_surface.can_set_buffer_scale())
     {
       m_scale = output->GetScale();
@@ -560,7 +566,8 @@ bool CWinSystemWayland::SetResolutionExternal(bool fullScreen, RESOLUTION_INFO c
     // Try to match output
     auto output = FindOutputByUserFriendlyName(res.strOutput);
     auto wlOutput = output ? output->GetWaylandOutput() : wayland::output_t{};
-    if (!m_shellSurfaceState.test(IShellSurface::STATE_FULLSCREEN) || (m_lastSetOutput != wlOutput))
+    if (!m_shellSurfaceState.test(IShellSurface::STATE_FULLSCREEN) ||
+        (m_lastSetOutput && m_lastSetOutput != wlOutput))
     {
       // Remember the output we set last so we don't set it again until we
       // either go windowed or were on a different output
@@ -758,12 +765,19 @@ void CWinSystemWayland::ProcessMessages()
 
     if (size.IsZero())
     {
-      if (configure->state.test(IShellSurface::STATE_FULLSCREEN) ||
-          m_shellSurfaceState.test(IShellSurface::STATE_FULLSCREEN))
+      if (configure->state.test(IShellSurface::STATE_FULLSCREEN))
       {
         // Do not change current size - UpdateWithConfiguredSize must be called regardless in case
         // scale or something else changed
         size = m_configuredSize;
+      }
+      else if (m_shellSurfaceState.test(IShellSurface::STATE_FULLSCREEN))
+      {
+        // Compositor did not grant fullscreen state; gamescope may omit FULLSCREEN while
+        // presenting fullscreen. 0x0 means the client decides size.
+        size = m_configuredSize;
+        CLog::LogF(LOGDEBUG, "Compositor did not grant fullscreen, keeping configured size {}x{}",
+                   size.Width(), size.Height());
       }
       else
       {
