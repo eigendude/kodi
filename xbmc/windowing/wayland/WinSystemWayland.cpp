@@ -303,37 +303,13 @@ bool CWinSystemWayland::CreateNewWindow(const std::string& name,
   // Use AppName as the desktop file name. This is required to lookup the app icon of the same name.
   m_shellSurface.reset(CreateShellSurface(name));
 
-  // Just remember initial width/height for context creation in OnConfigure.
-  // This is used for sizing the EGLSurface.
-  CLog::LogF(LOGDEBUG, "Initializing shell surface before fullscreen setup");
-  m_shellSurfaceInitializing = true;
-  m_shellSurface->Initialize();
-
   if (fullScreen)
   {
-    const auto monitorSetting =
-        CServiceBroker::GetSettingsComponent()->GetSettings()->GetString(
-            CSettings::SETTING_VIDEOSCREEN_MONITOR);
-
-    // Try to start on monitor selected in settings, then fall back to output from the resolution.
-    auto output = FindOutputByUserFriendlyName(monitorSetting);
-    if (!output)
-      output = FindOutputByUserFriendlyName(res.strOutput);
-
+    // Try to start on correct monitor and with correct buffer scale
+    auto output = FindOutputByUserFriendlyName(CServiceBroker::GetSettingsComponent()->GetSettings()->GetString(CSettings::SETTING_VIDEOSCREEN_MONITOR));
     auto wlOutput = output ? output->GetWaylandOutput() : wayland::output_t{};
-
-    CLog::LogF(LOGDEBUG,
-               "Initial fullscreen output resolution: monitor setting \"{}\", resolution output \"{}\", wl_output {}",
-               monitorSetting, res.strOutput, wlOutput ? "set" : "default");
-
     m_lastSetOutput = wlOutput;
-    m_shellSurfaceState.set(IShellSurface::STATE_FULLSCREEN);
-    CLog::LogF(LOGDEBUG, "CreateNewWindow SetFullScreen output {} refresh {:.3f}",
-               wlOutput ? "set" : "default", res.fRefreshRate);
     m_shellSurface->SetFullScreen(wlOutput, res.fRefreshRate);
-    m_surface.commit();
-    m_connection->GetDisplay().roundtrip();
-
     if (output && m_surface.can_set_buffer_scale())
     {
       m_scale = output->GetScale();
@@ -341,8 +317,11 @@ bool CWinSystemWayland::CreateNewWindow(const std::string& name,
     }
   }
 
+  // Just remember initial width/height for context creation in OnConfigure
+  // This is used for sizing the EGLSurface
+  m_shellSurfaceInitializing = true;
+  m_shellSurface->Initialize();
   m_shellSurfaceInitializing = false;
-  CLog::LogF(LOGDEBUG, "Shell surface initialization sequence complete");
 
   // Apply window decorations if necessary
   m_windowDecorator->SetState(m_configuredSize, m_scale, m_shellSurfaceState);
@@ -576,29 +555,14 @@ bool CWinSystemWayland::SetResolutionExternal(bool fullScreen, RESOLUTION_INFO c
 
   if (fullScreen)
   {
-    const auto monitorSetting =
-        CServiceBroker::GetSettingsComponent()->GetSettings()->GetString(
-            CSettings::SETTING_VIDEOSCREEN_MONITOR);
-
-    // Try to match output by monitor setting first to avoid name mismatches
-    // between the monitor setting and resolution output label.
-    auto output = FindOutputByUserFriendlyName(monitorSetting);
-    if (!output)
-      output = FindOutputByUserFriendlyName(res.strOutput);
-
+    // Try to match output
+    auto output = FindOutputByUserFriendlyName(res.strOutput);
     auto wlOutput = output ? output->GetWaylandOutput() : wayland::output_t{};
-
-    CLog::LogF(LOGDEBUG,
-               "Fullscreen output resolution: monitor setting \"{}\", requested output \"{}\", wl_output {}",
-               monitorSetting, res.strOutput, wlOutput ? "set" : "default");
-
-    if (!m_shellSurfaceState.test(IShellSurface::STATE_FULLSCREEN) ||
-        (m_lastSetOutput && m_lastSetOutput != wlOutput))
+    if (!m_shellSurfaceState.test(IShellSurface::STATE_FULLSCREEN) || (m_lastSetOutput != wlOutput))
     {
       // Remember the output we set last so we don't set it again until we
       // either go windowed or were on a different output
       m_lastSetOutput = wlOutput;
-      m_shellSurfaceState.set(IShellSurface::STATE_FULLSCREEN);
 
       if (output)
       {
@@ -613,8 +577,7 @@ bool CWinSystemWayland::SetResolutionExternal(bool fullScreen, RESOLUTION_INFO c
                    res.strOutput);
       }
 
-      CLog::LogF(LOGDEBUG, "SetFullScreen output {} refresh {:.3f}",
-                 wlOutput ? "set" : "default", res.fRefreshRate);
+      CLog::LogF(LOGDEBUG, "Setting full-screen with refresh rate {:.3f}", res.fRefreshRate);
       m_shellSurface->SetFullScreen(wlOutput, res.fRefreshRate);
     }
     else
@@ -797,16 +760,6 @@ void CWinSystemWayland::ProcessMessages()
       {
         // Do not change current size - UpdateWithConfiguredSize must be called regardless in case
         // scale or something else changed
-        size = m_configuredSize;
-      }
-      else if (m_shellSurfaceState.test(IShellSurface::STATE_FULLSCREEN))
-      {
-        // Some compositors (e.g. nested gamescope) can omit FULLSCREEN in state while still
-        // honoring fullscreen at another layer. Keep size stable to avoid translating this into
-        // a spurious windowed resize cycle.
-        CLog::LogF(LOGDEBUG,
-                   "Configure serial {} reported 0x0 without fullscreen state while fullscreen is intended; keeping configured size {}x{}",
-                   configure->serial, m_configuredSize.Width(), m_configuredSize.Height());
         size = m_configuredSize;
       }
       else
