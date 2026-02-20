@@ -762,6 +762,15 @@ void CWinSystemWayland::ProcessMessages()
         // scale or something else changed
         size = m_configuredSize;
       }
+      else if (m_shellSurfaceState.test(IShellSurface::STATE_FULLSCREEN))
+      {
+        // Keep current size stable when fullscreen is still intended but not reflected in the
+        // incoming configure state.
+        CLog::Log(LOGDEBUG,
+                  "Received 0x0 configure without fullscreen state while fullscreen is intended, "
+                  "keeping configured size");
+        size = m_configuredSize;
+      }
       else
       {
         // Compositor has no preference and we're windowed
