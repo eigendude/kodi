@@ -558,7 +558,8 @@ bool CWinSystemWayland::SetResolutionExternal(bool fullScreen, RESOLUTION_INFO c
     // Try to match output
     auto output = FindOutputByUserFriendlyName(res.strOutput);
     auto wlOutput = output ? output->GetWaylandOutput() : wayland::output_t{};
-    if (!m_shellSurfaceState.test(IShellSurface::STATE_FULLSCREEN) || (m_lastSetOutput != wlOutput))
+    if (!m_shellSurfaceState.test(IShellSurface::STATE_FULLSCREEN) ||
+        (m_lastSetOutput && m_lastSetOutput != wlOutput))
     {
       // Remember the output we set last so we don't set it again until we
       // either go windowed or were on a different output
