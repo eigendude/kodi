@@ -294,6 +294,11 @@ bool CWinSystemWayland::CreateNewWindow(const std::string& name,
   if (fullScreen)
   {
     m_shellSurfaceState.set(IShellSurface::STATE_FULLSCREEN);
+    m_fullscreenRequested = true;
+  }
+  else
+  {
+    m_fullscreenRequested = false;
   }
   // Assume we're active on startup until someone tells us otherwise
   m_shellSurfaceState.set(IShellSurface::STATE_ACTIVATED);
@@ -315,6 +320,7 @@ bool CWinSystemWayland::CreateNewWindow(const std::string& name,
     auto wlOutput = output ? output->GetWaylandOutput() : wayland::output_t{};
     m_lastSetOutput = wlOutput;
     m_shellSurfaceState.set(IShellSurface::STATE_FULLSCREEN);
+    m_fullscreenRequested = true;
     m_shellSurface->SetFullScreen(wlOutput, res.fRefreshRate);
     if (output && m_surface.can_set_buffer_scale())
     {
@@ -580,6 +586,7 @@ bool CWinSystemWayland::SetResolutionExternal(bool fullScreen, RESOLUTION_INFO c
       }
 
       CLog::LogF(LOGDEBUG, "Setting full-screen with refresh rate {:.3f}", res.fRefreshRate);
+      m_fullscreenRequested = true;
       m_shellSurface->SetFullScreen(wlOutput, res.fRefreshRate);
     }
     else
@@ -589,6 +596,8 @@ bool CWinSystemWayland::SetResolutionExternal(bool fullScreen, RESOLUTION_INFO c
   }
   else
   {
+    m_fullscreenRequested = false;
+
     if (m_shellSurfaceState.test(IShellSurface::STATE_FULLSCREEN))
     {
       CLog::LogF(LOGDEBUG, "Setting windowed");
@@ -758,8 +767,7 @@ void CWinSystemWayland::ProcessMessages()
 
     if (size.IsZero())
     {
-      if (configure->state.test(IShellSurface::STATE_FULLSCREEN) ||
-          m_shellSurfaceState.test(IShellSurface::STATE_FULLSCREEN))
+      if (configure->state.test(IShellSurface::STATE_FULLSCREEN) || m_fullscreenRequested)
       {
         // Do not change current size - UpdateWithConfiguredSize must be called regardless in case
         // scale or something else changed

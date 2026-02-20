@@ -281,6 +281,8 @@ private:
   int m_scale{1};
   /// Shell surface state last acked
   IShellSurface::StateBitset m_shellSurfaceState;
+  /// Whether fullscreen has been requested and not yet superseded by a windowed request
+  bool m_fullscreenRequested{false};
   /// Whether the shell surface is waiting for initial configure
   bool m_shellSurfaceInitializing{false};
   struct
