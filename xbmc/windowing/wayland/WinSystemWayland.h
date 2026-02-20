@@ -281,6 +281,8 @@ private:
   int m_scale{1};
   /// Shell surface state last acked
   IShellSurface::StateBitset m_shellSurfaceState;
+  /// Fullscreen mode requested by Kodi, independent of compositor-reported state
+  bool m_fullscreenIntent{false};
   /// Whether the shell surface is waiting for initial configure
   bool m_shellSurfaceInitializing{false};
   struct

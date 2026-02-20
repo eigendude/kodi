@@ -291,10 +291,7 @@ bool CWinSystemWayland::CreateNewWindow(const std::string& name,
     CLog::Log(LOGWARNING, "Wayland compositor did not announce a wl_seat - you will not have any input devices for the time being");
   }
 
-  if (fullScreen)
-  {
-    m_shellSurfaceState.set(IShellSurface::STATE_FULLSCREEN);
-  }
+  m_fullscreenIntent = fullScreen;
   // Assume we're active on startup until someone tells us otherwise
   m_shellSurfaceState.set(IShellSurface::STATE_ACTIVATED);
   // Try with this resolution if compositor does not say otherwise
@@ -314,7 +311,9 @@ bool CWinSystemWayland::CreateNewWindow(const std::string& name,
     auto output = FindOutputByUserFriendlyName(CServiceBroker::GetSettingsComponent()->GetSettings()->GetString(CSettings::SETTING_VIDEOSCREEN_MONITOR));
     auto wlOutput = output ? output->GetWaylandOutput() : wayland::output_t{};
     m_lastSetOutput = wlOutput;
-    m_shellSurfaceState.set(IShellSurface::STATE_FULLSCREEN);
+    CLog::LogF(LOGDEBUG, "Requesting full-screen for startup on output \"{}\" (global {})",
+               output ? UserFriendlyOutputName(output) : std::string{"default"},
+               output ? output->GetGlobalName() : 0u);
     m_shellSurface->SetFullScreen(wlOutput, res.fRefreshRate);
     if (output && m_surface.can_set_buffer_scale())
     {
@@ -557,6 +556,7 @@ bool CWinSystemWayland::SetResolutionExternal(bool fullScreen, RESOLUTION_INFO c
 
   if (fullScreen)
   {
+    m_fullscreenIntent = true;
     // Try to match output
     auto output = FindOutputByUserFriendlyName(res.strOutput);
     auto wlOutput = output ? output->GetWaylandOutput() : wayland::output_t{};
@@ -579,7 +579,10 @@ bool CWinSystemWayland::SetResolutionExternal(bool fullScreen, RESOLUTION_INFO c
                    res.strOutput);
       }
 
-      CLog::LogF(LOGDEBUG, "Setting full-screen with refresh rate {:.3f}", res.fRefreshRate);
+      CLog::LogF(LOGDEBUG,
+                 "Requesting full-screen on output \"{}\" (global {}) with refresh rate {:.3f}",
+                 output ? UserFriendlyOutputName(output) : std::string{"default"},
+                 output ? output->GetGlobalName() : 0u, res.fRefreshRate);
       m_shellSurface->SetFullScreen(wlOutput, res.fRefreshRate);
     }
     else
@@ -589,9 +592,10 @@ bool CWinSystemWayland::SetResolutionExternal(bool fullScreen, RESOLUTION_INFO c
   }
   else
   {
+    m_fullscreenIntent = false;
     if (m_shellSurfaceState.test(IShellSurface::STATE_FULLSCREEN))
     {
-      CLog::LogF(LOGDEBUG, "Setting windowed");
+      CLog::LogF(LOGDEBUG, "Requesting windowed mode on output \"{}\"", res.strOutput);
       m_shellSurface->SetWindowed();
     }
     else
@@ -720,6 +724,11 @@ void CWinSystemWayland::ProcessMessages()
           CLog::LogF(LOGDEBUG, "Output hotplug resulted in monitor set in settings appearing, switching");
           // Switch to this output
           m_lastSetOutput = wlOutput;
+          m_fullscreenIntent = true;
+          CLog::LogF(LOGDEBUG,
+                     "Requesting full-screen after hotplug on output \"{}\" (global {})",
+                     output ? UserFriendlyOutputName(output) : std::string{"default"},
+                     output ? output->GetGlobalName() : 0u);
           m_shellSurface->SetFullScreen(wlOutput, desktopRes.fRefreshRate);
           // SetOutput will result in a configure that updates the actual context size
         }
@@ -758,12 +767,16 @@ void CWinSystemWayland::ProcessMessages()
 
     if (size.IsZero())
     {
-      if (configure->state.test(IShellSurface::STATE_FULLSCREEN) ||
-          m_shellSurfaceState.test(IShellSurface::STATE_FULLSCREEN))
+      auto stateMask = static_cast<unsigned long long>(configure->state.to_ullong());
+      if (configure->state.test(IShellSurface::STATE_FULLSCREEN) || m_fullscreenIntent)
       {
         // Do not change current size - UpdateWithConfiguredSize must be called regardless in case
         // scale or something else changed
         size = m_configuredSize;
+        CLog::LogF(LOGDEBUG,
+                   "Configure serial {} is 0x0 (state mask 0x{:x}, fullscreen intent {}), "
+                   "keeping configured size {}x{}",
+                   configure->serial, stateMask, m_fullscreenIntent, size.Width(), size.Height());
       }
       else
       {
@@ -773,7 +786,10 @@ void CWinSystemWayland::ProcessMessages()
         // Kodi resolution is buffer size, but SetResolutionInternal expects
         // surface size, so divide by m_scale
         size = CSizeInt{windowed.iWidth, windowed.iHeight} / newScale;
-        CLog::LogF(LOGDEBUG, "Adapting Kodi windowed size {}x{}", size.Width(), size.Height());
+        CLog::LogF(LOGDEBUG,
+                   "Configure serial {} is 0x0 (state mask 0x{:x}, fullscreen intent {}), "
+                   "adapting Kodi windowed size {}x{}",
+                   configure->serial, stateMask, m_fullscreenIntent, size.Width(), size.Height());
         sizeIncludesDecoration = false;
       }
     }
