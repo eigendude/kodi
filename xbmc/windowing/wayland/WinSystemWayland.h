@@ -26,6 +26,7 @@
 #include <ctime>
 #include <list>
 #include <map>
+#include <optional>
 #include <set>
 #include <time.h>
 
@@ -281,6 +282,10 @@ private:
   int m_scale{1};
   /// Shell surface state last acked
   IShellSurface::StateBitset m_shellSurfaceState;
+  /// Whether Kodi most recently requested fullscreen mode
+  bool m_fullscreenRequested{false};
+  /// Last known windowed surface size (logical coordinates, decorations excluded)
+  std::optional<CSizeInt> m_lastWindowedSize;
   /// Whether the shell surface is waiting for initial configure
   bool m_shellSurfaceInitializing{false};
   struct

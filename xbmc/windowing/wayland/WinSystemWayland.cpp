@@ -291,6 +291,9 @@ bool CWinSystemWayland::CreateNewWindow(const std::string& name,
     CLog::Log(LOGWARNING, "Wayland compositor did not announce a wl_seat - you will not have any input devices for the time being");
   }
 
+  m_fullscreenRequested = fullScreen;
+  CLog::LogF(LOGDEBUG, "Fullscreen intent set to {} on startup", m_fullscreenRequested);
+
   if (fullScreen)
   {
     m_shellSurfaceState.set(IShellSurface::STATE_FULLSCREEN);
@@ -299,6 +302,12 @@ bool CWinSystemWayland::CreateNewWindow(const std::string& name,
   m_shellSurfaceState.set(IShellSurface::STATE_ACTIVATED);
   // Try with this resolution if compositor does not say otherwise
   UpdateSizeVariables({res.iWidth, res.iHeight}, m_scale, m_shellSurfaceState, false);
+  if (!fullScreen)
+  {
+    m_lastWindowedSize = CSizeInt{res.iWidth, res.iHeight};
+    CLog::LogF(LOGDEBUG, "Initial windowed size set to {}x{}", m_lastWindowedSize->Width(),
+               m_lastWindowedSize->Height());
+  }
 
   // Use AppName as the desktop file name. This is required to lookup the app icon of the same name.
   m_shellSurface.reset(CreateShellSurface(name));
@@ -549,7 +558,14 @@ bool CWinSystemWayland::SetResolutionExternal(bool fullScreen, RESOLUTION_INFO c
   // which applies for maximized and fullscreen states.
   // Also, setting an unconfigured size when just going fullscreen makes no sense.
   // Give precedence to the size we have still pending, if any.
-  bool mustHonorSize{m_waitingForApply || m_shellSurfaceState.test(IShellSurface::STATE_MAXIMIZED) || m_shellSurfaceState.test(IShellSurface::STATE_FULLSCREEN) || fullScreen};
+  bool mustHonorSize{m_waitingForApply || m_shellSurfaceState.test(IShellSurface::STATE_MAXIMIZED) ||
+                     m_shellSurfaceState.test(IShellSurface::STATE_FULLSCREEN) || fullScreen};
+
+  if (m_fullscreenRequested != fullScreen)
+  {
+    m_fullscreenRequested = fullScreen;
+    CLog::LogF(LOGDEBUG, "Fullscreen intent set to {}", m_fullscreenRequested);
+  }
 
   CLog::LogF(LOGINFO, "Kodi asked to switch mode to {}x{} @{:.3f} Hz on output \"{}\" {}",
              res.iWidth, res.iHeight, res.fRefreshRate, res.strOutput,
@@ -560,7 +576,8 @@ bool CWinSystemWayland::SetResolutionExternal(bool fullScreen, RESOLUTION_INFO c
     // Try to match output
     auto output = FindOutputByUserFriendlyName(res.strOutput);
     auto wlOutput = output ? output->GetWaylandOutput() : wayland::output_t{};
-    if (!m_shellSurfaceState.test(IShellSurface::STATE_FULLSCREEN) || (m_lastSetOutput != wlOutput))
+    const bool outputChanged = !m_lastSetOutput || (m_lastSetOutput != wlOutput);
+    if (!m_shellSurfaceState.test(IShellSurface::STATE_FULLSCREEN) || outputChanged)
     {
       // Remember the output we set last so we don't set it again until we
       // either go windowed or were on a different output
@@ -589,10 +606,25 @@ bool CWinSystemWayland::SetResolutionExternal(bool fullScreen, RESOLUTION_INFO c
   }
   else
   {
+    const CSizeInt requestedWindowedSize{res.iWidth, res.iHeight};
+    if (!requestedWindowedSize.IsZero())
+    {
+      m_lastWindowedSize = requestedWindowedSize;
+      CLog::LogF(LOGDEBUG, "Updated last windowed size from Kodi request to {}x{}",
+                 m_lastWindowedSize->Width(), m_lastWindowedSize->Height());
+    }
+
     if (m_shellSurfaceState.test(IShellSurface::STATE_FULLSCREEN))
     {
       CLog::LogF(LOGDEBUG, "Setting windowed");
       m_shellSurface->SetWindowed();
+
+      if (m_lastWindowedSize.has_value())
+      {
+        CLog::LogF(LOGDEBUG, "Requesting windowed geometry {}x{}", m_lastWindowedSize->Width(),
+                   m_lastWindowedSize->Height());
+        m_shellSurface->SetWindowGeometry(CRectInt{{0, 0}, *m_lastWindowedSize});
+      }
     }
     else
     {
@@ -607,7 +639,8 @@ bool CWinSystemWayland::SetResolutionExternal(bool fullScreen, RESOLUTION_INFO c
     CLog::LogF(LOGDEBUG, "Directly setting windowed size {}x{} on Kodi request", res.iWidth,
                res.iHeight);
     // Kodi is directly setting window size, apply
-    auto updateResult = UpdateSizeVariables({res.iWidth, res.iHeight}, m_scale, m_shellSurfaceState, false);
+    auto updateResult =
+        UpdateSizeVariables({res.iWidth, res.iHeight}, m_scale, m_shellSurfaceState, false);
     ApplySizeUpdate(updateResult);
   }
 
@@ -620,7 +653,6 @@ bool CWinSystemWayland::SetResolutionExternal(bool fullScreen, RESOLUTION_INFO c
   // Otherwise, Kodi must keep the old resolution.
   return !mustHonorSize || wasInitialSetFullScreen;
 }
-
 bool CWinSystemWayland::ResizeWindow(int, int, int, int)
 {
   // CGraphicContext is "smart" and calls ResizeWindow or SetFullScreen depending
@@ -758,27 +790,51 @@ void CWinSystemWayland::ProcessMessages()
 
     if (size.IsZero())
     {
-      if (configure->state.test(IShellSurface::STATE_FULLSCREEN) ||
-          m_shellSurfaceState.test(IShellSurface::STATE_FULLSCREEN))
+      const bool compositorSaysFullscreen = configure->state.test(IShellSurface::STATE_FULLSCREEN);
+      const bool fullscreenIntent =
+          m_fullscreenRequested || m_shellSurfaceState.test(IShellSurface::STATE_FULLSCREEN);
+
+      if (compositorSaysFullscreen || fullscreenIntent)
       {
-        // Do not change current size - UpdateWithConfiguredSize must be called regardless in case
+        // Do not change current size - SetResolutionInternal must be called regardless in case
         // scale or something else changed
         size = m_configuredSize;
+        sizeIncludesDecoration = false;
+        CLog::LogF(LOGDEBUG,
+                   "0x0 configure serial {} treated as fullscreen (intent={} compositor={}), keeping {}x{}",
+                   configure->serial, fullscreenIntent, compositorSaysFullscreen, size.Width(),
+                   size.Height());
+      }
+      else if (m_lastWindowedSize.has_value())
+      {
+        size = *m_lastWindowedSize;
+        sizeIncludesDecoration = false;
+        CLog::LogF(LOGDEBUG,
+                   "0x0 configure serial {} treated as windowed, using last windowed size {}x{}",
+                   configure->serial, size.Width(), size.Height());
       }
       else
       {
-        // Compositor has no preference and we're windowed
-        // -> adopt windowed size that Kodi wants
         auto const& windowed = CDisplaySettings::GetInstance().GetResolutionInfo(RES_WINDOW);
         // Kodi resolution is buffer size, but SetResolutionInternal expects
-        // surface size, so divide by m_scale
+        // surface size, so divide by scale
         size = CSizeInt{windowed.iWidth, windowed.iHeight} / newScale;
-        CLog::LogF(LOGDEBUG, "Adapting Kodi windowed size {}x{}", size.Width(), size.Height());
         sizeIncludesDecoration = false;
+        CLog::LogF(LOGDEBUG,
+                   "0x0 configure serial {} no history, using RES_WINDOW fallback {}x{}",
+                   configure->serial, size.Width(), size.Height());
       }
     }
+    else if (!configure->state.test(IShellSurface::STATE_FULLSCREEN))
+    {
+      const auto windowedSizes = CalculateSizes(size, newScale, configure->state, sizeIncludesDecoration);
+      m_lastWindowedSize = windowedSizes.surfaceSize;
+      CLog::LogF(LOGDEBUG, "Updated last windowed size to {}x{} from configure serial {}",
+                 m_lastWindowedSize->Width(), m_lastWindowedSize->Height(), configure->serial);
+    }
 
-    SetResolutionInternal(size, newScale, configure->state, sizeIncludesDecoration, true, configure->serial);
+    SetResolutionInternal(size, newScale, configure->state, sizeIncludesDecoration, true,
+                          configure->serial);
   }
   // If we were also configured, scale is already taken care of. But it could
   // also be a scale change without configure, so apply that.
