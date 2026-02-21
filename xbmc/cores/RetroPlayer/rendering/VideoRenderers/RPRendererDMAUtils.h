@@ -10,6 +10,8 @@
 
 #include "cores/GameSettings.h"
 
+#include <cstdint>
+
 namespace KODI
 {
 namespace RETRO
@@ -26,6 +28,21 @@ public:
    * the DMA buffer code).
    */
   static bool SupportsScalingMethod(SCALINGMETHOD method);
+
+  /*! \brief Runtime state that controls whether DMA OpenGL/GLES renderers may be used. */
+  static bool IsSupportedForSession();
+
+  /*! \brief Disable DMA rendering for this Kodi session after an import/capability failure. */
+  static void DisableForSession(uint32_t fourcc,
+                                unsigned int width,
+                                unsigned int height,
+                                uint64_t modifier,
+                                const char* reason);
+
+#ifndef NDEBUG
+  /*! \brief Debug-only knob to simulate dma-buf import failures. */
+  static bool ShouldSimulateImportFailure();
+#endif
 };
 } // namespace RETRO
 } // namespace KODI
