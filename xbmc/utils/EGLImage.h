@@ -46,6 +46,7 @@ public:
   CEGLImage& operator=(CEGLImage const& other) = delete;
 
   bool CreateImage(EglAttrs imageAttrs);
+  EGLint GetLastError() const { return m_lastError; }
   void UploadImage(GLenum textureTarget);
   void DestroyImage();
 
@@ -54,11 +55,13 @@ public:
 
 private:
   bool SupportsFormat(uint32_t format);
+  void LogSupportedFormatsAndModifiersOnce();
 #else
 private:
 #endif
   EGLDisplay m_display{nullptr};
   EGLImageKHR m_image{nullptr};
+  EGLint m_lastError{EGL_SUCCESS};
 
   PFNEGLCREATEIMAGEKHRPROC m_eglCreateImageKHR{nullptr};
   PFNEGLDESTROYIMAGEKHRPROC m_eglDestroyImageKHR{nullptr};
