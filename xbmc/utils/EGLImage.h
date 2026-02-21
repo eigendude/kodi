@@ -11,6 +11,7 @@
 #include "system_egl.h"
 
 #include <array>
+#include <vector>
 
 #include <EGL/eglext.h>
 #include <drm_fourcc.h>
@@ -46,6 +47,8 @@ public:
   CEGLImage& operator=(CEGLImage const& other) = delete;
 
   bool CreateImage(EglAttrs imageAttrs);
+  static std::vector<EGLint> BuildAttributeList(const EglAttrs& imageAttrs,
+                                                bool supportsModifiersExt);
   void UploadImage(GLenum textureTarget);
   void DestroyImage();
 
