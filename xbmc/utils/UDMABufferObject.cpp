@@ -200,3 +200,8 @@ void CUDMABufferObject::ReleaseMemory()
 
   m_map = nullptr;
 }
+
+uint64_t CUDMABufferObject::GetModifier()
+{
+  return DRM_FORMAT_MOD_LINEAR;
+}

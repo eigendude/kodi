@@ -11,6 +11,8 @@
 #include "BufferObjectFactory.h"
 #include "utils/log.h"
 
+#include <drm_fourcc.h>
+
 #if defined(HAVE_LINUX_DMA_BUF)
 #include <linux/dma-buf.h>
 #include <sys/ioctl.h>
@@ -33,7 +35,7 @@ uint32_t CBufferObject::GetStride()
 
 uint64_t CBufferObject::GetModifier()
 {
-  return 0; // linear
+  return DRM_FORMAT_MOD_INVALID;
 }
 
 void CBufferObject::SyncStart()
