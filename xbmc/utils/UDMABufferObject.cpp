@@ -47,7 +47,7 @@ void CUDMABufferObject::Register()
 
   close(fd);
 
-  CBufferObjectFactory::RegisterBufferObject("udmabuf", CUDMABufferObject::Create);
+  CBufferObjectFactory::RegisterBufferObject(CUDMABufferObject::Create);
 }
 
 CUDMABufferObject::~CUDMABufferObject()
@@ -55,15 +55,12 @@ CUDMABufferObject::~CUDMABufferObject()
   ReleaseMemory();
   DestroyBufferObject();
 
-  if (m_udmafd >= 0)
-  {
-    int ret = close(m_udmafd);
-    if (ret < 0)
-      CLog::Log(LOGERROR, "CUDMABufferObject::{} - close /dev/udmabuf failed, errno={}", __FUNCTION__,
-                strerror(errno));
+  int ret = close(m_udmafd);
+  if (ret < 0)
+    CLog::Log(LOGERROR, "CUDMABufferObject::{} - close /dev/udmabuf failed, errno={}", __FUNCTION__,
+              strerror(errno));
 
-    m_udmafd = -1;
-  }
+  m_udmafd = -1;
 }
 
 bool CUDMABufferObject::CreateBufferObject(uint32_t format, uint32_t width, uint32_t height)

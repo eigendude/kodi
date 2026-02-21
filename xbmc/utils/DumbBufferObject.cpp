@@ -30,7 +30,7 @@ std::unique_ptr<CBufferObject> CDumbBufferObject::Create()
 
 void CDumbBufferObject::Register()
 {
-  CBufferObjectFactory::RegisterBufferObject("dumb", CDumbBufferObject::Create);
+  CBufferObjectFactory::RegisterBufferObject(CDumbBufferObject::Create);
 }
 
 CDumbBufferObject::CDumbBufferObject()

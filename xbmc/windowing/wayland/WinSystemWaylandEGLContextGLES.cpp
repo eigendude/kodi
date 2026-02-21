@@ -19,7 +19,6 @@
 #include "rendering/gles/ScreenshotSurfaceGLES.h"
 #include "utils/BufferObjectFactory.h"
 #include "utils/DMAHeapBufferObject.h"
-#include "utils/GBMBufferObject.h"
 #include "utils/UDMABufferObject.h"
 #include "utils/log.h"
 #include "windowing/WindowSystemFactory.h"
@@ -62,14 +61,11 @@ bool CWinSystemWaylandEGLContextGLES::InitWindowSystem()
   }
 
   CBufferObjectFactory::ClearBufferObjects();
-#if defined(HAS_GBM_BO_MAP)
-  CGBMBufferObject::Register();
+#if defined(HAVE_LINUX_MEMFD) && defined(HAVE_LINUX_UDMABUF)
+  CUDMABufferObject::Register();
 #endif
 #if defined(HAVE_LINUX_DMA_HEAP)
   CDMAHeapBufferObject::Register();
-#endif
-#if defined(HAVE_LINUX_MEMFD) && defined(HAVE_LINUX_UDMABUF)
-  CUDMABufferObject::Register();
 #endif
 
   CScreenshotSurfaceGLES::Register();

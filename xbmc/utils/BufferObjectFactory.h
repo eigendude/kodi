@@ -13,7 +13,6 @@
 #include <functional>
 #include <list>
 #include <memory>
-#include <string>
 
 /**
  * @brief Factory that provides CBufferObject registration and creation
@@ -36,8 +35,7 @@ public:
    * @brief Registers a CBufferObject class to class to the factory.
    *
    */
-  static void RegisterBufferObject(const std::string& name,
-                                   const std::function<std::unique_ptr<CBufferObject>()>&);
+  static void RegisterBufferObject(const std::function<std::unique_ptr<CBufferObject>()>&);
 
   /**
    * @brief Clears the list of registered CBufferObject types
@@ -46,11 +44,5 @@ public:
   static void ClearBufferObjects();
 
 protected:
-  struct BufferObjectRegistration
-  {
-    std::string name;
-    std::function<std::unique_ptr<CBufferObject>()> create;
-  };
-
-  static std::list<BufferObjectRegistration> m_bufferObjects;
+  static std::list<std::function<std::unique_ptr<CBufferObject>()>> m_bufferObjects;
 };
