@@ -9,6 +9,8 @@
 #include "UDMABufferObject.h"
 
 #include "utils/BufferObjectFactory.h"
+#include "utils/FileUtils.h"
+#include "utils/StringUtils.h"
 #include "utils/log.h"
 
 #include <drm_fourcc.h>
@@ -28,6 +30,13 @@ int RoundUp(int num, int factor)
   return num + factor - 1 - (num - 1) % factor;
 }
 
+bool IsAllocatorAllowed()
+{
+  const auto allocator = CBufferObjectFactory::GetDmabufAllocatorPreference();
+  return allocator == CBufferObjectFactory::DmabufAllocator::AUTO ||
+         allocator == CBufferObjectFactory::DmabufAllocator::UDMABUF;
+}
+
 } // namespace
 
 std::unique_ptr<CBufferObject> CUDMABufferObject::Create()
@@ -37,11 +46,20 @@ std::unique_ptr<CBufferObject> CUDMABufferObject::Create()
 
 void CUDMABufferObject::Register()
 {
-  int fd = open("/dev/udmabuf", O_RDWR);
+  if (!IsAllocatorAllowed())
+    return;
+
+  int fd = open("/dev/udmabuf", O_RDWR | O_CLOEXEC);
   if (fd < 0)
   {
-    CLog::Log(LOGDEBUG, "CUDMABufferObject::{} - unable to open /dev/udmabuf: {}", __FUNCTION__,
-              strerror(errno));
+    if (CBufferObjectFactory::GetDmabufAllocatorPreference() ==
+        CBufferObjectFactory::DmabufAllocator::UDMABUF)
+    {
+      CLog::Log(LOGWARNING,
+                "CUDMABufferObject::{} - udmabuf allocator was forced, but /dev/udmabuf"
+                " is unavailable: {}",
+                __FUNCTION__, strerror(errno));
+    }
     return;
   }
 
@@ -50,17 +68,32 @@ void CUDMABufferObject::Register()
   CBufferObjectFactory::RegisterBufferObject(CUDMABufferObject::Create);
 }
 
+std::string CUDMABufferObject::GetDmaMaskBit()
+{
+  constexpr auto udmabufDmaMaskPath = "/sys/module/udmabuf/parameters/dma_mask_bit";
+
+  std::string dmaMaskBit;
+  if (!KODI::UTILS::FILE::ReadFile(udmabufDmaMaskPath, dmaMaskBit))
+    return {};
+
+  StringUtils::Trim(dmaMaskBit);
+  return dmaMaskBit;
+}
+
 CUDMABufferObject::~CUDMABufferObject()
 {
   ReleaseMemory();
   DestroyBufferObject();
 
-  int ret = close(m_udmafd);
-  if (ret < 0)
-    CLog::Log(LOGERROR, "CUDMABufferObject::{} - close /dev/udmabuf failed, errno={}", __FUNCTION__,
-              strerror(errno));
+  if (m_udmafd >= 0)
+  {
+    int ret = close(m_udmafd);
+    if (ret < 0)
+      CLog::Log(LOGERROR, "CUDMABufferObject::{} - close /dev/udmabuf failed, errno={}",
+                __FUNCTION__, strerror(errno));
 
-  m_udmafd = -1;
+    m_udmafd = -1;
+  }
 }
 
 bool CUDMABufferObject::CreateBufferObject(uint32_t format, uint32_t width, uint32_t height)
@@ -117,7 +150,7 @@ bool CUDMABufferObject::CreateBufferObject(uint64_t size)
 
   if (m_udmafd < 0)
   {
-    m_udmafd = open("/dev/udmabuf", O_RDWR);
+    m_udmafd = open("/dev/udmabuf", O_RDWR | O_CLOEXEC);
     if (m_udmafd < 0)
     {
       CLog::Log(LOGERROR, "CUDMABufferObject::{} - unable to open /dev/udmabuf: {}", __FUNCTION__,
@@ -171,17 +204,15 @@ uint8_t* CUDMABufferObject::GetMemory()
     return nullptr;
 
   if (m_map)
-  {
-    CLog::Log(LOGDEBUG, "CUDMABufferObject::{} - already mapped fd={} map={}", __FUNCTION__, m_fd,
-              fmt::ptr(m_map));
     return m_map;
-  }
 
-  m_map = static_cast<uint8_t*>(mmap(nullptr, m_size, PROT_WRITE, MAP_SHARED, m_memfd, 0));
+  m_map = static_cast<uint8_t*>(mmap(nullptr, m_size, PROT_READ | PROT_WRITE, MAP_SHARED, m_memfd,
+                                     0));
   if (m_map == MAP_FAILED)
   {
     CLog::Log(LOGERROR, "CUDMABufferObject::{} - mmap failed, errno={}", __FUNCTION__,
               strerror(errno));
+    m_map = nullptr;
     return nullptr;
   }
 
