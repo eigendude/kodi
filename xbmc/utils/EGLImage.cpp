@@ -25,7 +25,6 @@ namespace
     EGL_DMA_BUF_PLANE0_FD_EXT,
     EGL_DMA_BUF_PLANE1_FD_EXT,
     EGL_DMA_BUF_PLANE2_FD_EXT,
-    EGL_DMA_BUF_PLANE3_FD_EXT,
   };
 
   const EGLint eglDmabufPlaneOffsetAttr[CEGLImage::MAX_NUM_PLANES] =
@@ -33,7 +32,6 @@ namespace
     EGL_DMA_BUF_PLANE0_OFFSET_EXT,
     EGL_DMA_BUF_PLANE1_OFFSET_EXT,
     EGL_DMA_BUF_PLANE2_OFFSET_EXT,
-    EGL_DMA_BUF_PLANE3_OFFSET_EXT,
   };
 
   const EGLint eglDmabufPlanePitchAttr[CEGLImage::MAX_NUM_PLANES] =
@@ -41,7 +39,6 @@ namespace
     EGL_DMA_BUF_PLANE0_PITCH_EXT,
     EGL_DMA_BUF_PLANE1_PITCH_EXT,
     EGL_DMA_BUF_PLANE2_PITCH_EXT,
-    EGL_DMA_BUF_PLANE3_PITCH_EXT,
   };
 
 #if defined(EGL_EXT_image_dma_buf_import_modifiers)
@@ -50,7 +47,6 @@ namespace
     EGL_DMA_BUF_PLANE0_MODIFIER_LO_EXT,
     EGL_DMA_BUF_PLANE1_MODIFIER_LO_EXT,
     EGL_DMA_BUF_PLANE2_MODIFIER_LO_EXT,
-    EGL_DMA_BUF_PLANE3_MODIFIER_LO_EXT,
   };
 
   const EGLint eglDmabufPlaneModifierHiAttr[CEGLImage::MAX_NUM_PLANES] =
@@ -58,7 +54,6 @@ namespace
     EGL_DMA_BUF_PLANE0_MODIFIER_HI_EXT,
     EGL_DMA_BUF_PLANE1_MODIFIER_HI_EXT,
     EGL_DMA_BUF_PLANE2_MODIFIER_HI_EXT,
-    EGL_DMA_BUF_PLANE3_MODIFIER_HI_EXT,
   };
 #endif
 
@@ -122,63 +117,46 @@ CEGLImage::CEGLImage(EGLDisplay display)
 {
 }
 
-std::vector<EGLint> CEGLImage::BuildAttributeList(const EglAttrs& imageAttrs,
-                                                       bool supportsModifiersExt)
+bool CEGLImage::CreateImage(EglAttrs imageAttrs)
 {
-  std::vector<EGLint> attribs{
-      EGL_WIDTH, imageAttrs.width, EGL_HEIGHT, imageAttrs.height, EGL_LINUX_DRM_FOURCC_EXT,
-      static_cast<EGLint>(imageAttrs.format)};
+  CEGLAttributes<22> attribs;
+  attribs.Add({{EGL_WIDTH, imageAttrs.width},
+               {EGL_HEIGHT, imageAttrs.height},
+               {EGL_LINUX_DRM_FOURCC_EXT, static_cast<EGLint>(imageAttrs.format)}});
 
   if (imageAttrs.colorSpace != 0 && imageAttrs.colorRange != 0)
   {
-    attribs.insert(attribs.end(),
-                   {EGL_YUV_COLOR_SPACE_HINT_EXT, imageAttrs.colorSpace, EGL_SAMPLE_RANGE_HINT_EXT,
-                    imageAttrs.colorRange, EGL_YUV_CHROMA_VERTICAL_SITING_HINT_EXT,
-                    EGL_YUV_CHROMA_SITING_0_EXT, EGL_YUV_CHROMA_HORIZONTAL_SITING_HINT_EXT,
-                    EGL_YUV_CHROMA_SITING_0_EXT});
+    attribs.Add({{EGL_YUV_COLOR_SPACE_HINT_EXT, imageAttrs.colorSpace},
+                 {EGL_SAMPLE_RANGE_HINT_EXT, imageAttrs.colorRange},
+                 {EGL_YUV_CHROMA_VERTICAL_SITING_HINT_EXT, EGL_YUV_CHROMA_SITING_0_EXT},
+                 {EGL_YUV_CHROMA_HORIZONTAL_SITING_HINT_EXT, EGL_YUV_CHROMA_SITING_0_EXT}});
   }
 
   for (int i = 0; i < MAX_NUM_PLANES; i++)
   {
-    if (imageAttrs.planes[i].fd <= 0)
-      continue;
-
-    attribs.insert(attribs.end(), {eglDmabufPlaneFdAttr[i], imageAttrs.planes[i].fd,
-                                   eglDmabufPlaneOffsetAttr[i], imageAttrs.planes[i].offset,
-                                   eglDmabufPlanePitchAttr[i], imageAttrs.planes[i].pitch});
+    if (imageAttrs.planes[i].fd != 0)
+    {
+      attribs.Add({{eglDmabufPlaneFdAttr[i], imageAttrs.planes[i].fd},
+                   {eglDmabufPlaneOffsetAttr[i], imageAttrs.planes[i].offset},
+                   {eglDmabufPlanePitchAttr[i], imageAttrs.planes[i].pitch}});
 
 #if defined(EGL_EXT_image_dma_buf_import_modifiers)
-    if (supportsModifiersExt && imageAttrs.planes[i].modifier != DRM_FORMAT_MOD_INVALID)
-    {
-      const auto modifierLo = static_cast<EGLint>(imageAttrs.planes[i].modifier & 0xFFFFFFFF);
-      const auto modifierHi = static_cast<EGLint>((imageAttrs.planes[i].modifier >> 32) & 0xFFFFFFFF);
-      attribs.insert(attribs.end(),
-                     {eglDmabufPlaneModifierLoAttr[i], modifierLo, eglDmabufPlaneModifierHiAttr[i],
-                      modifierHi});
-    }
-#else
-    static_cast<void>(supportsModifiersExt);
+      if (imageAttrs.planes[i].modifier != DRM_FORMAT_MOD_INVALID && imageAttrs.planes[i].modifier != DRM_FORMAT_MOD_LINEAR)
+        attribs.Add({{eglDmabufPlaneModifierLoAttr[i], static_cast<EGLint>(imageAttrs.planes[i].modifier & 0xFFFFFFFF)},
+                     {eglDmabufPlaneModifierHiAttr[i], static_cast<EGLint>(imageAttrs.planes[i].modifier >> 32)}});
 #endif
+    }
   }
 
-  attribs.push_back(EGL_NONE);
-  return attribs;
-}
-
-bool CEGLImage::CreateImage(EglAttrs imageAttrs)
-{
-  const bool supportsModifiersExt = CEGLUtils::HasExtension(m_display, "EGL_EXT_image_dma_buf_import_modifiers");
-  const auto attribs = BuildAttributeList(imageAttrs, supportsModifiersExt);
-
-  m_image = m_eglCreateImageKHR(m_display, EGL_NO_CONTEXT, EGL_LINUX_DMA_BUF_EXT, nullptr, attribs.data());
+  m_image = m_eglCreateImageKHR(m_display, EGL_NO_CONTEXT, EGL_LINUX_DMA_BUF_EXT, nullptr, attribs.Get());
 
   if (!m_image || CServiceBroker::GetLogging().CanLogComponent(LOGVIDEO))
   {
-    const EGLint* attrs = attribs.data();
+    const EGLint* attrs = attribs.Get();
 
     std::string eglString;
 
-    for (size_t i = 0; i + 1 < attribs.size() && attrs[i] != EGL_NONE; i += 2)
+    for (int i = 0; i < (attribs.Size()); i += 2)
     {
       std::string keyStr;
       std::string valueStr;
@@ -214,18 +192,6 @@ bool CEGLImage::CreateImage(EglAttrs imageAttrs)
 
   if (!m_image)
   {
-#if defined(EGL_EXT_image_dma_buf_import_modifiers)
-    for (int i = 0; i < MAX_NUM_PLANES; ++i)
-    {
-      if (imageAttrs.planes[i].fd <= 0)
-        continue;
-
-      const bool included = supportsModifiersExt && imageAttrs.planes[i].modifier != DRM_FORMAT_MOD_INVALID;
-      CLog::Log(LOGDEBUG,
-                "CEGLImage::{} - plane {} modifier attr {} value={:#018x}",
-                __FUNCTION__, i, included ? "included" : "omitted", imageAttrs.planes[i].modifier);
-    }
-#endif
     CLog::Log(LOGERROR, "CEGLImage::{} - failed to import buffer into EGL image: {:#4x}",
               __FUNCTION__, eglGetError());
     return false;

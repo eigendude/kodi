@@ -11,7 +11,6 @@
 #include "system_egl.h"
 
 #include <array>
-#include <vector>
 
 #include <EGL/eglext.h>
 #include <drm_fourcc.h>
@@ -21,7 +20,7 @@
 class CEGLImage
 {
 public:
-  static const int MAX_NUM_PLANES{4};
+  static const int MAX_NUM_PLANES{3};
 
   struct EglPlane
   {
@@ -47,8 +46,6 @@ public:
   CEGLImage& operator=(CEGLImage const& other) = delete;
 
   bool CreateImage(EglAttrs imageAttrs);
-  static std::vector<EGLint> BuildAttributeList(const EglAttrs& imageAttrs,
-                                                bool supportsModifiersExt);
   void UploadImage(GLenum textureTarget);
   void DestroyImage();
 
