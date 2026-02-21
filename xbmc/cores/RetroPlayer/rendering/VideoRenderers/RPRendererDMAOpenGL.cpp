@@ -8,6 +8,7 @@
 
 #include "RPRendererDMAOpenGL.h"
 
+#include "RPRendererDMAUtils.h"
 #include "cores/RetroPlayer/buffers/RenderBufferDMA.h"
 #include "cores/RetroPlayer/buffers/RenderBufferPoolDMA.h"
 #include "cores/RetroPlayer/rendering/RenderContext.h"
@@ -36,6 +37,9 @@ CRPBaseRenderer* CRendererFactoryDMAOpenGL::CreateRenderer(
 
 RenderBufferPoolVector CRendererFactoryDMAOpenGL::CreateBufferPools(CRenderContext& context)
 {
+  if (!CRPRendererDMAUtils::IsSupportedForSession())
+    return {};
+
   if (!CBufferObjectFactory::CreateBufferObject(false))
     return {};
 
