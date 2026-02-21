@@ -12,6 +12,7 @@
 #include "ServiceBroker.h"
 #include "windowing/gbm/WinSystemGbmEGLContext.h"
 
+#include <drm_fourcc.h>
 #include <gbm.h>
 #include <unistd.h>
 
@@ -95,6 +96,6 @@ uint64_t CGBMBufferObject::GetModifier()
 #if defined(HAS_GBM_MODIFIERS)
   return gbm_bo_get_modifier(m_bo);
 #else
-  return 0;
+  return DRM_FORMAT_MOD_INVALID;
 #endif
 }
