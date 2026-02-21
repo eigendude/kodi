@@ -23,9 +23,6 @@ CRenderBufferPoolDMA::CRenderBufferPoolDMA(CRenderContext& context) : m_context(
 
 bool CRenderBufferPoolDMA::IsCompatible(const CRenderVideoSettings& renderSettings) const
 {
-  if (!CRPRendererDMAUtils::IsSupportedForSession())
-    return false;
-
   if (!CRPRendererDMAUtils::SupportsScalingMethod(renderSettings.GetScalingMethod()))
     return false;
 

@@ -9,7 +9,6 @@
 #include "RenderBufferDMA.h"
 
 #include "ServiceBroker.h"
-#include "cores/RetroPlayer/rendering/VideoRenderers/RPRendererDMAUtils.h"
 #include "utils/BufferObject.h"
 #include "utils/EGLImage.h"
 #include "utils/log.h"
@@ -50,15 +49,6 @@ bool CRenderBufferDMA::Allocate(AVPixelFormat format, unsigned int width, unsign
   m_height = height;
 
   m_bo->CreateBufferObject(m_fourcc, m_width, m_height);
-
-#if defined(EGL_EXT_image_dma_buf_import_modifiers)
-  if (!m_egl->SupportsFormatAndModifier(m_fourcc, m_bo->GetModifier()))
-  {
-    CRPRendererDMAUtils::DisableForSession(m_fourcc, m_width, m_height, m_bo->GetModifier(),
-                                           "unsupported EGL dma-buf format/modifier");
-    return false;
-  }
-#endif
 
   return true;
 }
@@ -118,18 +108,14 @@ bool CRenderBufferDMA::UploadTexture()
   attribs.format = m_fourcc;
   attribs.planes = planes;
 
-  const bool success = m_egl->CreateImage(attribs);
-  if (success)
+  if (m_egl->CreateImage(attribs))
     m_egl->UploadImage(m_textureTarget);
-  else
-    CRPRendererDMAUtils::DisableForSession(m_fourcc, m_width, m_height, m_bo->GetModifier(),
-                                           "eglCreateImageKHR failed");
 
   m_egl->DestroyImage();
 
   glBindTexture(m_textureTarget, 0);
 
-  return success;
+  return true;
 }
 
 void CRenderBufferDMA::DeleteTexture()
