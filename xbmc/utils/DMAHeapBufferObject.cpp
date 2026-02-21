@@ -61,7 +61,7 @@ void CDMAHeapBufferObject::Register()
 
   CLog::Log(LOGDEBUG, "CDMAHeapBufferObject::{} - using {}", __FUNCTION__, DMA_HEAP_PATH);
 
-  CBufferObjectFactory::RegisterBufferObject(CDMAHeapBufferObject::Create);
+  CBufferObjectFactory::RegisterBufferObject("dma-heap", CDMAHeapBufferObject::Create);
 }
 
 CDMAHeapBufferObject::~CDMAHeapBufferObject()

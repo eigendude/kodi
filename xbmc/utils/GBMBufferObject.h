@@ -19,7 +19,7 @@ struct gbm_device;
 class CGBMBufferObject : public CBufferObject
 {
 public:
-  CGBMBufferObject();
+  CGBMBufferObject() = default;
   ~CGBMBufferObject() override;
 
   // Registration
@@ -39,6 +39,9 @@ public:
 private:
   gbm_device* m_device{nullptr};
   gbm_bo* m_bo{nullptr};
+
+  int m_renderNodeFd{-1};
+  uint64_t m_size{0};
 
   uint32_t m_width{0};
   uint32_t m_height{0};

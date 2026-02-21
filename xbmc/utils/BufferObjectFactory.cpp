@@ -8,13 +8,23 @@
 
 #include "BufferObjectFactory.h"
 
-std::list<std::function<std::unique_ptr<CBufferObject>()>> CBufferObjectFactory::m_bufferObjects;
+#include "utils/log.h"
+
+#include <cstdlib>
+
+std::list<CBufferObjectFactory::BufferObjectRegistration> CBufferObjectFactory::m_bufferObjects;
 
 std::unique_ptr<CBufferObject> CBufferObjectFactory::CreateBufferObject(bool needsCreateBySize)
 {
+  const char* allocatorEnv = getenv("KODI_RETROPLAYER_DMABUF_ALLOCATOR");
+  const std::string allocatorOverride = allocatorEnv ? allocatorEnv : "";
+
   for (const auto& bufferObject : m_bufferObjects)
   {
-    auto bo = bufferObject();
+    if (!allocatorOverride.empty() && allocatorOverride != "auto" && allocatorOverride != bufferObject.name)
+      continue;
+
+    auto bo = bufferObject.create();
 
     if (needsCreateBySize)
     {
@@ -24,16 +34,25 @@ std::unique_ptr<CBufferObject> CBufferObjectFactory::CreateBufferObject(bool nee
       bo->DestroyBufferObject();
     }
 
+    CLog::Log(LOGDEBUG, "CBufferObjectFactory::{} - selected allocator '{}' ({})", __FUNCTION__,
+              bufferObject.name, bo->GetName());
     return bo;
+  }
+
+  if (!allocatorOverride.empty() && allocatorOverride != "auto")
+  {
+    CLog::Log(LOGWARNING,
+              "CBufferObjectFactory::{} - no allocator registered for override '{}'", __FUNCTION__,
+              allocatorOverride);
   }
 
   return nullptr;
 }
 
 void CBufferObjectFactory::RegisterBufferObject(
-    const std::function<std::unique_ptr<CBufferObject>()>& createFunc)
+    const std::string& name, const std::function<std::unique_ptr<CBufferObject>()>& createFunc)
 {
-  m_bufferObjects.emplace_back(createFunc);
+  m_bufferObjects.emplace_back(BufferObjectRegistration{name, createFunc});
 }
 
 void CBufferObjectFactory::ClearBufferObjects()
