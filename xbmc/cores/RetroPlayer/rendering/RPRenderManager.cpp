@@ -21,6 +21,7 @@
 #include "cores/RetroPlayer/guicontrols/GUIGameControl.h"
 #include "cores/RetroPlayer/process/RPProcessInfo.h"
 #include "cores/RetroPlayer/rendering/VideoRenderers/RPBaseRenderer.h"
+#include "cores/RetroPlayer/rendering/VideoRenderers/RPRendererDMAUtils.h"
 #include "cores/RetroPlayer/savestates/ISavestate.h"
 #include "cores/RetroPlayer/savestates/SavestateDatabase.h"
 #include "cores/RetroPlayer/streams/RetroPlayerVideo.h"
@@ -44,6 +45,11 @@ extern "C"
 
 using namespace KODI;
 using namespace RETRO;
+
+namespace
+{
+constexpr unsigned int MAX_RENDERER_SELECTION_ATTEMPTS = 4;
+}
 
 CRPRenderManager::CRPRenderManager(CRPProcessInfo& processInfo)
   : m_processInfo(processInfo),
@@ -95,6 +101,11 @@ void CRPRenderManager::Deinitialize()
   // Renderers may still hold GPU resources, so defer cleanup to the rendering thread
   m_oldRenderers = std::move(m_renderers);
 
+  m_activeBufferPool = nullptr;
+  m_rendererSelectionFailed = false;
+  m_loggedIncompatiblePools.clear();
+  m_loggedRendererCreateFailures.clear();
+
   m_state = RENDER_STATE::UNCONFIGURED;
 }
 
@@ -120,6 +131,11 @@ bool CRPRenderManager::Configure(AVPixelFormat format,
   std::unique_lock lock(m_stateMutex);
 
   m_state = RENDER_STATE::CONFIGURING;
+
+  m_rendererSelectionFailed = false;
+  m_activeBufferPool = nullptr;
+  m_loggedIncompatiblePools.clear();
+  m_loggedRendererCreateFailures.clear();
 
   return true;
 }
@@ -524,15 +540,44 @@ std::shared_ptr<CRPBaseRenderer> CRPRenderManager::GetRendererForSettings(
       return renderer;
   }
 
+  if (m_rendererSelectionFailed)
+    return renderer;
+
   CRenderSettings effectiveRenderSettings;
   effectiveRenderSettings.VideoSettings() = GetEffectiveSettings(renderSettings);
 
-  // Check renderers in order of buffer pools
-  for (IRenderBufferPool* bufferPool : m_processInfo.GetBufferManager().GetBufferPools())
+  const bool dmaSupported = CRPRendererDMAUtils::IsSupportedForSession();
+  if (!dmaSupported && m_activeBufferPool != nullptr)
   {
-    renderer = GetRendererForPool(bufferPool, effectiveRenderSettings);
-    if (renderer)
-      break;
+    const std::string activeRendererName = m_processInfo.GetRenderSystemName(m_activeBufferPool);
+    if (activeRendererName.find("DMA") != std::string::npos)
+    {
+      CLog::Log(LOGINFO,
+                "RetroPlayer[RENDER]: DMA was disabled, rebuilding renderer selection for fallback renderer");
+
+      m_oldRenderers.insert(m_renderers.begin(), m_renderers.end());
+      m_renderers.clear();
+      m_activeBufferPool = nullptr;
+      m_loggedIncompatiblePools.clear();
+      m_loggedRendererCreateFailures.clear();
+    }
+  }
+
+  std::string rejectionReason;
+  auto bufferPools = m_processInfo.GetBufferManager().GetBufferPools();
+
+  for (unsigned int attempt = 0; attempt < MAX_RENDERER_SELECTION_ATTEMPTS && !renderer; ++attempt)
+  {
+    for (IRenderBufferPool* bufferPool : bufferPools)
+    {
+      std::string reason;
+      renderer = GetRendererForPool(bufferPool, effectiveRenderSettings, reason);
+      if (renderer)
+        break;
+
+      if (!reason.empty())
+        rejectionReason = reason;
+    }
   }
 
   if (renderer)
@@ -542,19 +587,64 @@ std::shared_ptr<CRPBaseRenderer> CRPRenderManager::GetRendererForSettings(
     renderer->SetRenderRotation(effectiveRenderSettings.VideoSettings().GetRenderRotation());
     renderer->SetShaderPreset(effectiveRenderSettings.VideoSettings().GetShaderPreset());
     renderer->SetPixels(effectiveRenderSettings.VideoSettings().GetPixels());
+
+    IRenderBufferPool* selectedPool = renderer->GetBufferPool();
+    if (m_activeBufferPool != selectedPool)
+    {
+      CLog::Log(LOGINFO, "RetroPlayer[RENDER]: Selected {} renderer",
+                m_processInfo.GetRenderSystemName(selectedPool));
+
+      if (m_activeBufferPool != nullptr)
+      {
+        for (auto it = m_renderers.begin(); it != m_renderers.end();)
+        {
+          if ((*it)->GetBufferPool() != selectedPool)
+          {
+            m_oldRenderers.insert(*it);
+            it = m_renderers.erase(it);
+          }
+          else
+          {
+            ++it;
+          }
+        }
+      }
+
+      m_activeBufferPool = selectedPool;
+      m_loggedIncompatiblePools.clear();
+      m_loggedRendererCreateFailures.clear();
+      m_rendererSelectionFailed = false;
+    }
+  }
+  else
+  {
+    m_rendererSelectionFailed = true;
+
+    CLog::Log(LOGERROR,
+              "RetroPlayer[RENDER]: Failed to select a compatible renderer after {} attempts (last rejection: {})",
+              MAX_RENDERER_SELECTION_ATTEMPTS,
+              rejectionReason.empty() ? std::string{"no compatible buffer pools"} : rejectionReason);
   }
 
   return renderer;
 }
 
 std::shared_ptr<CRPBaseRenderer> CRPRenderManager::GetRendererForPool(
-    IRenderBufferPool* bufferPool, const CRenderSettings& renderSettings)
+    IRenderBufferPool* bufferPool, const CRenderSettings& renderSettings, std::string& reason)
 {
   std::shared_ptr<CRPBaseRenderer> renderer;
 
   if (!bufferPool->IsCompatible(renderSettings.VideoSettings()))
   {
-    CLog::Log(LOGDEBUG, "RetroPlayer[RENDER]: buffer pool is not compatible with renderer");
+    reason = "buffer pool is not compatible with renderer";
+
+    if (!m_loggedIncompatiblePools.contains(bufferPool))
+    {
+      m_loggedIncompatiblePools.insert(bufferPool);
+      CLog::Log(LOGDEBUG, "RetroPlayer[RENDER]: {} ({})", reason,
+                m_processInfo.GetRenderSystemName(bufferPool));
+    }
+
     return renderer;
   }
 
@@ -591,7 +681,18 @@ std::shared_ptr<CRPBaseRenderer> CRPRenderManager::GetRendererForPool(
       m_renderers.insert(renderer);
     }
     else
+    {
+      reason = "failed to create/configure renderer";
+
+      if (!m_loggedRendererCreateFailures.contains(bufferPool))
+      {
+        m_loggedRendererCreateFailures.insert(bufferPool);
+        CLog::Log(LOGDEBUG, "RetroPlayer[RENDER]: Renderer creation failed for {}",
+                  m_processInfo.GetRenderSystemName(bufferPool));
+      }
+
       renderer.reset();
+    }
 
     // If we failed to create a renderer, blocklist the shader preset
     if (!renderer && !shaderPreset.empty())

@@ -147,7 +147,8 @@ private:
    * \brief Get or create a renderer for the given buffer pool and render settings
    */
   std::shared_ptr<CRPBaseRenderer> GetRendererForPool(IRenderBufferPool* bufferPool,
-                                                      const CRenderSettings& renderSettings);
+                                                      const CRenderSettings& renderSettings,
+                                                      std::string& reason);
 
   /*!
    * \brief Render a frame using the given renderer
@@ -267,6 +268,10 @@ private:
   RENDER_STATE m_state = RENDER_STATE::UNCONFIGURED;
   bool m_bHasCachedFrame = false; // Invariant: m_cachedFrame is empty if false
   std::set<std::string> m_failedShaderPresets;
+  std::set<IRenderBufferPool*> m_loggedIncompatiblePools;
+  std::set<IRenderBufferPool*> m_loggedRendererCreateFailures;
+  IRenderBufferPool* m_activeBufferPool = nullptr;
+  bool m_rendererSelectionFailed = false;
   std::atomic<bool> m_bFlush = {false};
 
   // Playback parameters
