@@ -25,6 +25,7 @@ using namespace RETRO;
 namespace
 {
 std::atomic_bool g_dmaSupportedForSession{true};
+std::atomic_bool g_dmaDisableLogged{false};
 }
 
 bool CRPRendererDMAUtils::SupportsScalingMethod(SCALINGMETHOD method)
@@ -46,9 +47,18 @@ void CRPRendererDMAUtils::DisableForSession(
 {
   g_dmaSupportedForSession.store(false);
 
+  if (g_dmaDisableLogged.exchange(true))
+    return;
+
   CLog::Log(LOGWARNING,
-            "RetroPlayer[RENDER]: DMAOpenGL disabled for this session ({}) after dma-buf "
+            "RetroPlayer[RENDER]: DMARenderer disabled for this session ({}) after dma-buf "
             "import failure, attempted {} {}x{}, modifier {}",
             reason, DRMHELPERS::FourCCToString(fourcc), width, height,
             DRMHELPERS::ModifierToString(modifier));
+
+  CLog::Log(LOGWARNING,
+            "RetroPlayer[RENDER]: For upstream bug reports include SteamOS/kernel/Mesa/"
+            "gamescope versions, supported EGL dma-buf format/modifier dump, the first "
+            "import failure log (including fdinfo), and if failure reproduces under "
+            "native Wayland vs gamescope");
 }

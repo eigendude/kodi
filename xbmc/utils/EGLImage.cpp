@@ -16,7 +16,10 @@
 #include "utils/log.h"
 
 #include <algorithm>
+#include <mutex>
+#include <sstream>
 #include <string_view>
+#include <vector>
 
 namespace
 {
@@ -105,6 +108,10 @@ namespace
 
 } // namespace
 
+#if defined(EGL_EXT_image_dma_buf_import_modifiers)
+std::once_flag g_logSupportedFormatsAndModifiersOnce;
+#endif
+
 CEGLImage::CEGLImage(EGLDisplay display)
   : m_display(display),
     m_eglCreateImageKHR(
@@ -119,6 +126,10 @@ CEGLImage::CEGLImage(EGLDisplay display)
 
 bool CEGLImage::CreateImage(EglAttrs imageAttrs)
 {
+#if defined(EGL_EXT_image_dma_buf_import_modifiers)
+  LogSupportedFormatsAndModifiersOnce();
+#endif
+
   CEGLAttributes<22> attribs;
   attribs.Add({{EGL_WIDTH, imageAttrs.width},
                {EGL_HEIGHT, imageAttrs.height},
@@ -148,6 +159,7 @@ bool CEGLImage::CreateImage(EglAttrs imageAttrs)
     }
   }
 
+  m_lastError = EGL_SUCCESS;
   m_image = m_eglCreateImageKHR(m_display, EGL_NO_CONTEXT, EGL_LINUX_DMA_BUF_EXT, nullptr, attribs.Get());
 
   if (!m_image || CServiceBroker::GetLogging().CanLogComponent(LOGVIDEO))
@@ -192,8 +204,9 @@ bool CEGLImage::CreateImage(EglAttrs imageAttrs)
 
   if (!m_image)
   {
+    m_lastError = eglGetError();
     CLog::Log(LOGERROR, "CEGLImage::{} - failed to import buffer into EGL image: {:#4x}",
-              __FUNCTION__, eglGetError());
+              __FUNCTION__, m_lastError);
     return false;
   }
 
@@ -207,10 +220,83 @@ void CEGLImage::UploadImage(GLenum textureTarget)
 
 void CEGLImage::DestroyImage()
 {
-  m_eglDestroyImageKHR(m_display, m_image);
+  if (m_image != nullptr)
+    m_eglDestroyImageKHR(m_display, m_image);
+
+  m_image = nullptr;
 }
 
 #if defined(EGL_EXT_image_dma_buf_import_modifiers)
+void CEGLImage::LogSupportedFormatsAndModifiersOnce()
+{
+  std::call_once(g_logSupportedFormatsAndModifiersOnce, [this]() {
+    auto eglQueryDmaBufFormatsEXT =
+        CEGLUtils::GetRequiredProcAddress<PFNEGLQUERYDMABUFFORMATSEXTPROC>(
+            "eglQueryDmaBufFormatsEXT");
+    auto eglQueryDmaBufModifiersEXT =
+        CEGLUtils::GetRequiredProcAddress<PFNEGLQUERYDMABUFMODIFIERSEXTPROC>(
+            "eglQueryDmaBufModifiersEXT");
+
+    EGLint numFormats = 0;
+    if (eglQueryDmaBufFormatsEXT(m_display, 0, nullptr, &numFormats) != EGL_TRUE)
+    {
+      CLog::Log(LOGERROR,
+                "CEGLImage::{} - failed to query max EGL dma-buf formats: {:#4x}",
+                __FUNCTION__, eglGetError());
+      return;
+    }
+
+    std::vector<EGLint> formats(numFormats);
+    if (numFormats > 0 &&
+        eglQueryDmaBufFormatsEXT(m_display, numFormats, formats.data(), &numFormats) != EGL_TRUE)
+    {
+      CLog::Log(LOGERROR, "CEGLImage::{} - failed to query EGL dma-buf formats: {:#4x}",
+                __FUNCTION__, eglGetError());
+      return;
+    }
+
+    std::ostringstream stream;
+    stream << "CEGLImage::" << __FUNCTION__ << " - supported EGL dma-buf format/modifiers:";
+
+    for (const EGLint format : formats)
+    {
+      EGLint numModifiers = 0;
+      if (eglQueryDmaBufModifiersEXT(m_display, format, 0, nullptr, nullptr, &numModifiers) !=
+          EGL_TRUE)
+      {
+        stream << "\n  " << DRMHELPERS::FourCCToString(format)
+               << ": <modifier query failed " << StringUtils::Format("{:#x}", eglGetError())
+               << ">";
+        continue;
+      }
+
+      std::vector<EGLuint64KHR> modifiers(numModifiers);
+      if (numModifiers > 0 &&
+          eglQueryDmaBufModifiersEXT(m_display, format, numModifiers, modifiers.data(), nullptr,
+                                     &numModifiers) != EGL_TRUE)
+      {
+        stream << "\n  " << DRMHELPERS::FourCCToString(format)
+               << ": <modifier query failed " << StringUtils::Format("{:#x}", eglGetError())
+               << ">";
+        continue;
+      }
+
+      stream << "\n  " << DRMHELPERS::FourCCToString(format) << ":";
+      if (modifiers.empty())
+      {
+        stream << " <none>";
+      }
+      else
+      {
+        for (const auto& modifier : modifiers)
+          stream << " " << DRMHELPERS::ModifierToString(modifier);
+      }
+    }
+
+    CLog::Log(LOGINFO, "{}", stream.str());
+  });
+}
+
 bool CEGLImage::SupportsFormat(uint32_t format)
 {
   auto eglQueryDmaBufFormatsEXT =
