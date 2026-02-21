@@ -33,9 +33,6 @@ CRPBaseRenderer* CRendererFactoryDMAOpenGLES::CreateRenderer(
     CRenderContext& context,
     std::shared_ptr<IRenderBufferPool> bufferPool)
 {
-  if (!CRPRendererDMAUtils::IsSupportedForSession())
-    return nullptr;
-
   return new CRPRendererDMAOpenGLES(settings, context, std::move(bufferPool));
 }
 
