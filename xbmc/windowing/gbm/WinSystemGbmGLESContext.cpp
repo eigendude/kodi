@@ -84,7 +84,6 @@ bool CWinSystemGbmGLESContext::InitWindowSystem()
   CScreenshotSurfaceGLES::Register();
 
   CBufferObjectFactory::ClearBufferObjects();
-  CDumbBufferObject::Register();
 #if defined(HAS_GBM_BO_MAP)
   CGBMBufferObject::Register();
 #endif
@@ -94,6 +93,7 @@ bool CWinSystemGbmGLESContext::InitWindowSystem()
 #if defined(HAVE_LINUX_DMA_HEAP)
   CDMAHeapBufferObject::Register();
 #endif
+  CDumbBufferObject::Register();
 
   return true;
 }

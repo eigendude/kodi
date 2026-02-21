@@ -16,6 +16,7 @@
 #include "rendering/gl/ScreenshotSurfaceGL.h"
 #include "utils/BufferObjectFactory.h"
 #include "utils/DMAHeapBufferObject.h"
+#include "utils/GBMBufferObject.h"
 #include "utils/UDMABufferObject.h"
 #include "utils/log.h"
 #include "windowing/WindowSystemFactory.h"
@@ -56,6 +57,9 @@ bool CWinSystemWaylandEGLContextGL::InitWindowSystem()
   }
 
   CBufferObjectFactory::ClearBufferObjects();
+#if defined(HAS_GBM_BO_MAP)
+  CGBMBufferObject::Register();
+#endif
 #if defined(HAVE_LINUX_MEMFD) && defined(HAVE_LINUX_UDMABUF)
   CUDMABufferObject::Register();
 #endif

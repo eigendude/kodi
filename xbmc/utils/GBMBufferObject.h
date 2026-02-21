@@ -13,6 +13,8 @@
 #include <memory>
 #include <stdint.h>
 
+#include <string>
+
 struct gbm_bo;
 struct gbm_device;
 
@@ -39,6 +41,7 @@ public:
 private:
   gbm_device* m_device{nullptr};
   gbm_bo* m_bo{nullptr};
+  int m_renderFd{-1};
 
   uint32_t m_width{0};
   uint32_t m_height{0};
