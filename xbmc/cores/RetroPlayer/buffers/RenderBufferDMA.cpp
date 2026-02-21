@@ -11,69 +11,13 @@
 #include "ServiceBroker.h"
 #include "cores/RetroPlayer/rendering/VideoRenderers/RPRendererDMAUtils.h"
 #include "utils/BufferObject.h"
-#include "utils/DRMHelpers.h"
 #include "utils/EGLImage.h"
-#include "utils/StringUtils.h"
 #include "utils/log.h"
 #include "windowing/WinSystem.h"
 #include "windowing/linux/WinSystemEGL.h"
 
-#include <fstream>
-#include <mutex>
-#include <set>
-#include <tuple>
-
 using namespace KODI;
 using namespace RETRO;
-
-namespace
-{
-struct ImportFailureKey
-{
-  int fourcc;
-  uint64_t modifier;
-
-  bool operator<(const ImportFailureKey& other) const
-  {
-    return std::tie(fourcc, modifier) < std::tie(other.fourcc, other.modifier);
-  }
-};
-
-bool ShouldLogImportFailure(int fourcc, uint64_t modifier)
-{
-  static std::mutex mutex;
-  static std::set<ImportFailureKey> loggedFailures;
-
-  std::scoped_lock lock(mutex);
-  return loggedFailures.insert({fourcc, modifier}).second;
-}
-
-void LogFdInfo(int fd)
-{
-  if (fd < 0)
-    return;
-
-  const std::string path = StringUtils::Format("/proc/self/fdinfo/{}", fd);
-  std::ifstream file(path);
-  if (!file.is_open())
-  {
-    CLog::Log(LOGERROR,
-              "CRenderBufferDMA::{} - failed to open {}",
-              __FUNCTION__,
-              path);
-    return;
-  }
-
-  std::string content((std::istreambuf_iterator<char>(file)),
-                      std::istreambuf_iterator<char>());
-
-  CLog::Log(LOGERROR,
-            "CRenderBufferDMA::{} - {} contents:\n{}",
-            __FUNCTION__,
-            path,
-            content.empty() ? "<empty>" : content);
-}
-} // namespace
 
 CRenderBufferDMA::CRenderBufferDMA(CRenderContext& context, int fourcc)
   : m_context(context),
@@ -176,35 +120,10 @@ bool CRenderBufferDMA::UploadTexture()
 
   const bool success = m_egl->CreateImage(attribs);
   if (success)
-  {
     m_egl->UploadImage(m_textureTarget);
-  }
   else
-  {
-    if (ShouldLogImportFailure(m_fourcc, m_bo->GetModifier()))
-    {
-      CLog::Log(
-          LOGERROR,
-          "CRenderBufferDMA::{} - eglCreateImageKHR failed: err={:#04x}, "
-          "fourcc={}, modifier={}, width={}, height={}, pitch={}, "
-          "offset={}, fds=[{}, {}, {}]",
-          __FUNCTION__,
-          m_egl->GetLastError(),
-          DRMHELPERS::FourCCToString(m_fourcc),
-          DRMHELPERS::ModifierToString(m_bo->GetModifier()),
-          m_width,
-          m_height,
-          planes[0].pitch,
-          planes[0].offset,
-          planes[0].fd,
-          planes[1].fd,
-          planes[2].fd);
-      LogFdInfo(planes[0].fd);
-    }
-
     CRPRendererDMAUtils::DisableForSession(m_fourcc, m_width, m_height, m_bo->GetModifier(),
                                            "eglCreateImageKHR failed");
-  }
 
   m_egl->DestroyImage();
 

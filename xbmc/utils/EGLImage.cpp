@@ -16,7 +16,6 @@
 #include "utils/log.h"
 
 #include <algorithm>
-#include <mutex>
 #include <string_view>
 
 namespace
@@ -120,10 +119,6 @@ CEGLImage::CEGLImage(EGLDisplay display)
 
 bool CEGLImage::CreateImage(EglAttrs imageAttrs)
 {
-#if defined(EGL_EXT_image_dma_buf_import_modifiers)
-  LogSupportedFormatsAndModifiersOnce();
-#endif
-
   CEGLAttributes<22> attribs;
   attribs.Add({{EGL_WIDTH, imageAttrs.width},
                {EGL_HEIGHT, imageAttrs.height},
@@ -153,11 +148,7 @@ bool CEGLImage::CreateImage(EglAttrs imageAttrs)
     }
   }
 
-  m_image =
-      m_eglCreateImageKHR(m_display, EGL_NO_CONTEXT, EGL_LINUX_DMA_BUF_EXT, nullptr,
-                          attribs.Get());
-
-  m_lastError = m_image ? EGL_SUCCESS : eglGetError();
+  m_image = m_eglCreateImageKHR(m_display, EGL_NO_CONTEXT, EGL_LINUX_DMA_BUF_EXT, nullptr, attribs.Get());
 
   if (!m_image || CServiceBroker::GetLogging().CanLogComponent(LOGVIDEO))
   {
@@ -201,10 +192,8 @@ bool CEGLImage::CreateImage(EglAttrs imageAttrs)
 
   if (!m_image)
   {
-    CLog::Log(LOGERROR,
-              "CEGLImage::{} - failed to import buffer into EGL image: {:#4x}",
-              __FUNCTION__,
-              m_lastError);
+    CLog::Log(LOGERROR, "CEGLImage::{} - failed to import buffer into EGL image: {:#4x}",
+              __FUNCTION__, eglGetError());
     return false;
   }
 
@@ -222,92 +211,6 @@ void CEGLImage::DestroyImage()
 }
 
 #if defined(EGL_EXT_image_dma_buf_import_modifiers)
-void CEGLImage::LogSupportedFormatsAndModifiersOnce()
-{
-  static std::once_flag loggedOnce;
-
-  std::call_once(loggedOnce, [this]()
-  {
-    auto eglQueryDmaBufFormatsEXT =
-        CEGLUtils::GetRequiredProcAddress<PFNEGLQUERYDMABUFFORMATSEXTPROC>(
-            "eglQueryDmaBufFormatsEXT");
-    auto eglQueryDmaBufModifiersEXT =
-        CEGLUtils::GetRequiredProcAddress<PFNEGLQUERYDMABUFMODIFIERSEXTPROC>(
-            "eglQueryDmaBufModifiersEXT");
-
-    EGLint numFormats = 0;
-    if (eglQueryDmaBufFormatsEXT(m_display, 0, nullptr, &numFormats) != EGL_TRUE)
-    {
-      CLog::Log(LOGERROR,
-                "CEGLImage::{} - failed to query max dma-buf formats: {:#4x}",
-                __FUNCTION__,
-                eglGetError());
-      return;
-    }
-
-    std::vector<EGLint> formats(numFormats);
-    if (numFormats > 0 &&
-        eglQueryDmaBufFormatsEXT(m_display, numFormats, formats.data(), &numFormats) !=
-            EGL_TRUE)
-    {
-      CLog::Log(LOGERROR,
-                "CEGLImage::{} - failed to query dma-buf formats: {:#4x}",
-                __FUNCTION__,
-                eglGetError());
-      return;
-    }
-
-    CLog::Log(LOGDEBUG,
-              "CEGLImage::{} - EGL dma-buf formats/modifiers ({} formats)",
-              __FUNCTION__,
-              numFormats);
-
-    for (EGLint format : formats)
-    {
-      EGLint numModifiers = 0;
-      if (eglQueryDmaBufModifiersEXT(m_display, format, 0, nullptr, nullptr,
-                                     &numModifiers) != EGL_TRUE)
-      {
-        CLog::Log(LOGDEBUG,
-                  "CEGLImage::{} - format {} modifiers query failed: {:#4x}",
-                  __FUNCTION__,
-                  DRMHELPERS::FourCCToString(format),
-                  eglGetError());
-        continue;
-      }
-
-      std::vector<EGLuint64KHR> modifiers(numModifiers);
-      if (numModifiers > 0 &&
-          eglQueryDmaBufModifiersEXT(m_display, format, numModifiers,
-                                     modifiers.data(), nullptr,
-                                     &numModifiers) != EGL_TRUE)
-      {
-        CLog::Log(LOGDEBUG,
-                  "CEGLImage::{} - format {} modifiers fetch failed: {:#4x}",
-                  __FUNCTION__,
-                  DRMHELPERS::FourCCToString(format),
-                  eglGetError());
-        continue;
-      }
-
-      CLog::Log(LOGDEBUG,
-                "CEGLImage::{} - format {} has {} modifiers",
-                __FUNCTION__,
-                DRMHELPERS::FourCCToString(format),
-                numModifiers);
-
-      for (const auto& modifier : modifiers)
-      {
-        CLog::Log(LOGDEBUG,
-                  "CEGLImage::{} -   {}",
-                  __FUNCTION__,
-                  DRMHELPERS::ModifierToString(modifier));
-      }
-    }
-  });
-}
-
-
 bool CEGLImage::SupportsFormat(uint32_t format)
 {
   auto eglQueryDmaBufFormatsEXT =
