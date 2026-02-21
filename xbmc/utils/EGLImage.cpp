@@ -119,8 +119,6 @@ CEGLImage::CEGLImage(EGLDisplay display)
 
 bool CEGLImage::CreateImage(EglAttrs imageAttrs)
 {
-  m_lastError = EGL_SUCCESS;
-
   CEGLAttributes<22> attribs;
   attribs.Add({{EGL_WIDTH, imageAttrs.width},
                {EGL_HEIGHT, imageAttrs.height},
@@ -194,9 +192,8 @@ bool CEGLImage::CreateImage(EglAttrs imageAttrs)
 
   if (!m_image)
   {
-    m_lastError = eglGetError();
     CLog::Log(LOGERROR, "CEGLImage::{} - failed to import buffer into EGL image: {:#4x}",
-              __FUNCTION__, m_lastError);
+              __FUNCTION__, eglGetError());
     return false;
   }
 
@@ -210,11 +207,7 @@ void CEGLImage::UploadImage(GLenum textureTarget)
 
 void CEGLImage::DestroyImage()
 {
-  if (!m_image)
-    return;
-
   m_eglDestroyImageKHR(m_display, m_image);
-  m_image = nullptr;
 }
 
 #if defined(EGL_EXT_image_dma_buf_import_modifiers)

@@ -48,7 +48,6 @@ public:
   bool CreateImage(EglAttrs imageAttrs);
   void UploadImage(GLenum textureTarget);
   void DestroyImage();
-  EGLint GetLastError() const { return m_lastError; }
 
 #if defined(EGL_EXT_image_dma_buf_import_modifiers)
   bool SupportsFormatAndModifier(uint32_t format, uint64_t modifier);
@@ -60,7 +59,6 @@ private:
 #endif
   EGLDisplay m_display{nullptr};
   EGLImageKHR m_image{nullptr};
-  EGLint m_lastError{EGL_SUCCESS};
 
   PFNEGLCREATEIMAGEKHRPROC m_eglCreateImageKHR{nullptr};
   PFNEGLDESTROYIMAGEKHRPROC m_eglDestroyImageKHR{nullptr};
