@@ -11,6 +11,7 @@
 #include "utils/BufferObject.h"
 
 #include <memory>
+#include <string>
 #include <stdint.h>
 
 class CUDMABufferObject : public CBufferObject
@@ -22,6 +23,7 @@ public:
   // Registration
   static std::unique_ptr<CBufferObject> Create();
   static void Register();
+  static std::string GetDmaMaskBit();
 
   // IBufferObject overrides via CBufferObject
   bool CreateBufferObject(uint32_t format, uint32_t width, uint32_t height) override;

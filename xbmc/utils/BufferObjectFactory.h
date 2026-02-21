@@ -21,6 +21,13 @@
 class CBufferObjectFactory
 {
 public:
+  enum class DmabufAllocator
+  {
+    AUTO,
+    DMA_HEAP,
+    UDMABUF,
+  };
+
   /**
    * @brief Create a CBufferObject from the registered BufferObject types.
    *        In the future this may include some criteria for selecting a specific
@@ -42,6 +49,8 @@ public:
    *
    */
   static void ClearBufferObjects();
+
+  static DmabufAllocator GetDmabufAllocatorPreference();
 
 protected:
   static std::list<std::function<std::unique_ptr<CBufferObject>()>> m_bufferObjects;

@@ -88,11 +88,11 @@ bool CWinSystemGbmGLESContext::InitWindowSystem()
 #if defined(HAS_GBM_BO_MAP)
   CGBMBufferObject::Register();
 #endif
-#if defined(HAVE_LINUX_MEMFD) && defined(HAVE_LINUX_UDMABUF)
-  CUDMABufferObject::Register();
-#endif
 #if defined(HAVE_LINUX_DMA_HEAP)
   CDMAHeapBufferObject::Register();
+#endif
+#if defined(HAVE_LINUX_MEMFD) && defined(HAVE_LINUX_UDMABUF)
+  CUDMABufferObject::Register();
 #endif
 
   return true;
