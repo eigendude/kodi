@@ -8,11 +8,6 @@
 
 #include "BufferObjectFactory.h"
 
-#include "utils/StringUtils.h"
-#include "utils/log.h"
-
-#include <cstdlib>
-
 std::list<std::function<std::unique_ptr<CBufferObject>()>> CBufferObjectFactory::m_bufferObjects;
 
 std::unique_ptr<CBufferObject> CBufferObjectFactory::CreateBufferObject(bool needsCreateBySize)
@@ -44,34 +39,4 @@ void CBufferObjectFactory::RegisterBufferObject(
 void CBufferObjectFactory::ClearBufferObjects()
 {
   m_bufferObjects.clear();
-}
-
-CBufferObjectFactory::DmabufAllocator CBufferObjectFactory::GetDmabufAllocatorPreference()
-{
-  static const DmabufAllocator allocator = []() {
-    const char* allocatorEnv = std::getenv("KODI_RETROPLAYER_DMABUF_ALLOCATOR");
-    if (allocatorEnv == nullptr)
-      return DmabufAllocator::AUTO;
-
-    std::string allocatorStr{allocatorEnv};
-    StringUtils::ToLower(allocatorStr);
-
-    if (allocatorStr == "auto")
-      return DmabufAllocator::AUTO;
-
-    if (allocatorStr == "dma_heap")
-      return DmabufAllocator::DMA_HEAP;
-
-    if (allocatorStr == "udmabuf")
-      return DmabufAllocator::UDMABUF;
-
-    CLog::Log(LOGWARNING,
-              "CBufferObjectFactory::{} - invalid KODI_RETROPLAYER_DMABUF_ALLOCATOR={}"
-              " (supported values: auto|dma_heap|udmabuf)",
-              __FUNCTION__, allocatorEnv);
-
-    return DmabufAllocator::AUTO;
-  }();
-
-  return allocator;
 }

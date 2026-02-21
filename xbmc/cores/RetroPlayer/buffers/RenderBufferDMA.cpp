@@ -10,91 +10,13 @@
 
 #include "ServiceBroker.h"
 #include "utils/BufferObject.h"
-#include "utils/DRMHelpers.h"
 #include "utils/EGLImage.h"
-#include "utils/FileUtils.h"
-#include "utils/StringUtils.h"
-#include "utils/UDMABufferObject.h"
 #include "utils/log.h"
 #include "windowing/WinSystem.h"
 #include "windowing/linux/WinSystemEGL.h"
 
-#include <mutex>
-#include <string_view>
-
 using namespace KODI;
 using namespace RETRO;
-
-namespace
-{
-
-std::string ReadFdInfo(int fd)
-{
-  if (fd < 0)
-    return {};
-
-  std::string fdInfo;
-  if (!KODI::UTILS::FILE::ReadFile(
-          StringUtils::Format("/proc/self/fdinfo/{}", fd), fdInfo))
-  {
-    return {};
-  }
-
-  StringUtils::Trim(fdInfo);
-  return fdInfo;
-}
-
-void LogImportFailureOnce(EGLint error,
-                          int format,
-                          int width,
-                          int height,
-                          uint32_t stride,
-                          uint64_t modifier,
-                          int fd,
-                          std::string_view allocator)
-{
-  static std::mutex failureLogMutex;
-  static std::string lastSignature;
-
-  std::string signature = StringUtils::Format("{}:{}:{}:{}:{}:{}:{}", error, format, width,
-                                              height, stride, modifier, allocator);
-
-  std::scoped_lock lock(failureLogMutex);
-  if (signature == lastSignature)
-    return;
-
-  lastSignature = signature;
-
-  CLog::Log(LOGERROR,
-            "CRenderBufferDMA::{} - EGL dma-buf import failed: eglError={:#06x} format={}"
-            " size={}x{} stride={} modifier={:#x} allocator={} fd={}",
-            __FUNCTION__, error, DRMHELPERS::FourCCToString(format), width, height, stride,
-            modifier, allocator, fd);
-
-  const std::string fdInfo = ReadFdInfo(fd);
-  if (!fdInfo.empty())
-    CLog::Log(LOGDEBUG, "CRenderBufferDMA::{} - dma-buf fdinfo:\n{}", __FUNCTION__, fdInfo);
-
-  if (allocator == "udmabuf")
-  {
-    const std::string dmaMaskBit = CUDMABufferObject::GetDmaMaskBit();
-    if (!dmaMaskBit.empty())
-    {
-      CLog::Log(LOGDEBUG, "CRenderBufferDMA::{} - udmabuf dma_mask_bit={}", __FUNCTION__,
-                dmaMaskBit);
-      if (dmaMaskBit == "32")
-      {
-        CLog::Log(LOGWARNING,
-                  "CRenderBufferDMA::{} - udmabuf dma_mask_bit is 32; this can break GPU"
-                  " dma-buf import. If you must use udmabuf, reload the module with:"
-                  " sudo modprobe -r udmabuf; sudo modprobe udmabuf dma_mask_bit=64",
-                  __FUNCTION__);
-      }
-    }
-  }
-}
-
-} // namespace
 
 CRenderBufferDMA::CRenderBufferDMA(CRenderContext& context, int fourcc)
   : m_context(context),
@@ -187,24 +109,7 @@ bool CRenderBufferDMA::UploadTexture()
   attribs.planes = planes;
 
   if (m_egl->CreateImage(attribs))
-  {
     m_egl->UploadImage(m_textureTarget);
-  }
-  else
-  {
-    const EGLint eglError = m_egl->GetLastError();
-    std::string allocator = "unknown";
-    if (m_bo->GetName() == "CDMAHeapBufferObject")
-      allocator = "dma_heap";
-    else if (m_bo->GetName() == "CUDMABufferObject")
-      allocator = "udmabuf";
-
-    LogImportFailureOnce(eglError, m_fourcc, m_width, m_height, m_bo->GetStride(),
-                         m_bo->GetModifier(), m_bo->GetFd(), allocator);
-
-    glBindTexture(m_textureTarget, 0);
-    return false;
-  }
 
   m_egl->DestroyImage();
 

@@ -148,9 +148,7 @@ bool CEGLImage::CreateImage(EglAttrs imageAttrs)
     }
   }
 
-  m_lastError = EGL_SUCCESS;
-  m_image =
-      m_eglCreateImageKHR(m_display, EGL_NO_CONTEXT, EGL_LINUX_DMA_BUF_EXT, nullptr, attribs.Get());
+  m_image = m_eglCreateImageKHR(m_display, EGL_NO_CONTEXT, EGL_LINUX_DMA_BUF_EXT, nullptr, attribs.Get());
 
   if (!m_image || CServiceBroker::GetLogging().CanLogComponent(LOGVIDEO))
   {
@@ -194,9 +192,8 @@ bool CEGLImage::CreateImage(EglAttrs imageAttrs)
 
   if (!m_image)
   {
-    m_lastError = eglGetError();
-    CLog::Log(LOGERROR, "CEGLImage::{} - failed to import buffer into EGL image: {:#06x}",
-              __FUNCTION__, m_lastError);
+    CLog::Log(LOGERROR, "CEGLImage::{} - failed to import buffer into EGL image: {:#4x}",
+              __FUNCTION__, eglGetError());
     return false;
   }
 
@@ -210,11 +207,7 @@ void CEGLImage::UploadImage(GLenum textureTarget)
 
 void CEGLImage::DestroyImage()
 {
-  if (m_image == nullptr)
-    return;
-
   m_eglDestroyImageKHR(m_display, m_image);
-  m_image = nullptr;
 }
 
 #if defined(EGL_EXT_image_dma_buf_import_modifiers)
