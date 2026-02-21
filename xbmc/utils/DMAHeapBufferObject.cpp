@@ -8,7 +8,6 @@
 
 #include "DMAHeapBufferObject.h"
 
-#include "ServiceBroker.h"
 #include "utils/BufferObjectFactory.h"
 #include "utils/log.h"
 
@@ -24,10 +23,11 @@
 namespace
 {
 
-std::array<const char*, 3> DMA_HEAP_PATHS = {
-    "/dev/dma_heap/reserved",
-    "/dev/dma_heap/linux,cma",
+std::array<const char*, 4> DMA_HEAP_PATHS = {
     "/dev/dma_heap/system",
+    "/dev/dma_heap/system-uncached",
+    "/dev/dma_heap/linux,cma",
+    "/dev/dma_heap/reserved",
 };
 
 static const char* DMA_HEAP_PATH;
@@ -95,11 +95,14 @@ bool CDMAHeapBufferObject::CreateBufferObject(uint32_t format, uint32_t width, u
 
   m_stride = width * bpp;
 
-  return CreateBufferObject(width * height * bpp);
+  return CreateBufferObject(static_cast<uint64_t>(m_stride) * height);
 }
 
 bool CDMAHeapBufferObject::CreateBufferObject(uint64_t size)
 {
+  if (!DMA_HEAP_PATH)
+    return false;
+
   m_size = size;
 
   if (m_dmaheapfd < 0)
@@ -165,7 +168,8 @@ uint8_t* CDMAHeapBufferObject::GetMemory()
     return m_map;
   }
 
-  m_map = static_cast<uint8_t*>(mmap(nullptr, m_size, PROT_WRITE, MAP_SHARED, m_fd, 0));
+  m_map = static_cast<uint8_t*>(mmap(nullptr, m_size, PROT_READ | PROT_WRITE, MAP_SHARED, m_fd,
+                                     0));
   if (m_map == MAP_FAILED)
   {
     CLog::Log(LOGERROR, "CDMAHeapBufferObject::{} - mmap failed, errno={}", __FUNCTION__,
