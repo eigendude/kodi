@@ -117,94 +117,61 @@ CEGLImage::CEGLImage(EGLDisplay display)
 {
 }
 
-std::vector<EGLint> CEGLImage::BuildAttributeList(const EglAttrs& imageAttrs,
-                                                bool supportsModifiersExt)
+bool CEGLImage::CreateImage(EglAttrs imageAttrs)
 {
-  std::vector<EGLint> attribs{{EGL_WIDTH,
-                               imageAttrs.width,
-                               EGL_HEIGHT,
-                               imageAttrs.height,
-                               EGL_LINUX_DRM_FOURCC_EXT,
-                               static_cast<EGLint>(imageAttrs.format)}};
+  CEGLAttributes<22> attribs;
+  attribs.Add({{EGL_WIDTH, imageAttrs.width},
+               {EGL_HEIGHT, imageAttrs.height},
+               {EGL_LINUX_DRM_FOURCC_EXT, static_cast<EGLint>(imageAttrs.format)}});
 
   if (imageAttrs.colorSpace != 0 && imageAttrs.colorRange != 0)
   {
-    attribs.insert(attribs.end(),
-                   {EGL_YUV_COLOR_SPACE_HINT_EXT,
-                    imageAttrs.colorSpace,
-                    EGL_SAMPLE_RANGE_HINT_EXT,
-                    imageAttrs.colorRange,
-                    EGL_YUV_CHROMA_VERTICAL_SITING_HINT_EXT,
-                    EGL_YUV_CHROMA_SITING_0_EXT,
-                    EGL_YUV_CHROMA_HORIZONTAL_SITING_HINT_EXT,
-                    EGL_YUV_CHROMA_SITING_0_EXT});
+    attribs.Add({{EGL_YUV_COLOR_SPACE_HINT_EXT, imageAttrs.colorSpace},
+                 {EGL_SAMPLE_RANGE_HINT_EXT, imageAttrs.colorRange},
+                 {EGL_YUV_CHROMA_VERTICAL_SITING_HINT_EXT, EGL_YUV_CHROMA_SITING_0_EXT},
+                 {EGL_YUV_CHROMA_HORIZONTAL_SITING_HINT_EXT, EGL_YUV_CHROMA_SITING_0_EXT}});
   }
 
   for (int i = 0; i < MAX_NUM_PLANES; i++)
   {
-    if (imageAttrs.planes[i].fd == 0)
-      continue;
-
-    attribs.insert(attribs.end(),
-                   {eglDmabufPlaneFdAttr[i],
-                    imageAttrs.planes[i].fd,
-                    eglDmabufPlaneOffsetAttr[i],
-                    imageAttrs.planes[i].offset,
-                    eglDmabufPlanePitchAttr[i],
-                    imageAttrs.planes[i].pitch});
+    if (imageAttrs.planes[i].fd != 0)
+    {
+      attribs.Add({{eglDmabufPlaneFdAttr[i], imageAttrs.planes[i].fd},
+                   {eglDmabufPlaneOffsetAttr[i], imageAttrs.planes[i].offset},
+                   {eglDmabufPlanePitchAttr[i], imageAttrs.planes[i].pitch}});
 
 #if defined(EGL_EXT_image_dma_buf_import_modifiers)
-    if (supportsModifiersExt && imageAttrs.planes[i].modifier != DRM_FORMAT_MOD_INVALID)
-    {
-      attribs.insert(
-          attribs.end(),
-          {eglDmabufPlaneModifierLoAttr[i],
-           static_cast<EGLint>(imageAttrs.planes[i].modifier & 0xFFFFFFFF),
-           eglDmabufPlaneModifierHiAttr[i],
-           static_cast<EGLint>(imageAttrs.planes[i].modifier >> 32)});
-    }
+      if (imageAttrs.planes[i].modifier != DRM_FORMAT_MOD_INVALID && imageAttrs.planes[i].modifier != DRM_FORMAT_MOD_LINEAR)
+        attribs.Add({{eglDmabufPlaneModifierLoAttr[i], static_cast<EGLint>(imageAttrs.planes[i].modifier & 0xFFFFFFFF)},
+                     {eglDmabufPlaneModifierHiAttr[i], static_cast<EGLint>(imageAttrs.planes[i].modifier >> 32)}});
 #endif
+    }
   }
 
-  attribs.emplace_back(EGL_NONE);
-  return attribs;
-}
-
-bool CEGLImage::CreateImage(EglAttrs imageAttrs)
-{
-  const auto attrs = BuildAttributeList(imageAttrs,
-#if defined(EGL_EXT_image_dma_buf_import_modifiers)
-                                        true
-#else
-                                        false
-#endif
-  );
-
-  m_image = m_eglCreateImageKHR(m_display, EGL_NO_CONTEXT, EGL_LINUX_DMA_BUF_EXT, nullptr,
-                                attrs.data());
+  m_image = m_eglCreateImageKHR(m_display, EGL_NO_CONTEXT, EGL_LINUX_DMA_BUF_EXT, nullptr, attribs.Get());
 
   if (!m_image || CServiceBroker::GetLogging().CanLogComponent(LOGVIDEO))
   {
-    const EGLint* attrsData = attrs.data();
+    const EGLint* attrs = attribs.Get();
 
     std::string eglString;
 
-    for (size_t i = 0; i + 1 < attrs.size() && attrsData[i] != EGL_NONE; i += 2)
+    for (int i = 0; i < (attribs.Size()); i += 2)
     {
       std::string keyStr;
       std::string valueStr;
 
-      auto eglAttrKey = eglAttributes.find(attrsData[i]);
+      auto eglAttrKey = eglAttributes.find(attrs[i]);
       if (eglAttrKey != eglAttributes.end())
       {
         keyStr = eglAttrKey->second;
       }
       else
       {
-        keyStr = std::to_string(attrsData[i]);
+        keyStr = std::to_string(attrs[i]);
       }
 
-      auto eglAttrValue = eglAttributes.find(attrsData[i + 1]);
+      auto eglAttrValue = eglAttributes.find(attrs[i + 1]);
       if (eglAttrValue != eglAttributes.end())
       {
         valueStr = eglAttrValue->second;
@@ -212,9 +179,9 @@ bool CEGLImage::CreateImage(EglAttrs imageAttrs)
       else
       {
         if (eglAttrKey != eglAttributes.end() && eglAttrKey->first == EGL_LINUX_DRM_FOURCC_EXT)
-          valueStr = DRMHELPERS::FourCCToString(attrsData[i + 1]);
+          valueStr = DRMHELPERS::FourCCToString(attrs[i + 1]);
         else
-          valueStr = std::to_string(attrsData[i + 1]);
+          valueStr = std::to_string(attrs[i + 1]);
       }
 
       eglString.append(StringUtils::Format("{}: {}\n", keyStr, valueStr));

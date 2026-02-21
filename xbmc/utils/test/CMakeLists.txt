@@ -10,7 +10,6 @@ set(SOURCES TestAlarmClock.cpp
             TestCrc32.cpp
             TestDatabaseUtils.cpp
             TestDigest.cpp
-            TestEGLImage.cpp
             TestEndianSwap.cpp
             TestExecString.cpp
             TestFileOperationJob.cpp
