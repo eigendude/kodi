@@ -34,6 +34,9 @@ bool CRenderBufferPoolDMA::IsCompatible(const CRenderVideoSettings& renderSettin
 
 IRenderBuffer* CRenderBufferPoolDMA::CreateRenderBuffer(void* header /* = nullptr */)
 {
+  if (!CRPRendererDMAUtils::IsSupportedForSession())
+    return nullptr;
+
   return new CRenderBufferDMA(m_context, m_fourcc);
 }
 
