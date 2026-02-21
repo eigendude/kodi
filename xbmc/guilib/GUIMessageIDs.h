@@ -62,6 +62,7 @@ constexpr const int GUI_MSG_ITEM_SELECTED = 15;
 // Ask control 2 select a specific item
 constexpr const int GUI_MSG_ITEM_SELECT = 16;
 
+// Show or hide the range indicator in a spin control
 constexpr const int GUI_MSG_SHOWRANGE = 18;
 
 // should go to fullscreen window (vis or video)
@@ -156,10 +157,19 @@ constexpr const int GUI_MSG_REMOVE_CONTROL = 40;
  */
 constexpr const int GUI_MSG_UNFOCUS_ALL = 41;
 
+/*!
+ * \brief Set the text content of an edit control or other text-based control
+ */
 constexpr const int GUI_MSG_SET_TEXT = 42;
 
+/*!
+ * \brief Initialize a window before displaying it
+ */
 constexpr const int GUI_MSG_WINDOW_LOAD = 43;
 
+/*!
+ * \brief Notify that an edit control's input validity state has changed
+ */
 constexpr const int GUI_MSG_VALIDITY_CHANGED = 44;
 
 /*!
@@ -207,6 +217,9 @@ constexpr const int GUI_MSG_SUBTITLE_DOWNLOADED = 52;
  */
 constexpr const int GUI_MSG_RESET_MULTI_IMAGE = 53;
 
+/*!
+ * \brief Base offset for application-defined user messages (1000)
+ */
 constexpr const int GUI_MSG_USER = 1000;
 
 /*!
