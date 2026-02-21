@@ -28,6 +28,7 @@ public:
   bool CreateBufferObject(uint64_t size) override;
   void DestroyBufferObject() override;
   uint8_t* GetMemory() override;
+  uint64_t GetModifier() override;
   void ReleaseMemory() override;
   std::string GetName() const override { return "CUDMABufferObject"; }
 
