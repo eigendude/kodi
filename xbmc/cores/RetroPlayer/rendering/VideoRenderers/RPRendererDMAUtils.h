@@ -10,8 +10,6 @@
 
 #include "cores/GameSettings.h"
 
-#include <cstdint>
-
 namespace KODI
 {
 namespace RETRO
@@ -28,32 +26,6 @@ public:
    * the DMA buffer code).
    */
   static bool SupportsScalingMethod(SCALINGMETHOD method);
-
-  /*!
-   * \brief Runtime state that controls whether DMA OpenGL/GLES renderers may
-   * be used.
-   *
-   * \return `true` if the current Kodi session supports DMA renderers, `false`
-   * if DMA renderers should be disabled for the current session
-   */
-  static bool IsSupportedForSession();
-
-  /*!
-   * \brief Disable DMA rendering for this Kodi session after an
-   * import/capability failure.
-   *
-   * \param fourcc The fourcc code of the buffer that failed to import
-   * \param width The width of the buffer that failed to import
-   * \param height The height of the buffer that failed to import
-   * \param modifier The modifier of the buffer that failed to import
-   * \param reason A human-readable string describing the failure reason, which
-   * will be logged for debugging purposes
-   */
-  static void DisableForSession(uint32_t fourcc,
-                                unsigned int width,
-                                unsigned int height,
-                                uint64_t modifier,
-                                const char* reason);
 };
 } // namespace RETRO
 } // namespace KODI
