@@ -229,7 +229,7 @@ if("gbm" IN_LIST CORE_PLATFORM_NAME_LC OR "wayland" IN_LIST CORE_PLATFORM_NAME_L
     list(APPEND HEADERS DMAHeapBufferObject.h)
   endif()
 
-  if(GBM_HAS_BO_MAP AND ("gbm" IN_LIST CORE_PLATFORM_NAME_LC OR "wayland" IN_LIST CORE_PLATFORM_NAME_LC))
+  if(GBM_HAS_BO_MAP AND "gbm" IN_LIST CORE_PLATFORM_NAME_LC)
     list(APPEND SOURCES GBMBufferObject.cpp)
     list(APPEND HEADERS GBMBufferObject.h)
   endif()

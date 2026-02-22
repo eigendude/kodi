@@ -119,11 +119,6 @@ CEGLImage::CEGLImage(EGLDisplay display)
 
 bool CEGLImage::CreateImage(EglAttrs imageAttrs)
 {
-#if defined(EGL_EXT_image_dma_buf_import_modifiers)
-  const bool hasModifierExt =
-      CEGLUtils::HasExtension(m_display, "EGL_EXT_image_dma_buf_import_modifiers");
-#endif
-
   CEGLAttributes<22> attribs;
   attribs.Add({{EGL_WIDTH, imageAttrs.width},
                {EGL_HEIGHT, imageAttrs.height},
@@ -146,7 +141,7 @@ bool CEGLImage::CreateImage(EglAttrs imageAttrs)
                    {eglDmabufPlanePitchAttr[i], imageAttrs.planes[i].pitch}});
 
 #if defined(EGL_EXT_image_dma_buf_import_modifiers)
-      if (hasModifierExt && imageAttrs.planes[i].modifier != DRM_FORMAT_MOD_INVALID)
+      if (imageAttrs.planes[i].modifier != DRM_FORMAT_MOD_INVALID && imageAttrs.planes[i].modifier != DRM_FORMAT_MOD_LINEAR)
         attribs.Add({{eglDmabufPlaneModifierLoAttr[i], static_cast<EGLint>(imageAttrs.planes[i].modifier & 0xFFFFFFFF)},
                      {eglDmabufPlaneModifierHiAttr[i], static_cast<EGLint>(imageAttrs.planes[i].modifier >> 32)}});
 #endif
