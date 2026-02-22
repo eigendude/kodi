@@ -119,44 +119,81 @@ CEGLImage::CEGLImage(EGLDisplay display)
 
 bool CEGLImage::CreateImage(EglAttrs imageAttrs)
 {
-  CEGLAttributes<22> attribs;
-  attribs.Add({{EGL_WIDTH, imageAttrs.width},
-               {EGL_HEIGHT, imageAttrs.height},
-               {EGL_LINUX_DRM_FOURCC_EXT, static_cast<EGLint>(imageAttrs.format)}});
-
-  if (imageAttrs.colorSpace != 0 && imageAttrs.colorRange != 0)
+  const auto buildAttribs = [&](CEGLAttributes<22>& attribs, bool addModifiers,
+                                bool& usedExplicitModifiers)
   {
-    attribs.Add({{EGL_YUV_COLOR_SPACE_HINT_EXT, imageAttrs.colorSpace},
-                 {EGL_SAMPLE_RANGE_HINT_EXT, imageAttrs.colorRange},
-                 {EGL_YUV_CHROMA_VERTICAL_SITING_HINT_EXT, EGL_YUV_CHROMA_SITING_0_EXT},
-                 {EGL_YUV_CHROMA_HORIZONTAL_SITING_HINT_EXT, EGL_YUV_CHROMA_SITING_0_EXT}});
-  }
+    attribs.Add({{EGL_WIDTH, imageAttrs.width},
+                 {EGL_HEIGHT, imageAttrs.height},
+                 {EGL_LINUX_DRM_FOURCC_EXT, static_cast<EGLint>(imageAttrs.format)}});
 
-  for (int i = 0; i < MAX_NUM_PLANES; i++)
-  {
-    if (imageAttrs.planes[i].fd != 0)
+    if (imageAttrs.colorSpace != 0 && imageAttrs.colorRange != 0)
     {
+      attribs.Add({{EGL_YUV_COLOR_SPACE_HINT_EXT, imageAttrs.colorSpace},
+                   {EGL_SAMPLE_RANGE_HINT_EXT, imageAttrs.colorRange},
+                   {EGL_YUV_CHROMA_VERTICAL_SITING_HINT_EXT, EGL_YUV_CHROMA_SITING_0_EXT},
+                   {EGL_YUV_CHROMA_HORIZONTAL_SITING_HINT_EXT, EGL_YUV_CHROMA_SITING_0_EXT}});
+    }
+
+    for (int i = 0; i < MAX_NUM_PLANES; i++)
+    {
+      if (imageAttrs.planes[i].fd == 0)
+        continue;
+
       attribs.Add({{eglDmabufPlaneFdAttr[i], imageAttrs.planes[i].fd},
                    {eglDmabufPlaneOffsetAttr[i], imageAttrs.planes[i].offset},
                    {eglDmabufPlanePitchAttr[i], imageAttrs.planes[i].pitch}});
 
 #if defined(EGL_EXT_image_dma_buf_import_modifiers)
-      if (imageAttrs.planes[i].modifier != DRM_FORMAT_MOD_INVALID && imageAttrs.planes[i].modifier != DRM_FORMAT_MOD_LINEAR)
-        attribs.Add({{eglDmabufPlaneModifierLoAttr[i], static_cast<EGLint>(imageAttrs.planes[i].modifier & 0xFFFFFFFF)},
-                     {eglDmabufPlaneModifierHiAttr[i], static_cast<EGLint>(imageAttrs.planes[i].modifier >> 32)}});
+      if (addModifiers && imageAttrs.planes[i].modifier != DRM_FORMAT_MOD_INVALID &&
+          imageAttrs.planes[i].modifier != DRM_FORMAT_MOD_LINEAR)
+      {
+        usedExplicitModifiers = true;
+        attribs.Add({{eglDmabufPlaneModifierLoAttr[i],
+                      static_cast<EGLint>(imageAttrs.planes[i].modifier & 0xFFFFFFFF)},
+                     {eglDmabufPlaneModifierHiAttr[i],
+                      static_cast<EGLint>(imageAttrs.planes[i].modifier >> 32)}});
+      }
 #endif
     }
-  }
+  };
+
+  bool usedExplicitModifiers{false};
+  CEGLAttributes<22> attribs;
+  buildAttribs(attribs, true, usedExplicitModifiers);
+  const CEGLAttributes<22>* usedAttribs{&attribs};
 
   m_image = m_eglCreateImageKHR(m_display, EGL_NO_CONTEXT, EGL_LINUX_DMA_BUF_EXT, nullptr, attribs.Get());
+  const EGLint explicitError = m_image ? EGL_SUCCESS : eglGetError();
+
+  EGLint implicitError{EGL_SUCCESS};
+  bool implicitRetried{false};
+
+#if defined(EGL_EXT_image_dma_buf_import_modifiers)
+  CEGLAttributes<22> implicitAttribs;
+  if (!m_image && usedExplicitModifiers)
+  {
+    bool implicitUsedExplicitModifiers{false};
+    buildAttribs(implicitAttribs, false, implicitUsedExplicitModifiers);
+    m_image =
+        m_eglCreateImageKHR(m_display, EGL_NO_CONTEXT, EGL_LINUX_DMA_BUF_EXT, nullptr, implicitAttribs.Get());
+    implicitRetried = true;
+    usedAttribs = &implicitAttribs;
+
+    if (m_image)
+      CLog::Log(LOGDEBUG, "CEGLImage::{} - explicit modifier import failed ({:#4x}), fell back to implicit modifiers",
+                __FUNCTION__, explicitError);
+    else
+      implicitError = eglGetError();
+  }
+#endif
 
   if (!m_image || CServiceBroker::GetLogging().CanLogComponent(LOGVIDEO))
   {
-    const EGLint* attrs = attribs.Get();
+    const EGLint* attrs = usedAttribs->Get();
 
     std::string eglString;
 
-    for (int i = 0; i < (attribs.Size()); i += 2)
+    for (int i = 0; i < (usedAttribs->Size()); i += 2)
     {
       std::string keyStr;
       std::string valueStr;
@@ -192,8 +229,19 @@ bool CEGLImage::CreateImage(EglAttrs imageAttrs)
 
   if (!m_image)
   {
-    CLog::Log(LOGERROR, "CEGLImage::{} - failed to import buffer into EGL image: {:#4x}",
-              __FUNCTION__, eglGetError());
+    if (implicitRetried)
+    {
+      CLog::Log(
+          LOGERROR,
+          "CEGLImage::{} - failed to import buffer into EGL image (explicit: {:#4x}, implicit: "
+          "{:#4x})",
+          __FUNCTION__, explicitError, implicitError);
+    }
+    else
+    {
+      CLog::Log(LOGERROR, "CEGLImage::{} - failed to import buffer into EGL image: {:#4x}",
+                __FUNCTION__, explicitError);
+    }
     return false;
   }
 
