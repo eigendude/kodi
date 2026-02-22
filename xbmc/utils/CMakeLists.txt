@@ -235,8 +235,10 @@ if("gbm" IN_LIST CORE_PLATFORM_NAME_LC OR "wayland" IN_LIST CORE_PLATFORM_NAME_L
   endif()
 
   if(TARGET ${APP_NAME_LC}::EGL)
-    list(APPEND SOURCES EGLImage.cpp)
-    list(APPEND HEADERS EGLImage.h)
+    list(APPEND SOURCES EGLImage.cpp
+                        DmaBufImportProber.cpp)
+    list(APPEND HEADERS EGLImage.h
+                        DmaBufImportProber.h)
   endif()
 
   if(TARGET ${APP_NAME_LC}::LibDRM)

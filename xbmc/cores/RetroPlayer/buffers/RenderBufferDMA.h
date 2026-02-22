@@ -9,6 +9,7 @@
 #pragma once
 
 #include "cores/RetroPlayer/buffers/BaseRenderBuffer.h"
+#include "utils/DmaBufImportProber.h"
 
 #include <memory>
 
@@ -60,7 +61,9 @@ private:
   void DeleteTexture();
 
   std::unique_ptr<CEGLImage> m_egl;
+  std::unique_ptr<CDmaBufImportProber> m_prober;
   std::unique_ptr<IBufferObject> m_bo;
+  CDmaBufImportProber::ProbeKey BuildProbeKey(unsigned int width, unsigned int height) const;
 };
 } // namespace RETRO
 } // namespace KODI

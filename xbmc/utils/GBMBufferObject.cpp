@@ -57,6 +57,30 @@ bool CGBMBufferObject::CreateBufferObject(uint32_t format, uint32_t width, uint3
   return true;
 }
 
+
+bool CGBMBufferObject::CreateBufferObjectWithModifier(uint32_t format,
+                                                      uint32_t width,
+                                                      uint32_t height,
+                                                      uint64_t modifier)
+{
+#if defined(HAS_GBM_MODIFIERS)
+  if (m_fd >= 0)
+    return true;
+
+  m_width = width;
+  m_height = height;
+
+  const uint64_t modifiers[] = {modifier};
+  m_bo = gbm_bo_create_with_modifiers(m_device, m_width, m_height, format, modifiers, 1);
+  if (!m_bo)
+    return false;
+
+  m_fd = gbm_bo_get_fd(m_bo);
+  return m_fd >= 0;
+#else
+  return false;
+#endif
+}
 void CGBMBufferObject::DestroyBufferObject()
 {
   close(m_fd);

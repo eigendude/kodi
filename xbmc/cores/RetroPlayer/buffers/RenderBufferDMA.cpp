@@ -11,10 +11,21 @@
 #include "ServiceBroker.h"
 #include "cores/RetroPlayer/rendering/VideoRenderers/RPRendererDMAUtils.h"
 #include "utils/BufferObject.h"
+#if defined(HAVE_LINUX_DMA_HEAP)
+#include "utils/DMAHeapBufferObject.h"
+#endif
+#include "utils/DmaBufImportProber.h"
 #include "utils/EGLImage.h"
+#include "utils/StringUtils.h"
+
+#if defined(HAVE_GBM)
+#include "utils/GBMBufferObject.h"
+#endif
 #include "utils/log.h"
 #include "windowing/WinSystem.h"
 #include "windowing/linux/WinSystemEGL.h"
+
+#include <optional>
 
 using namespace KODI;
 using namespace RETRO;
@@ -32,7 +43,9 @@ CRenderBufferDMA::CRenderBufferDMA(CRenderContext& context, int fourcc)
                              "a build misconfiguration as DMA can only be used with EGL and "
                              "specifically platforms that implement CWinSystemEGL");
 
-  m_egl = std::make_unique<CEGLImage>(winSystemEGL->GetEGLDisplay());
+  const EGLDisplay eglDisplay = winSystemEGL->GetEGLDisplay();
+  m_egl = std::make_unique<CEGLImage>(eglDisplay);
+  m_prober = std::make_unique<CDmaBufImportProber>(eglDisplay);
 
   CLog::Log(LOGDEBUG, "CRenderBufferDMA: using BufferObject type: {}", m_bo->GetName());
 }
@@ -42,6 +55,20 @@ CRenderBufferDMA::~CRenderBufferDMA()
   DeleteTexture();
 }
 
+CDmaBufImportProber::ProbeKey CRenderBufferDMA::BuildProbeKey(unsigned int width,
+                                                               unsigned int height) const
+{
+  const auto* renderer = reinterpret_cast<const char*>(glGetString(GL_RENDERER));
+  const auto* vendor = reinterpret_cast<const char*>(glGetString(GL_VENDOR));
+
+  CDmaBufImportProber::ProbeKey key;
+  key.gpu = StringUtils::Format("{}:{}", vendor ? vendor : "unknown", renderer ? renderer : "unknown");
+  key.drmFourcc = m_fourcc;
+  key.widthBucket = width <= 512 ? 512 : (width <= 1024 ? 1024 : (width <= 2048 ? 2048 : 4096));
+  key.heightBucket = height <= 512 ? 512 : (height <= 1024 ? 1024 : (height <= 2048 ? 2048 : 4096));
+  return key;
+}
+
 bool CRenderBufferDMA::Allocate(AVPixelFormat format, unsigned int width, unsigned int height)
 {
   // Initialize IRenderBuffer
@@ -49,16 +76,84 @@ bool CRenderBufferDMA::Allocate(AVPixelFormat format, unsigned int width, unsign
   m_width = width;
   m_height = height;
 
-  m_bo->CreateBufferObject(m_fourcc, m_width, m_height);
+  const auto probeKey = BuildProbeKey(width, height);
 
-#if defined(EGL_EXT_image_dma_buf_import_modifiers)
-  if (!m_egl->SupportsFormatAndModifier(m_fourcc, m_bo->GetModifier()))
+  auto allocateFn = [](CDmaBufImportProber::AllocatorType allocator,
+                       uint32_t drmFourcc,
+                       uint32_t boWidth,
+                       uint32_t boHeight,
+                       uint64_t modifier,
+                       uint32_t strideAlignment) -> std::unique_ptr<IBufferObject> {
+    std::unique_ptr<IBufferObject> bo;
+
+    switch (allocator)
+    {
+      case CDmaBufImportProber::AllocatorType::GBMModifiers:
+      {
+#if defined(HAVE_GBM)
+        auto gbm = std::make_unique<CGBMBufferObject>();
+        if (!gbm->CreateBufferObjectWithModifier(drmFourcc, boWidth, boHeight, modifier))
+          return nullptr;
+        bo = std::move(gbm);
+        break;
+#else
+        return nullptr;
+#endif
+      }
+      case CDmaBufImportProber::AllocatorType::GBMImplicit:
+      {
+#if defined(HAVE_GBM)
+        auto gbm = std::make_unique<CGBMBufferObject>();
+        if (!gbm->CreateBufferObject(drmFourcc, boWidth, boHeight))
+          return nullptr;
+        bo = std::move(gbm);
+        break;
+#else
+        return nullptr;
+#endif
+      }
+      case CDmaBufImportProber::AllocatorType::DMAHeapImplicit:
+      {
+#if defined(HAVE_LINUX_DMA_HEAP)
+        auto dma = std::make_unique<CDMAHeapBufferObject>();
+        if (!dma->CreateBufferObject(drmFourcc, boWidth, boHeight))
+          return nullptr;
+        bo = std::move(dma);
+        break;
+#else
+        return nullptr;
+#endif
+      }
+      case CDmaBufImportProber::AllocatorType::DMAHeapAligned:
+      {
+#if defined(HAVE_LINUX_DMA_HEAP)
+        auto dma = std::make_unique<CDMAHeapBufferObject>();
+        if (!dma->CreateBufferObjectAligned(drmFourcc, boWidth, boHeight, strideAlignment))
+          return nullptr;
+        bo = std::move(dma);
+        break;
+#else
+        return nullptr;
+#endif
+      }
+    }
+
+    return bo;
+  };
+
+  auto probeResult = m_prober->ProbeAndAdapt(probeKey, width, height, m_fourcc, allocateFn,
+                                             true /*prefer linear*/);
+  if (!probeResult.success)
   {
-    CRPRendererDMAUtils::DisableForSession(m_fourcc, m_width, m_height, m_bo->GetModifier(),
-                                           "unsupported EGL dma-buf format/modifier");
+    CRPRendererDMAUtils::DisableForSession(m_fourcc, m_width, m_height, DRM_FORMAT_MOD_INVALID,
+                                           "all non-copy dma-buf import paths failed");
     return false;
   }
-#endif
+
+  m_bo = allocateFn(probeResult.allocator, m_fourcc, m_width, m_height, probeResult.modifier,
+                    probeResult.strideAlignment);
+  if (!m_bo)
+    return false;
 
   return true;
 }
@@ -122,8 +217,13 @@ bool CRenderBufferDMA::UploadTexture()
   if (success)
     m_egl->UploadImage(m_textureTarget);
   else
+  {
+    const auto probeKey = BuildProbeKey(m_width, m_height);
+    m_prober->Invalidate(probeKey);
+
     CRPRendererDMAUtils::DisableForSession(m_fourcc, m_width, m_height, m_bo->GetModifier(),
                                            "eglCreateImageKHR failed");
+  }
 
   m_egl->DestroyImage();
 

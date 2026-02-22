@@ -9,6 +9,7 @@ set(SOURCES TestAlarmClock.cpp
             TestComponentContainer.cpp
             TestCrc32.cpp
             TestDatabaseUtils.cpp
+            TestDmaBufImportProber.cpp
             TestDigest.cpp
             TestEndianSwap.cpp
             TestExecString.cpp

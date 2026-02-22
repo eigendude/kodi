@@ -98,6 +98,34 @@ bool CDMAHeapBufferObject::CreateBufferObject(uint32_t format, uint32_t width, u
   return CreateBufferObject(width * height * bpp);
 }
 
+
+bool CDMAHeapBufferObject::CreateBufferObjectAligned(uint32_t format,
+                                                     uint32_t width,
+                                                     uint32_t height,
+                                                     uint32_t strideAlignment)
+{
+  uint32_t bpp{1};
+
+  switch (format)
+  {
+    case DRM_FORMAT_ARGB8888:
+      bpp = 4;
+      break;
+    case DRM_FORMAT_ARGB1555:
+    case DRM_FORMAT_RGB565:
+      bpp = 2;
+      break;
+    default:
+      throw std::runtime_error("CDMAHeapBufferObject: pixel format not implemented");
+  }
+
+  const uint32_t rawStride = width * bpp;
+  const uint32_t alignMask = strideAlignment > 0 ? (strideAlignment - 1) : 0;
+  m_stride = strideAlignment > 0 ? ((rawStride + alignMask) & ~alignMask) : rawStride;
+
+  return CreateBufferObject(static_cast<uint64_t>(m_stride) * height);
+}
+
 bool CDMAHeapBufferObject::CreateBufferObject(uint64_t size)
 {
   m_size = size;
