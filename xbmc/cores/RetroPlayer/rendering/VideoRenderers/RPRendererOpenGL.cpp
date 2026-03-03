@@ -57,6 +57,28 @@ CRPRendererOpenGL::CRPRendererOpenGL(const CRenderSettings& renderSettings,
   // Initialize CRPRendererOpenGL
   m_clearColor = m_context.UseLimitedColor() ? (16.0f / 0xff) : 0.0f;
 
+  m_context.ApplyStateBlock();
+}
+
+CRPRendererOpenGL::~CRPRendererOpenGL()
+{
+  if (m_glInitialized)
+  {
+    glDeleteBuffers(1, &m_mainIndexVBO);
+    glDeleteBuffers(1, &m_mainVertexVBO);
+    glDeleteBuffers(1, &m_blackbarsVertexVBO);
+
+    glDeleteVertexArrays(1, &m_mainVAO);
+    glDeleteVertexArrays(1, &m_blackbarsVAO);
+  }
+}
+
+void CRPRendererOpenGL::InitializeGLResources()
+{
+  // Lazily initialize GL resources on the render thread with a current context.
+  if (m_glInitialized)
+    return;
+
   m_context.EnableGUIShader(GL_SHADER_METHOD::TEXTURE);
 
   GLint posLoc = m_context.GUIShaderGetPos();
@@ -106,21 +128,13 @@ CRPRendererOpenGL::CRPRendererOpenGL(const CRenderSettings& renderSettings,
 
   m_context.DisableGUIShader();
 
-  m_context.ApplyStateBlock();
-}
-
-CRPRendererOpenGL::~CRPRendererOpenGL()
-{
-  glDeleteBuffers(1, &m_mainIndexVBO);
-  glDeleteBuffers(1, &m_mainVertexVBO);
-  glDeleteBuffers(1, &m_blackbarsVertexVBO);
-
-  glDeleteVertexArrays(1, &m_mainVAO);
-  glDeleteVertexArrays(1, &m_blackbarsVAO);
+  m_glInitialized = true;
 }
 
 void CRPRendererOpenGL::RenderInternal(bool clear, uint8_t alpha)
 {
+  InitializeGLResources();
+
   if (clear)
   {
     if (alpha == 255)
@@ -163,6 +177,8 @@ void CRPRendererOpenGL::ClearBackBuffer()
 
 void CRPRendererOpenGL::DrawBlackBars()
 {
+  InitializeGLResources();
+
   glDisable(GL_BLEND);
 
   m_context.EnableGUIShader(GL_SHADER_METHOD::DEFAULT);
@@ -273,6 +289,8 @@ void CRPRendererOpenGL::DrawBlackBars()
 
 void CRPRendererOpenGL::Render(uint8_t alpha)
 {
+  InitializeGLResources();
+
   auto renderBuffer = static_cast<CRenderBufferOpenGL*>(m_renderBuffer);
   if (renderBuffer == nullptr)
     return;

@@ -96,14 +96,18 @@ protected:
 
   virtual void Render(uint8_t alpha);
 
+  void InitializeGLResources();
+
   std::map<CRenderBufferOpenGL*, std::unique_ptr<RenderBufferTextures>> m_RBTexturesMap;
 
-  GLuint m_mainVAO;
-  GLuint m_mainVertexVBO;
-  GLuint m_mainIndexVBO;
+  bool m_glInitialized{false};
 
-  GLuint m_blackbarsVAO;
-  GLuint m_blackbarsVertexVBO;
+  GLuint m_mainVAO{0};
+  GLuint m_mainVertexVBO{0};
+  GLuint m_mainIndexVBO{0};
+
+  GLuint m_blackbarsVAO{0};
+  GLuint m_blackbarsVertexVBO{0};
 
   GLenum m_textureTarget = GL_TEXTURE_2D;
   float m_clearColor = 0.0f;
