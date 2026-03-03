@@ -57,6 +57,14 @@ CRPRendererOpenGL::CRPRendererOpenGL(const CRenderSettings& renderSettings,
   // Initialize CRPRendererOpenGL
   m_clearColor = m_context.UseLimitedColor() ? (16.0f / 0xff) : 0.0f;
 
+#if defined(TARGET_DARWIN_OSX)
+  // macOS OpenGL core profile requires a VAO to be bound for program validation.
+  // RetroPlayer enables guilib shaders (which call glValidateProgram()), so bind
+  // a dedicated VAO in this renderer before any shader enable/validation.
+  glGenVertexArrays(1, &m_retroDummyVao);
+  glBindVertexArray(m_retroDummyVao);
+#endif
+
   m_context.EnableGUIShader(GL_SHADER_METHOD::TEXTURE);
 
   GLint posLoc = m_context.GUIShaderGetPos();
@@ -111,6 +119,11 @@ CRPRendererOpenGL::CRPRendererOpenGL(const CRenderSettings& renderSettings,
 
 CRPRendererOpenGL::~CRPRendererOpenGL()
 {
+#if defined(TARGET_DARWIN_OSX)
+  if (m_retroDummyVao != 0)
+    glDeleteVertexArrays(1, &m_retroDummyVao);
+#endif
+
   glDeleteBuffers(1, &m_mainIndexVBO);
   glDeleteBuffers(1, &m_mainVertexVBO);
   glDeleteBuffers(1, &m_blackbarsVertexVBO);
@@ -119,8 +132,20 @@ CRPRendererOpenGL::~CRPRendererOpenGL()
   glDeleteVertexArrays(1, &m_blackbarsVAO);
 }
 
+void CRPRendererOpenGL::EnsureVaoBoundForCoreProfile()
+{
+#if defined(TARGET_DARWIN_OSX)
+  GLint vao = 0;
+  glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &vao);
+  if (vao == 0 && m_retroDummyVao != 0)
+    glBindVertexArray(m_retroDummyVao);
+#endif
+}
+
 void CRPRendererOpenGL::RenderInternal(bool clear, uint8_t alpha)
 {
+  EnsureVaoBoundForCoreProfile();
+
   if (clear)
   {
     if (alpha == 255)

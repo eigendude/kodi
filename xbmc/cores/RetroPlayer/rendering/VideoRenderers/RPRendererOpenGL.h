@@ -96,7 +96,18 @@ protected:
 
   virtual void Render(uint8_t alpha);
 
+  /*!
+   * \brief Ensure a VAO is bound before enabling GUI shaders.
+   *
+   * On macOS OpenGL core profile, shader program validation fails when no VAO
+   * is currently bound. RetroPlayer uses guilib shader enable/validation, so
+   * keep a dedicated VAO bound in this renderer when needed.
+   */
+  void EnsureVaoBoundForCoreProfile();
+
   std::map<CRenderBufferOpenGL*, std::unique_ptr<RenderBufferTextures>> m_RBTexturesMap;
+
+  GLuint m_retroDummyVao{0};
 
   GLuint m_mainVAO;
   GLuint m_mainVertexVBO;
