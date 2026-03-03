@@ -22,6 +22,28 @@
 using namespace KODI;
 using namespace RETRO;
 
+#if defined(TARGET_DARWIN_OSX)
+namespace
+{
+void EnsureVaoBoundForShaderValidation()
+{
+  // macOS OpenGL core profile requires a VAO bound for program validation.
+  static thread_local GLuint s_validationVao{0};
+
+  GLint boundVao{0};
+  glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &boundVao);
+  if (boundVao != 0)
+    return;
+
+  if (s_validationVao == 0)
+    glGenVertexArrays(1, &s_validationVao);
+
+  if (s_validationVao != 0)
+    glBindVertexArray(s_validationVao);
+}
+} // namespace
+#endif
+
 // --- CRendererFactoryOpenGL --------------------------------------------------
 
 std::string CRendererFactoryOpenGL::RenderSystemName() const
@@ -34,6 +56,10 @@ CRPBaseRenderer* CRendererFactoryOpenGL::CreateRenderer(
     CRenderContext& context,
     std::shared_ptr<IRenderBufferPool> bufferPool)
 {
+#if defined(TARGET_DARWIN_OSX)
+  EnsureVaoBoundForShaderValidation();
+#endif
+
   return new CRPRendererOpenGL(settings, context, std::move(bufferPool));
 }
 
