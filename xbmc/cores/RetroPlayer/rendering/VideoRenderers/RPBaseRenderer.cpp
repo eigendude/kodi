@@ -55,6 +55,10 @@ bool CRPBaseRenderer::IsCompatible(const CRenderVideoSettings& settings) const
   return true;
 }
 
+void CRPBaseRenderer::InitializeRenderer()
+{
+}
+
 bool CRPBaseRenderer::Configure(AVPixelFormat format)
 {
   m_format = format;

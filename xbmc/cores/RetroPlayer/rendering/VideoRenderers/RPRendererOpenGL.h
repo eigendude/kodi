@@ -53,6 +53,7 @@ public:
 
   // implementation of CRPBaseRenderer
   bool Supports(RENDERFEATURE feature) const override;
+  void InitializeRenderer() override;
   SCALINGMETHOD GetDefaultScalingMethod() const override { return SCALINGMETHOD::NEAREST; }
 
   static bool SupportsScalingMethod(SCALINGMETHOD method);

@@ -593,6 +593,14 @@ std::shared_ptr<CRPBaseRenderer> CRPRenderManager::GetRendererForPool(
     if (shaderPreset.empty() || !m_failedShaderPresets.contains(shaderPreset))
       renderer.reset(m_processInfo.CreateRenderer(bufferPool, renderSettings));
 
+    if (renderer)
+    {
+      // Initialize renderer GL resources now, before buffer pool setup, because
+      // GUI shader validation on macOS core profile requires the renderer VAO
+      // that is created in InitializeGLResources().
+      renderer->InitializeRenderer();
+    }
+
     if (renderer && renderer->Configure(m_format))
     {
       // Ensure we have a render buffer for this renderer
