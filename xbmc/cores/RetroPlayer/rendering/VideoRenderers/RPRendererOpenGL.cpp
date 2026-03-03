@@ -19,12 +19,52 @@
 
 #include <cstddef>
 
+#define RP_GL_BLACKSCREEN_FIXES 1
+
 using namespace KODI;
 using namespace RETRO;
 
 #if defined(TARGET_DARWIN_OSX)
 namespace
 {
+#if !defined(GL_DRAW_FRAMEBUFFER_BINDING)
+#define GL_DRAW_FRAMEBUFFER_BINDING GL_FRAMEBUFFER_BINDING
+#endif
+
+void DumpGLState(const char* tag)
+{
+  GLint currentProgram{0};
+  GLint vao{0};
+  GLint arrayBuffer{0};
+  GLint elementArrayBuffer{0};
+  GLint activeTexture{0};
+  GLint texture2D{0};
+  GLint framebuffer{0};
+  GLint viewport[4] = {0, 0, 0, 0};
+
+  glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
+  glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &vao);
+  glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &arrayBuffer);
+  glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &elementArrayBuffer);
+  glGetIntegerv(GL_ACTIVE_TEXTURE, &activeTexture);
+  glGetIntegerv(GL_TEXTURE_BINDING_2D, &texture2D);
+  glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &framebuffer);
+  glGetIntegerv(GL_VIEWPORT, viewport);
+
+  const bool blendEnabled = glIsEnabled(GL_BLEND) == GL_TRUE;
+  const bool depthEnabled = glIsEnabled(GL_DEPTH_TEST) == GL_TRUE;
+  const bool scissorEnabled = glIsEnabled(GL_SCISSOR_TEST) == GL_TRUE;
+  const GLenum lastError = glGetError();
+
+  CLog::Log(LOGDEBUG,
+            "RPRendererOpenGL: {} program={}, vao={}, arrayBuffer={}, elementArrayBuffer={}, "
+            "activeTexture={}, texture2D={}, drawFbo={}, viewport=[{}, {}, {}, {}], "
+            "blend={}, depth={}, scissor={}, glError=0x{:x}",
+            tag, currentProgram, vao, arrayBuffer, elementArrayBuffer, activeTexture, texture2D,
+            framebuffer, viewport[0], viewport[1], viewport[2], viewport[3], blendEnabled,
+            depthEnabled, scissorEnabled, static_cast<unsigned int>(lastError));
+}
+
 void EnsureVaoBoundForShaderValidation()
 {
   // macOS OpenGL core profile requires a VAO bound for program validation.
@@ -362,8 +402,13 @@ void CRPRendererOpenGL::Render(uint8_t alpha)
     glBindTexture(m_textureTarget, target->GetTextureID());
     glTexParameteri(m_textureTarget, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(m_textureTarget, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+#if RP_GL_BLACKSCREEN_FIXES && defined(TARGET_DARWIN_OSX)
+    glTexParameteri(m_textureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(m_textureTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+#else
     glTexParameteri(m_textureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTexParameteri(m_textureTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+#endif
     glTexParameterfv(m_textureTarget, GL_TEXTURE_BORDER_COLOR, blackBorder);
 
     // Force alpha to 1, because shader can leave it undefined
@@ -377,6 +422,20 @@ void CRPRendererOpenGL::Render(uint8_t alpha)
 
   std::shared_ptr<SHADER::CShaderTextureGLRef> source = rbTextures->source;
   std::shared_ptr<SHADER::CShaderTextureGL> target = rbTextures->target;
+
+  static GLuint s_lastLoggedTextureId{0};
+  if (renderBuffer->TextureID() != s_lastLoggedTextureId)
+  {
+    s_lastLoggedTextureId = renderBuffer->TextureID();
+    CLog::Log(
+        LOGDEBUG,
+        "RPRendererOpenGL: Render buffer sourceTex={}, source={}x{}, target={}x{}, fullDest={}x{}, "
+        "screen={}x{}, rect=[{:.3f},{:.3f}]-[{:.3f},{:.3f}]",
+        renderBuffer->TextureID(), renderBuffer->GetWidth(), renderBuffer->GetHeight(),
+        target->GetWidth(), target->GetHeight(), m_fullDestWidth, m_fullDestHeight,
+        m_context.GetScreenWidth(), m_context.GetScreenHeight(), m_sourceRect.x1, m_sourceRect.y1,
+        m_sourceRect.x2, m_sourceRect.y2);
+  }
 
   Updateshaders();
 
@@ -429,6 +488,34 @@ void CRPRendererOpenGL::Render(uint8_t alpha)
   // Use GUI shader
   m_context.EnableGUIShader(GL_SHADER_METHOD::TEXTURE);
 
+  GLint currentProgram{0};
+  glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
+#if RP_GL_BLACKSCREEN_FIXES && defined(TARGET_DARWIN_OSX)
+  if (currentProgram == 0)
+  {
+    CLog::Log(LOGERROR,
+              "RPRendererOpenGL: GL_CURRENT_PROGRAM is 0 after EnableGUIShader(TEXTURE), retrying");
+    m_context.EnableGUIShader(GL_SHADER_METHOD::TEXTURE);
+    glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
+    if (currentProgram == 0)
+    {
+      CLog::Log(LOGERROR,
+                "RPRendererOpenGL: aborting draw because GL_CURRENT_PROGRAM remains 0 after retry");
+      m_context.DisableGUIShader();
+      return;
+    }
+  }
+#endif
+
+#if defined(TARGET_DARWIN_OSX)
+  static bool s_loggedAfterShaderEnable{false};
+  if (!s_loggedAfterShaderEnable)
+  {
+    DumpGLState("after EnableGUIShader(TEXTURE)");
+    s_loggedAfterShaderEnable = true;
+  }
+#endif
+
   GLint uniColLoc = m_context.GUIShaderGetUniCol();
   GLint depthLoc = m_context.GUIShaderGetDepth();
 
@@ -467,12 +554,111 @@ void CRPRendererOpenGL::Render(uint8_t alpha)
   vertex[1].u1 = vertex[2].u1 = rect.x2;
   vertex[2].v1 = vertex[3].v1 = rect.y2;
 
+#if RP_GL_BLACKSCREEN_FIXES && defined(TARGET_DARWIN_OSX)
+  if (source->GetTextureID() == 0)
+  {
+    CLog::Log(LOGERROR, "RPRendererOpenGL: source texture id is 0, skipping draw");
+    m_context.DisableGUIShader();
+    return;
+  }
+
+  GLint viewport[4] = {0, 0, 0, 0};
+  glGetIntegerv(GL_VIEWPORT, viewport);
+  if (viewport[2] == 0 || viewport[3] == 0)
+  {
+    CLog::Log(LOGERROR,
+              "RPRendererOpenGL: viewport is {}x{}, forcing viewport to screen {}x{}",
+              viewport[2], viewport[3], m_context.GetScreenWidth(), m_context.GetScreenHeight());
+    glViewport(0, 0, m_context.GetScreenWidth(), m_context.GetScreenHeight());
+  }
+
+  GLint drawFbo{0};
+  glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &drawFbo);
+  static bool s_loggedUnexpectedFbo{false};
+  if (drawFbo != 0 && !s_loggedUnexpectedFbo)
+  {
+    CLog::Log(LOGDEBUG,
+              "RPRendererOpenGL: draw framebuffer binding is {} (expected 0 for default framebuffer)",
+              drawFbo);
+    s_loggedUnexpectedFbo = true;
+  }
+
+  const bool depthWasEnabled = glIsEnabled(GL_DEPTH_TEST) == GL_TRUE;
+  const bool cullWasEnabled = glIsEnabled(GL_CULL_FACE) == GL_TRUE;
+  const bool scissorWasEnabled = glIsEnabled(GL_SCISSOR_TEST) == GL_TRUE;
+  if (depthWasEnabled || cullWasEnabled || scissorWasEnabled)
+  {
+    static bool s_loggedForcedState{false};
+    if (!s_loggedForcedState)
+    {
+      CLog::Log(LOGDEBUG,
+                "RPRendererOpenGL: forcing GL state depth={}, cull={}, scissor={} to disabled before draw",
+                depthWasEnabled, cullWasEnabled, scissorWasEnabled);
+      s_loggedForcedState = true;
+    }
+  }
+  glDisable(GL_DEPTH_TEST);
+  glDisable(GL_CULL_FACE);
+  glDisable(GL_SCISSOR_TEST);
+#endif
+
+#if defined(TARGET_DARWIN_OSX)
+  static bool s_loggedBeforeBindMainVao{false};
+  if (!s_loggedBeforeBindMainVao)
+  {
+    DumpGLState("before bind main VAO");
+    s_loggedBeforeBindMainVao = true;
+  }
+#endif
+
+#if RP_GL_BLACKSCREEN_FIXES && defined(TARGET_DARWIN_OSX)
+  if (m_mainVAO == 0)
+  {
+    CLog::Log(LOGERROR, "RPRendererOpenGL: m_mainVAO is 0, skipping draw");
+    m_context.DisableGUIShader();
+    return;
+  }
+#endif
+
   glBindVertexArray(m_mainVAO);
 
   glBindBuffer(GL_ARRAY_BUFFER, m_mainVertexVBO);
   glBufferData(GL_ARRAY_BUFFER, sizeof(PackedVertex) * 4, &vertex[0], GL_DYNAMIC_DRAW);
 
+#if RP_GL_BLACKSCREEN_FIXES && defined(TARGET_DARWIN_OSX)
+  GLint boundTexture{0};
+  glGetIntegerv(GL_TEXTURE_BINDING_2D, &boundTexture);
+  if (boundTexture == 0)
+  {
+    CLog::Log(LOGERROR, "RPRendererOpenGL: GL_TEXTURE_BINDING_2D is 0 before draw, skipping draw");
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    m_context.DisableGUIShader();
+    return;
+  }
+#endif
+
+  const GLenum preDrawError = glGetError();
+  if (preDrawError != GL_NO_ERROR)
+  {
+    CLog::Log(LOGERROR, "RPRendererOpenGL: GL error before draw: 0x{:x}",
+              static_cast<unsigned int>(preDrawError));
+#if defined(TARGET_DARWIN_OSX)
+    DumpGLState("before draw");
+#endif
+  }
+
   glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_BYTE, nullptr);
+
+  const GLenum postDrawError = glGetError();
+  if (postDrawError != GL_NO_ERROR)
+  {
+    CLog::Log(LOGERROR, "RPRendererOpenGL: GL error after draw: 0x{:x}",
+              static_cast<unsigned int>(postDrawError));
+#if defined(TARGET_DARWIN_OSX)
+    DumpGLState("after draw");
+#endif
+  }
 
   glBindVertexArray(0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
