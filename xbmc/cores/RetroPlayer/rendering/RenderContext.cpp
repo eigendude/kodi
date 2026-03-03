@@ -80,6 +80,25 @@ bool CRenderContext::IsExtSupported(const char* extension)
 namespace
 {
 
+#if defined(TARGET_DARWIN_OSX) && defined(HAS_GL)
+void EnsureVaoBoundForGuiShaderValidation()
+{
+  // macOS core profile requires VAO bound for program validation.
+  static thread_local GLuint s_validationVao{0};
+
+  GLint boundVao{0};
+  glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &boundVao);
+  if (boundVao != 0)
+    return;
+
+  if (s_validationVao == 0)
+    glGenVertexArrays(1, &s_validationVao);
+
+  if (s_validationVao != 0)
+    glBindVertexArray(s_validationVao);
+}
+#endif
+
 #ifdef HAS_GL
 static ShaderMethodGL TranslateShaderMethodGL(GL_SHADER_METHOD method)
 {
@@ -120,6 +139,10 @@ static ShaderMethodGLES TranslateShaderMethodGLES(GL_SHADER_METHOD method)
 
 void CRenderContext::EnableGUIShader(GL_SHADER_METHOD method)
 {
+#if defined(TARGET_DARWIN_OSX) && defined(HAS_GL)
+  EnsureVaoBoundForGuiShaderValidation();
+#endif
+
 #if defined(HAS_GL)
   CRenderSystemGL* rendering = dynamic_cast<CRenderSystemGL*>(m_rendering);
   if (rendering != nullptr)
