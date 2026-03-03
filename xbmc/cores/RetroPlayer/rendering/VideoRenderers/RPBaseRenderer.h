@@ -59,6 +59,7 @@ public:
   virtual SCALINGMETHOD GetDefaultScalingMethod() const = 0;
 
   // Public renderer interface
+  virtual void InitializeRenderer();
   virtual void Flush();
 
   // Get render settings

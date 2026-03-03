@@ -156,6 +156,11 @@ void CRPRendererOpenGL::FlushInternal()
   glFinish();
 }
 
+void CRPRendererOpenGL::InitializeRenderer()
+{
+  InitializeGLResources();
+}
+
 bool CRPRendererOpenGL::Supports(RENDERFEATURE feature) const
 {
   return feature == RENDERFEATURE::STRETCH || feature == RENDERFEATURE::ZOOM ||
