@@ -69,6 +69,7 @@ public:
   void Render(bool clear, uint32_t alpha = 255, bool gui = true) override;
   bool IsRenderingVideo() const override;
   bool HasGameAgent() const override;
+  bool IsDiscEjected() const override;
 
   // Implementation of IGameCallback
   std::string GameClientID() const override;
