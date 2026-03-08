@@ -11,6 +11,10 @@
 #include "games/GameTypes.h"
 #include "guilib/GUIDialog.h"
 
+#include <memory>
+
+class CFileItemList;
+
 namespace KODI
 {
 namespace GAME
@@ -32,6 +36,9 @@ protected:
 private:
   // Game parameters
   GameClientPtr m_gameClient;
+
+  // Dialog parameters
+  std::unique_ptr<CFileItemList> m_items;
 };
 } // namespace GAME
 } // namespace KODI
