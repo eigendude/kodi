@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "games/GameTypes.h"
 #include "guilib/GUIDialog.h"
 
 namespace KODI
@@ -22,6 +23,15 @@ class CDialogGameDiscManager : public CGUIDialog
 public:
   CDialogGameDiscManager();
   ~CDialogGameDiscManager() override = default;
+
+protected:
+  // Implementation of CGUIWindow via CGUIDialog
+  void OnInitWindow() override;
+  void OnDeinitWindow(int nextWindowID) override;
+
+private:
+  // Game parameters
+  GameClientPtr m_gameClient;
 };
 } // namespace GAME
 } // namespace KODI
