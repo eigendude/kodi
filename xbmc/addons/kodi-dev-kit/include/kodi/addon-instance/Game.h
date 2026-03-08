@@ -1034,6 +1034,126 @@ public:
 
   ///@}
 
+  //--==----==----==----==----==----==----==----==----==----==----==----==----==--
+
+  //============================================================================
+  /// @defgroup cpp_kodi_addon_game_SerializationOperations 5. Serialization operations
+  /// @ingroup cpp_kodi_addon_game
+  /// @brief **Serialization operations**
+  ///
+  ///---------------------------------------------------------------------------
+  ///
+  /// **Serialization operation parts in interface:**\n
+  /// Copy this to your project and extend with your parts or leave functions
+  /// complete away where not used or supported.
+  ///
+  /// @copydetails cpp_kodi_addon_game_SerializationOperations_header_addon_auto_check
+  /// @copydetails cpp_kodi_addon_game_SerializationOperations_source_addon_auto_check
+  ///
+  ///@{
+
+  //============================================================================
+  /// @brief
+  ///
+  /// @return
+  ///
+  virtual bool GetEjectState() { return false; }
+  //----------------------------------------------------------------------------
+
+  //============================================================================
+  /// @brief
+  ///
+  /// @param[in] ejected
+  ///
+  /// @return
+  ///
+  virtual GAME_ERROR SetEjectState(bool ejected) { return GAME_ERROR_NOT_IMPLEMENTED; }
+  //----------------------------------------------------------------------------
+
+  //============================================================================
+  /// @brief
+  ///
+  /// @return
+  ///
+  virtual unsigned int GetImageIndex() { return 0; }
+  //----------------------------------------------------------------------------
+
+  //============================================================================
+  /// @brief
+  ///
+  /// @param[in] imageIndex
+  ///
+  /// @return
+  ///
+  virtual GAME_ERROR SetImageIndex(bool imageIndex) { return GAME_ERROR_NOT_IMPLEMENTED; }
+  //----------------------------------------------------------------------------
+
+  //============================================================================
+  /// @brief
+  ///
+  /// @return
+  ///
+  virtual unsigned int GetImageCount() { return 0; }
+  //----------------------------------------------------------------------------
+
+  //============================================================================
+  /// @brief
+  ///
+  /// @return
+  ///
+  virtual GAME_ERROR AddImageIndex() { return GAME_ERROR_NOT_IMPLEMENTED; }
+  //----------------------------------------------------------------------------
+
+  //============================================================================
+  /// @brief
+  ///
+  /// @param[in] imageIndex
+  /// @param[in] filePath
+  ///
+  /// @return
+  ///
+  virtual GAME_ERROR ReplaceImageIndex(bool imageIndex, const std::string& filePath) { return GAME_ERROR_NOT_IMPLEMENTED; }
+  //----------------------------------------------------------------------------
+
+  //============================================================================
+  /// @brief
+  ///
+  /// @param[in] imageIndex
+  ///
+  /// @return
+  ///
+  virtual GAME_ERROR RemoveImageIndex(bool imageIndex) { return GAME_ERROR_NOT_IMPLEMENTED; }
+  //----------------------------------------------------------------------------
+
+  //============================================================================
+  /// @brief
+  ///
+  /// @param[in] imageIndex
+  /// @param[in] filePath
+  ///
+  /// @return
+  ///
+  virtual GAME_ERROR SetInitialImage(bool imageIndex, const std::string& filePath) { return GAME_ERROR_NOT_IMPLEMENTED; }
+  //----------------------------------------------------------------------------
+
+  //============================================================================
+  /// @brief
+  ///
+  /// @return
+  ///
+  virtual std::string GetImagePath() { return ""; }
+  //----------------------------------------------------------------------------
+
+  //============================================================================
+  /// @brief
+  ///
+  /// @return
+  ///
+  virtual std::string GetImageLabel() { return ""; }
+  //----------------------------------------------------------------------------
+
+  ///@}
+
 private:
   void SetAddonStruct(KODI_ADDON_INSTANCE_STRUCT* instance)
   {
@@ -1076,6 +1196,9 @@ private:
     instance->game->toAddon->RCEnableRichPresence = ADDON_RCEnableRichPresence;
     instance->game->toAddon->RCGetRichPresenceEvaluation = ADDON_RCGetRichPresenceEvaluation;
     instance->game->toAddon->RCResetRuntime = ADDON_RCResetRuntime;
+
+    instance->game->toAddon->GetEjectState = ADDON_GetEjectState;
+    // ...
 
     instance->game->toAddon->FreeString = ADDON_FreeString;
 
@@ -1379,6 +1502,13 @@ private:
   {
     return static_cast<CInstanceGame*>(instance->toAddon->addonInstance)->RCResetRuntime();
   }
+
+  inline static bool ADDON_GetEjectState(const AddonInstance_Game* instance)
+  {
+    return static_cast<CInstanceGame*>(instance->toAddon->addonInstance)->GetEjectState();
+  }
+
+  // ...
 
   inline static void ADDON_FreeString(const AddonInstance_Game* instance, char* str)
   {
