@@ -28,7 +28,8 @@ void CGameClientDiscModel::Clear()
   m_discs.clear();
   m_mainDiscPath.clear();
   m_lastDiscPath.clear();
-  m_selectedDiscPath.reset();
+  m_selectedType = DiscSelectionType::NoDisc;
+  m_selectedDiscPath.clear();
 }
 
 bool CGameClientDiscModel::AddDisc(const std::string& path, const std::string& cachedLabel)
@@ -42,6 +43,7 @@ bool CGameClientDiscModel::AddDisc(const std::string& path, const std::string& c
   {
     m_mainDiscPath = path;
     m_lastDiscPath = path;
+    m_selectedType = DiscSelectionType::Disc;
     m_selectedDiscPath = path;
   }
 
@@ -66,7 +68,7 @@ bool CGameClientDiscModel::RemoveDiscByIndex(size_t index)
   const bool wasMainDisc = (m_mainDiscPath == removedPath);
   const bool wasLastDisc = (m_lastDiscPath == removedPath);
   const bool wasSelectedDisc =
-      (m_selectedDiscPath.has_value() && *m_selectedDiscPath == removedPath);
+      (m_selectedType == DiscSelectionType::Disc && m_selectedDiscPath == removedPath);
 
   m_discs.erase(m_discs.begin() + index);
 
@@ -76,16 +78,22 @@ bool CGameClientDiscModel::RemoveDiscByIndex(size_t index)
   if (wasLastDisc)
   {
     const auto replacement = GetReplacementPath(index);
-    m_lastDiscPath = replacement.has_value() ? *replacement : "";
+    m_lastDiscPath = replacement.value_or("");
   }
 
   if (wasSelectedDisc)
   {
     const auto replacement = GetReplacementPath(index);
     if (replacement.has_value())
+    {
+      m_selectedType = DiscSelectionType::Disc;
       m_selectedDiscPath = *replacement;
+    }
     else
-      m_selectedDiscPath.reset();
+    {
+      m_selectedType = DiscSelectionType::NoDisc;
+      m_selectedDiscPath.clear();
+    }
   }
 
   return true;
@@ -121,7 +129,7 @@ std::optional<size_t> CGameClientDiscModel::GetDiscIndexByBasename(
 
 bool CGameClientDiscModel::SetMainDiscByPath(const std::string& path)
 {
-  if (!GetDiscIndexByPath(path).has_value())
+  if (!HasDiscPath(path))
     return false;
 
   m_mainDiscPath = path;
@@ -130,7 +138,7 @@ bool CGameClientDiscModel::SetMainDiscByPath(const std::string& path)
 
 bool CGameClientDiscModel::SetLastDiscByPath(const std::string& path)
 {
-  if (!GetDiscIndexByPath(path).has_value())
+  if (!HasDiscPath(path))
     return false;
 
   m_lastDiscPath = path;
@@ -139,16 +147,23 @@ bool CGameClientDiscModel::SetLastDiscByPath(const std::string& path)
 
 bool CGameClientDiscModel::SetSelectedDiscByPath(const std::string& path)
 {
-  if (!GetDiscIndexByPath(path).has_value())
+  if (!HasDiscPath(path))
     return false;
 
+  m_selectedType = DiscSelectionType::Disc;
   m_selectedDiscPath = path;
   return true;
 }
 
 void CGameClientDiscModel::SetSelectedNoDisc()
 {
-  m_selectedDiscPath.reset();
+  m_selectedType = DiscSelectionType::NoDisc;
+  m_selectedDiscPath.clear();
+}
+
+bool CGameClientDiscModel::HasSelectedDisc() const
+{
+  return m_selectedType == DiscSelectionType::Disc;
 }
 
 std::string CGameClientDiscModel::GetMainDiscPath() const
@@ -163,12 +178,12 @@ std::string CGameClientDiscModel::GetLastDiscPath() const
 
 bool CGameClientDiscModel::IsSelectedNoDisc() const
 {
-  return !m_selectedDiscPath.has_value();
+  return m_selectedType == DiscSelectionType::NoDisc;
 }
 
 std::string CGameClientDiscModel::GetSelectedDiscPath() const
 {
-  return m_selectedDiscPath.value_or("");
+  return HasSelectedDisc() ? m_selectedDiscPath : "";
 }
 
 bool CGameClientDiscModel::UpdateCachedLabel(const std::string& path, const std::string& label)
@@ -241,5 +256,13 @@ std::optional<std::string> CGameClientDiscModel::GetReplacementPath(size_t remov
   if (removedIndex < m_discs.size())
     return m_discs[removedIndex].path;
 
-  return m_discs.back().path;
+  if (removedIndex > 0)
+    return m_discs[removedIndex - 1].path;
+
+  return std::nullopt;
+}
+
+bool CGameClientDiscModel::HasDiscPath(const std::string& path) const
+{
+  return GetDiscIndexByPath(path).has_value();
 }

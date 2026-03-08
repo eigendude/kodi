@@ -28,6 +28,20 @@ struct GameClientDiscEntry
 class CGameClientDiscModel
 {
 public:
+  // Selected disc state used by the frontend selector/workflow.
+  // "No disc" is explicit and distinct from any real disc entry.
+  enum class DiscSelectionType
+  {
+    Disc,
+    NoDisc,
+  };
+
+  // Model invariants:
+  // - m_mainDiscPath, m_lastDiscPath and m_selectedDiscPath (when selection type is Disc)
+  //   always refer to an existing entry in m_discs.
+  // - For removal replacement (selected/last): prefer same index if still valid, otherwise
+  //   previous valid index, otherwise no replacement.
+  // - Main disc replacement is separate: if removed, use first remaining disc or clear.
   size_t Size() const;
   bool Empty() const;
 
@@ -46,11 +60,12 @@ public:
   bool SetLastDiscByPath(const std::string& path);
   bool SetSelectedDiscByPath(const std::string& path);
   void SetSelectedNoDisc();
+  bool IsSelectedNoDisc() const;
+  bool HasSelectedDisc() const;
 
+  std::string GetSelectedDiscPath() const;
   std::string GetMainDiscPath() const;
   std::string GetLastDiscPath() const;
-  bool IsSelectedNoDisc() const;
-  std::string GetSelectedDiscPath() const;
 
   bool UpdateCachedLabel(const std::string& path, const std::string& label);
 
@@ -60,11 +75,13 @@ public:
 private:
   static std::string DeriveBasename(const std::string& path);
   std::optional<std::string> GetReplacementPath(size_t removedIndex) const;
+  bool HasDiscPath(const std::string& path) const;
 
   std::vector<GameClientDiscEntry> m_discs;
   std::string m_mainDiscPath;
   std::string m_lastDiscPath;
-  std::optional<std::string> m_selectedDiscPath;
+  DiscSelectionType m_selectedType{DiscSelectionType::NoDisc};
+  std::string m_selectedDiscPath;
 };
 
 } // namespace GAME
