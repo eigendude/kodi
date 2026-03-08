@@ -126,12 +126,14 @@ public:
 
   // Game subsystems (const)
   const CGameClientCheevos& Cheevos() const { return *m_subsystems.Cheevos; }
+  const CGameClientDiscs& Discs() const { return *m_subsystems.Discs; }
   const CGameClientInput& Input() const { return *m_subsystems.Input; }
   const CGameClientProperties& AddonProperties() const { return *m_subsystems.AddonProperties; }
   const CGameClientStreams& Streams() const { return *m_subsystems.Streams; }
 
   // Game subsystems (mutable)
   CGameClientCheevos& Cheevos() { return *m_subsystems.Cheevos; }
+  CGameClientDiscs& Discs() { return *m_subsystems.Discs; }
   CGameClientInput& Input() { return *m_subsystems.Input; }
   CGameClientProperties& AddonProperties() { return *m_subsystems.AddonProperties; }
   CGameClientStreams& Streams() { return *m_subsystems.Streams; }

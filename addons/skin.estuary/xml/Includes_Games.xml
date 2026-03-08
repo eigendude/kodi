@@ -615,4 +615,177 @@
 			-->
 		</control>
 	</include>
+	<include name="GameDialogDiscManager">
+		<control type="group">
+			<centertop>50%</centertop>
+			<centerleft>50%</centerleft>
+			<width>1480</width>
+			<height>630</height>
+			<include content="DialogBackgroundCommons">
+				<param name="width" value="1480" />
+				<param name="height" value="630" />
+				<param name="header_label" value="Disc swap" />
+			</include>
+			<control type="group">
+				<description>Content area</description>
+				<top>100</top>
+				<bottom>30</bottom>
+				<left>30</left>
+				<right>30</right>
+				<control type="group">
+					<description>Port list</description>
+					<width>1430</width>
+					<height>500</height>
+					<control type="image">
+						<description>Port list background</description>
+						<top>-20</top>
+						<bottom>-20</bottom>
+						<left>-20</left>
+						<right>-20</right>
+						<texture border="40">buttons/dialogbutton-nofo.png</texture>
+					</control>
+					<control type="list" id="3">
+						<description>Disc manager list</description>
+						<onright>9001</onright>
+						<onup>3</onup>
+						<ondown>3</ondown>
+						<pagecontrol>62</pagecontrol>
+						<scrolltime tween="sine">200</scrolltime>
+						<orientation>vertical</orientation>
+						<itemlayout width="1440" height="100">
+							<control type="group">
+								<include content="GameDiscManagerMenuItem"/>
+							</control>
+						</itemlayout>
+						<focusedlayout width="1440" height="100">
+							<control type="group">
+								<control type="image">
+									<top>-20</top>
+									<bottom>-20</bottom>
+									<left>-20</left>
+									<right>-20</right>
+									<texture border="40" colordiffuse="button_focus">buttons/dialogbutton-fo.png</texture>
+									<visible>Control.HasFocus(3)</visible>
+								</control>
+								<include content="GameDiscManagerMenuItem"/>
+							</control>
+						</focusedlayout>
+						<content>
+							<item>
+								<label>Inserted disc</label>
+								<label2>Metal Gear Solid [disc1of2][SLUS-00594]</label2>
+								<icon>DefaultAlbumCover.png</icon>
+								<property name="transparency"></property>
+							</item>
+							<item>
+								<label>Eject</label>
+								<label2>Tray closed</label2>
+								<icon>DefaultAddonsUpdates.png</icon>
+								<!-- Error dialog on error: "The disc can't be ejected right now." -->
+							</item>
+							<item>
+								<label>Add</label>
+								<icon>DefaultAddSource.png</icon>
+							</item>
+							<item>
+								<label>Remove</label>
+								<icon>DefaultAddonNone.png</icon>
+							</item>
+							<item>
+								<label>Resume game</label>
+								<icon>osd/fullscreen/buttons/play.png</icon>
+							</item>
+						</content>
+					</control>
+					<control type="list" id="108321">
+						<visible>false</visible>
+						<description>Disc menu</description>
+						<onup>108321</onup>
+						<ondown>108321</ondown>
+						<pagecontrol>108322</pagecontrol>
+						<scrolltime tween="sine">200</scrolltime>
+						<orientation>vertical</orientation>
+						<itemlayout width="1440" height="100">
+							<control type="group">
+								<include content="GameDiscManagerDiscItem"/>
+							</control>
+						</itemlayout>
+						<focusedlayout width="1440" height="100">
+							<control type="group">
+								<control type="image">
+									<top>-20</top>
+									<bottom>-20</bottom>
+									<left>-20</left>
+									<right>-20</right>
+									<texture border="40" colordiffuse="button_focus">buttons/dialogbutton-fo.png</texture>
+									<visible>Control.HasFocus(108321)</visible>
+								</control>
+								<include content="GameDiscManagerDiscItem"/>
+							</control>
+						</focusedlayout>
+						<content>
+							<item>
+								<label>Metal Gear Solid [disc1of6][SLUS-00594]</label>
+							</item>
+							<item>
+								<label>Metal Gear Solid [disc2of6][SLUS-00594]</label>
+							</item>
+							<item>
+								<label>Metal Gear Solid [disc3of6][SLUS-00594]</label>
+							</item>
+							<item>
+								<label>Metal Gear Solid [disc4of6][SLUS-00594]</label>
+							</item>
+							<item>
+								<label>Metal Gear Solid [disc5of6][SLUS-00594]</label>
+							</item>
+							<item>
+								<label>Metal Gear Solid [disc6of6][SLUS-00594]</label>
+							</item>
+						</content>
+					</control>
+					<control type="scrollbar" id="108322">
+						<visible>false</visible>
+						<right>0</right>
+						<width>12</width>
+						<orientation>vertical</orientation>
+					</control>
+				</control>
+			</control>
+		</control>
+	</include>
+	<include name="GameDiscManagerMenuItem">
+		<control type="image">
+			<width>100</width>
+			<height>100</height>
+			<texture>$INFO[ListItem.Icon]</texture>
+		</control>
+		<control type="label">
+			<top>20</top>
+			<left>105</left>
+			<label>$INFO[ListItem.Label]</label>
+			<font>font37</font>
+			<shadowcolor>text_shadow</shadowcolor>
+			<align>left</align>
+		</control>
+		<control type="label">
+			<top>20</top>
+			<left>400</left>
+			<right>40</right>
+			<label>$INFO[ListItem.Label2]</label>
+			<font>font37</font>
+			<shadowcolor>text_shadow</shadowcolor>
+			<align>right</align>
+		</control>
+	</include>
+	<include name="GameDiscManagerDiscItem">
+		<control type="label">
+			<top>20</top>
+			<left>20</left>
+			<label>$INFO[ListItem.Label]</label>
+			<font>font37</font>
+			<shadowcolor>text_shadow</shadowcolor>
+			<align>left</align>
+		</control>
+	</include>
 </includes>
