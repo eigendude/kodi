@@ -185,6 +185,11 @@ public:
    */
   bool HasGameAgent() const;
 
+  /*!
+   * \copydoc IPlayer::IsDiscEjected
+   */
+  bool IsDiscEjected() const;
+
 private:
   std::shared_ptr<const IPlayer> GetInternal() const;
   std::shared_ptr<IPlayer> GetInternal();
