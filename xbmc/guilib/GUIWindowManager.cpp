@@ -149,6 +149,7 @@
 #include "games/agents/windows/GUIAgentWindow.h"
 #include "games/controllers/windows/GUIControllerWindow.h"
 #include "games/dialogs/osd/DialogGameAdvancedSettings.h"
+#include "games/dialogs/osd/DialogGameDiscManager.h"
 #include "games/dialogs/osd/DialogGameOSD.h"
 #include "games/dialogs/osd/DialogGameSaves.h"
 #include "games/dialogs/osd/DialogGameStretchMode.h"
@@ -329,6 +330,7 @@ void CGUIWindowManager::CreateWindows()
   Add(new GAME::CDialogGameVideoRotation);
   Add(new GAME::CDialogInGameSaves);
   Add(new GAME::CGUIAgentWindow);
+  Add(new GAME::CDialogGameDiscManager);
   Add(new RETRO::CGameWindowFullScreen);
 }
 
