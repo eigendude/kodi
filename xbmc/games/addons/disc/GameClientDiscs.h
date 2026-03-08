@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <string>
+
 struct AddonInstance_Game;
 
 namespace KODI
@@ -25,7 +27,24 @@ class CGameClientDiscs
 public:
   CGameClientDiscs(CGameClient& gameClient, AddonInstance_Game& addonStruct);
 
-  // Game API functions
+  bool SupportsDiskControl() const;
+  bool SupportsDiskControlLabels() const;
+  bool SupportsInitialImage() const;
+
+  bool GetEjectState(bool& ejected);
+  bool SetEjectState(bool ejected);
+
+  bool GetImageIndex(unsigned int& index);
+  bool SetImageIndex(unsigned int index);
+  bool GetNumImages(unsigned int& count);
+
+  bool AddImageIndex();
+  bool ReplaceImageIndex(unsigned int index, const char* path);
+  bool RemoveImageIndex(unsigned int index);
+
+  bool SetInitialImage(unsigned int index, const std::string& path);
+  bool GetImagePath(unsigned int index, std::string& path);
+  bool GetImageLabel(unsigned int index, std::string& label);
 
 private:
   CGameClient& m_gameClient;

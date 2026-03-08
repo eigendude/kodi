@@ -19,3 +19,78 @@ CGameClientDiscs::CGameClientDiscs(CGameClient& gameClient, AddonInstance_Game& 
     m_struct(addonStruct)
 {
 }
+
+bool CGameClientDiscs::SupportsDiskControl() const
+{
+  return false;
+}
+
+bool CGameClientDiscs::SupportsDiskControlLabels() const
+{
+  return false;
+}
+
+bool CGameClientDiscs::SupportsInitialImage() const
+{
+  return false;
+}
+
+bool CGameClientDiscs::GetEjectState(bool& ejected)
+{
+  ejected = false;
+  return false;
+}
+
+bool CGameClientDiscs::SetEjectState(bool /*ejected*/)
+{
+  return false;
+}
+
+bool CGameClientDiscs::GetImageIndex(unsigned int& index)
+{
+  index = 0;
+  return false;
+}
+
+bool CGameClientDiscs::SetImageIndex(unsigned int /*index*/)
+{
+  return false;
+}
+
+bool CGameClientDiscs::GetNumImages(unsigned int& count)
+{
+  count = 0;
+  return false;
+}
+
+bool CGameClientDiscs::AddImageIndex()
+{
+  return false;
+}
+
+bool CGameClientDiscs::ReplaceImageIndex(unsigned int /*index*/, const char* /*path*/)
+{
+  return false;
+}
+
+bool CGameClientDiscs::RemoveImageIndex(unsigned int index)
+{
+  return ReplaceImageIndex(index, nullptr);
+}
+
+bool CGameClientDiscs::SetInitialImage(unsigned int /*index*/, const std::string& /*path*/)
+{
+  return false;
+}
+
+bool CGameClientDiscs::GetImagePath(unsigned int /*index*/, std::string& path)
+{
+  path.clear();
+  return false;
+}
+
+bool CGameClientDiscs::GetImageLabel(unsigned int /*index*/, std::string& label)
+{
+  label.clear();
+  return false;
+}
