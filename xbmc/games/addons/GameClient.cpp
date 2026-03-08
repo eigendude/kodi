@@ -23,6 +23,7 @@
 #include "filesystem/SpecialProtocol.h"
 #include "games/GameServices.h"
 #include "games/addons/cheevos/GameClientCheevos.h"
+#include "games/addons/disc/GameClientDiscs.h"
 #include "games/addons/input/GameClientInput.h"
 #include "games/addons/streams/GameClientStreams.h"
 #include "games/addons/streams/IGameClientStream.h"
@@ -60,6 +61,8 @@ using namespace GAME;
 
 namespace
 {
+constexpr const char* GAME_PROPERTY_SUPPORTS_DISC_CONTROL = "supports_disc_control";
+
 /*
  * \brief Convert to lower case and canonicalize with a leading "."
  */
@@ -104,6 +107,9 @@ CGameClient::CGameClient(const ADDON::AddonInfoPtr& addonInfo)
       addonInfo->Type(AddonType::GAMEDLL)->GetValue(GAME_PROPERTY_SUPPORTS_VFS).asBoolean();
   m_bSupportsStandalone =
       addonInfo->Type(AddonType::GAMEDLL)->GetValue(GAME_PROPERTY_SUPPORTS_STANDALONE).asBoolean();
+  m_supportsDiscControl = addonInfo->Type(AddonType::GAMEDLL)
+                              ->GetValue(GAME_PROPERTY_SUPPORTS_DISC_CONTROL)
+                              .asBoolean();
 
   std::tie(m_emulatorName, m_platforms) = ParseLibretroName(Name());
 }
@@ -240,6 +246,10 @@ bool CGameClient::OpenFile(const CFileItem& file,
 
   // Loading the game might require the stream subsystem to be initialized
   Streams().Initialize(streamManager);
+
+  // Initialize disc control subsystem, if supported
+  if (SupportsDiscControl())
+    Discs().Initialize();
 
   try
   {
@@ -607,6 +617,7 @@ void CGameClient::LogAddonProperties(void) const
   CLog::Log(LOGINFO, "GAME: Valid extensions:    {}", StringUtils::Join(m_extensions, " "));
   CLog::Log(LOGINFO, "GAME: Supports VFS:        {}", m_bSupportsVFS);
   CLog::Log(LOGINFO, "GAME: Supports standalone: {}", m_bSupportsStandalone);
+  CLog::Log(LOGINFO, "GAME: Disc control:        {}", m_supportsDiscControl);
   CLog::Log(LOGINFO, "GAME: ------------------------------------");
 }
 
