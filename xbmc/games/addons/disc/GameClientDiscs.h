@@ -11,6 +11,7 @@
 #include "games/addons/GameClientSubsystem.h"
 
 #include <atomic>
+#include <cstddef>
 #include <memory>
 #include <string>
 
@@ -48,7 +49,9 @@ public:
   bool SetEjected(bool ejected);
   bool AddDisc(const std::string& filePath);
   bool RemoveDisc(const std::string& filePath);
+  bool RemoveDiscByIndex(size_t index);
   bool InsertDisc(const std::string& filePath);
+  bool InsertDiscByIndex(size_t index);
 
 private:
   void PopulateModelFromCore(CGameClientDiscModel& model);

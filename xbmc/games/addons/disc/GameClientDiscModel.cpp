@@ -26,10 +26,10 @@ bool CGameClientDiscModel::Empty() const
 void CGameClientDiscModel::Clear()
 {
   m_discs.clear();
-  m_mainDiscPath.clear();
-  m_lastDiscPath.clear();
+  m_mainDiscIndex.reset();
+  m_lastDiscIndex.reset();
   m_selectedType = DiscSelectionType::NoDisc;
-  m_selectedDiscPath.clear();
+  m_selectedDiscIndex.reset();
 }
 
 bool CGameClientDiscModel::AddDisc(const std::string& path, const std::string& cachedLabel)
@@ -37,14 +37,30 @@ bool CGameClientDiscModel::AddDisc(const std::string& path, const std::string& c
   if (path.empty() || GetDiscIndexByPath(path).has_value())
     return false;
 
-  m_discs.push_back({path, DeriveBasename(path), cachedLabel});
+  m_discs.push_back(
+      {GameClientDiscEntry::DiscSlotType::Disc, path, DeriveBasename(path), cachedLabel});
 
   if (m_discs.size() == 1)
   {
-    m_mainDiscPath = path;
-    m_lastDiscPath = path;
+    m_mainDiscIndex = 0;
+    m_lastDiscIndex = 0;
     m_selectedType = DiscSelectionType::Disc;
-    m_selectedDiscPath = path;
+    m_selectedDiscIndex = 0;
+  }
+
+  return true;
+}
+
+bool CGameClientDiscModel::AddEmptySlot(const std::string& cachedLabel)
+{
+  m_discs.push_back({GameClientDiscEntry::DiscSlotType::EmptySlot, "", "", cachedLabel});
+
+  if (m_discs.size() == 1)
+  {
+    m_mainDiscIndex = 0;
+    m_lastDiscIndex = 0;
+    m_selectedType = DiscSelectionType::Disc;
+    m_selectedDiscIndex = 0;
   }
 
   return true;
@@ -52,6 +68,9 @@ bool CGameClientDiscModel::AddDisc(const std::string& path, const std::string& c
 
 bool CGameClientDiscModel::RemoveDiscByPath(const std::string& path)
 {
+  if (path.empty())
+    return false;
+
   const auto index = GetDiscIndexByPath(path);
   if (!index.has_value())
     return false;
@@ -64,35 +83,47 @@ bool CGameClientDiscModel::RemoveDiscByIndex(size_t index)
   if (index >= m_discs.size())
     return false;
 
-  const std::string removedPath = m_discs[index].path;
-  const bool wasMainDisc = (m_mainDiscPath == removedPath);
-  const bool wasLastDisc = (m_lastDiscPath == removedPath);
-  const bool wasSelectedDisc =
-      (m_selectedType == DiscSelectionType::Disc && m_selectedDiscPath == removedPath);
+  const auto AdjustIndex = [index](std::optional<size_t>& trackedIndex)
+  {
+    if (!trackedIndex.has_value())
+      return;
+
+    if (*trackedIndex == index)
+      trackedIndex.reset();
+    else if (*trackedIndex > index)
+      --(*trackedIndex);
+  };
+
+  const bool wasSelectedDisc = (m_selectedType == DiscSelectionType::Disc &&
+                                m_selectedDiscIndex.has_value() && *m_selectedDiscIndex == index);
+
+  const bool wasMainDisc = m_mainDiscIndex.has_value() && *m_mainDiscIndex == index;
+  const bool wasLastDisc = m_lastDiscIndex.has_value() && *m_lastDiscIndex == index;
 
   m_discs.erase(m_discs.begin() + index);
 
+  AdjustIndex(m_mainDiscIndex);
+  AdjustIndex(m_lastDiscIndex);
+  AdjustIndex(m_selectedDiscIndex);
+
   if (wasMainDisc)
-    m_mainDiscPath = m_discs.empty() ? "" : m_discs.front().path;
+    m_mainDiscIndex = m_discs.empty() ? std::nullopt : std::optional<size_t>{0};
 
   if (wasLastDisc)
-  {
-    const auto replacement = GetReplacementPath(index);
-    m_lastDiscPath = replacement.value_or("");
-  }
+    m_lastDiscIndex = GetReplacementIndex(index);
 
   if (wasSelectedDisc)
   {
-    const auto replacement = GetReplacementPath(index);
+    const auto replacement = GetReplacementIndex(index);
     if (replacement.has_value())
     {
       m_selectedType = DiscSelectionType::Disc;
-      m_selectedDiscPath = *replacement;
+      m_selectedDiscIndex = replacement;
     }
     else
     {
       m_selectedType = DiscSelectionType::NoDisc;
-      m_selectedDiscPath.clear();
+      m_selectedDiscIndex.reset();
     }
   }
 
@@ -101,9 +132,9 @@ bool CGameClientDiscModel::RemoveDiscByIndex(size_t index)
 
 std::optional<size_t> CGameClientDiscModel::GetDiscIndexByPath(const std::string& path) const
 {
-  const auto it =
-      std::find_if(m_discs.begin(), m_discs.end(),
-                   [&path](const GameClientDiscEntry& disc) { return disc.path == path; });
+  const auto it = std::find_if(
+      m_discs.begin(), m_discs.end(), [&path](const GameClientDiscEntry& disc)
+      { return disc.slotType == GameClientDiscEntry::DiscSlotType::Disc && disc.path == path; });
   if (it == m_discs.end())
     return std::nullopt;
 
@@ -113,9 +144,11 @@ std::optional<size_t> CGameClientDiscModel::GetDiscIndexByPath(const std::string
 std::optional<size_t> CGameClientDiscModel::GetDiscIndexByBasename(
     const std::string& basename) const
 {
-  const auto it =
-      std::find_if(m_discs.begin(), m_discs.end(), [&basename](const GameClientDiscEntry& disc)
-                   { return disc.basename == basename; });
+  const auto it = std::find_if(m_discs.begin(), m_discs.end(),
+                               [&basename](const GameClientDiscEntry& disc) {
+                                 return disc.slotType == GameClientDiscEntry::DiscSlotType::Disc &&
+                                        disc.basename == basename;
+                               });
   if (it == m_discs.end())
     return std::nullopt;
 
@@ -124,36 +157,95 @@ std::optional<size_t> CGameClientDiscModel::GetDiscIndexByBasename(
 
 bool CGameClientDiscModel::SetMainDiscByPath(const std::string& path)
 {
-  if (!HasDiscPath(path))
+  const auto index = GetDiscIndexByPath(path);
+  if (!index.has_value())
     return false;
 
-  m_mainDiscPath = path;
+  return SetMainDiscByIndex(*index);
+}
+
+bool CGameClientDiscModel::SetMainDiscByIndex(size_t index)
+{
+  if (index >= m_discs.size())
+    return false;
+
+  m_mainDiscIndex = index;
   return true;
 }
 
 bool CGameClientDiscModel::SetLastDiscByPath(const std::string& path)
 {
-  if (!HasDiscPath(path))
+  const auto index = GetDiscIndexByPath(path);
+  if (!index.has_value())
     return false;
 
-  m_lastDiscPath = path;
+  return SetLastDiscByIndex(*index);
+}
+
+bool CGameClientDiscModel::SetLastDiscByIndex(size_t index)
+{
+  if (index >= m_discs.size())
+    return false;
+
+  m_lastDiscIndex = index;
   return true;
 }
 
 bool CGameClientDiscModel::SetSelectedDiscByPath(const std::string& path)
 {
-  if (!HasDiscPath(path))
+  const auto index = GetDiscIndexByPath(path);
+  if (!index.has_value())
+    return false;
+
+  return SetSelectedDiscByIndex(*index);
+}
+
+bool CGameClientDiscModel::SetSelectedDiscByIndex(size_t index)
+{
+  if (index >= m_discs.size())
     return false;
 
   m_selectedType = DiscSelectionType::Disc;
-  m_selectedDiscPath = path;
+  m_selectedDiscIndex = index;
   return true;
 }
 
 void CGameClientDiscModel::SetSelectedNoDisc()
 {
   m_selectedType = DiscSelectionType::NoDisc;
-  m_selectedDiscPath.clear();
+  m_selectedDiscIndex.reset();
+}
+
+std::optional<size_t> CGameClientDiscModel::GetSelectedDiscIndex() const
+{
+  if (m_selectedType != DiscSelectionType::Disc)
+    return std::nullopt;
+
+  return m_selectedDiscIndex;
+}
+
+std::string CGameClientDiscModel::GetSelectedDiscPath() const
+{
+  if (!m_selectedDiscIndex.has_value() || *m_selectedDiscIndex >= m_discs.size())
+    return "";
+
+  return m_discs[*m_selectedDiscIndex].path;
+}
+
+std::string CGameClientDiscModel::GetMainDiscPath() const
+{
+  if (!m_mainDiscIndex.has_value() || *m_mainDiscIndex >= m_discs.size())
+    return "";
+
+  return m_discs[*m_mainDiscIndex].path;
+}
+
+std::string CGameClientDiscModel::GetLastDiscPath() const
+{
+  if (!m_lastDiscIndex.has_value() || *m_lastDiscIndex >= m_discs.size())
+    return "";
+
+  return m_discs[*m_lastDiscIndex].path;
 }
 
 bool CGameClientDiscModel::UpdateCachedLabel(const std::string& path, const std::string& label)
@@ -168,30 +260,50 @@ bool CGameClientDiscModel::UpdateCachedLabel(const std::string& path, const std:
 
 std::string CGameClientDiscModel::GetPathByIndex(size_t index) const
 {
-  if (index >= m_discs.size())
+  const GameClientDiscEntry* disc = GetDiscByIndex(index);
+  if (disc == nullptr)
     return "";
 
-  return m_discs[index].path;
+  return disc->path;
 }
 
 std::string CGameClientDiscModel::GetLabelByIndex(size_t index) const
 {
-  if (index >= m_discs.size())
+  const GameClientDiscEntry* disc = GetDiscByIndex(index);
+  if (disc == nullptr)
     return "";
 
-  const GameClientDiscEntry& disc = m_discs[index];
+  if (!disc->cachedLabel.empty())
+    return disc->cachedLabel;
 
-  if (!disc.cachedLabel.empty())
-    return disc.cachedLabel;
+  if (disc->slotType == GameClientDiscEntry::DiscSlotType::EmptySlot)
+    return "";
 
-  if (!disc.basename.empty())
-    return disc.basename;
+  if (!disc->basename.empty())
+    return disc->basename;
 
-  const std::string basename = DeriveBasename(disc.path);
+  const std::string basename = DeriveBasename(disc->path);
   if (!basename.empty())
     return basename;
 
-  return disc.path;
+  return disc->path;
+}
+
+bool CGameClientDiscModel::IsEmptySlotByIndex(size_t index) const
+{
+  const GameClientDiscEntry* disc = GetDiscByIndex(index);
+  if (disc == nullptr)
+    return false;
+
+  return disc->slotType == GameClientDiscEntry::DiscSlotType::EmptySlot;
+}
+
+const GameClientDiscEntry* CGameClientDiscModel::GetDiscByIndex(size_t index) const
+{
+  if (index >= m_discs.size())
+    return nullptr;
+
+  return &m_discs[index];
 }
 
 std::string CGameClientDiscModel::DeriveBasename(const std::string& path)
@@ -213,21 +325,16 @@ std::string CGameClientDiscModel::DeriveBasename(const std::string& path)
   return path.substr(pos + 1, end - pos);
 }
 
-std::optional<std::string> CGameClientDiscModel::GetReplacementPath(size_t removedIndex) const
+std::optional<size_t> CGameClientDiscModel::GetReplacementIndex(size_t removedIndex) const
 {
   if (m_discs.empty())
     return std::nullopt;
 
   if (removedIndex < m_discs.size())
-    return m_discs[removedIndex].path;
+    return removedIndex;
 
   if (removedIndex > 0)
-    return m_discs[removedIndex - 1].path;
+    return removedIndex - 1;
 
   return std::nullopt;
-}
-
-bool CGameClientDiscModel::HasDiscPath(const std::string& path) const
-{
-  return GetDiscIndexByPath(path).has_value();
 }

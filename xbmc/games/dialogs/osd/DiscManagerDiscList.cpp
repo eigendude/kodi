@@ -25,6 +25,7 @@
 #include "utils/Variant.h"
 
 #include <assert.h>
+#include <optional>
 
 using namespace KODI;
 using namespace GAME;
@@ -71,7 +72,9 @@ bool CDiscManagerDiscList::OnClick(const std::shared_ptr<CGUIListItem>& item)
   auto fileItem = std::dynamic_pointer_cast<CFileItem>(item);
   if (fileItem)
   {
-    m_discManager.OnDiscSelect(fileItem->GetPath());
+    const size_t discIndex = static_cast<size_t>(fileItem->GetProperty("discIndex").asInteger());
+    const bool isNoDisc = fileItem->GetProperty("isNoDisc").asBoolean();
+    m_discManager.OnDiscSelect(discIndex, isNoDisc);
     return true;
   }
 
@@ -84,11 +87,7 @@ void CDiscManagerDiscList::UpdateItems()
 
   const CGameClientDiscModel& discList = m_gameClient->Discs().GetDiscs();
 
-  std::string selectedPath;
-  if (discList.IsSelectedNoDisc())
-    selectedPath.clear();
-  else
-    selectedPath = discList.GetSelectedDiscPath();
+  const std::optional<size_t> selectedDiscIndex = discList.GetSelectedDiscIndex();
 
   for (size_t i = 0; i < discList.Size(); ++i)
   {
@@ -97,7 +96,9 @@ void CDiscManagerDiscList::UpdateItems()
 
     auto item = std::make_shared<CFileItem>(label);
     item->SetPath(path);
-    item->Select(path == selectedPath);
+    item->Select(selectedDiscIndex.has_value() && *selectedDiscIndex == i);
+    item->SetProperty("discIndex", static_cast<int64_t>(i));
+    item->SetProperty("isNoDisc", false);
     item->SetProperty("isplaying", false);
 
     m_items.emplace_back(std::move(item));
@@ -107,7 +108,9 @@ void CDiscManagerDiscList::UpdateItems()
   {
     auto noDiscItem = std::make_shared<CFileItem>("No disc");
     noDiscItem->SetPath("");
-    noDiscItem->Select(selectedPath.empty());
+    noDiscItem->Select(discList.IsSelectedNoDisc());
+    noDiscItem->SetProperty("discIndex", static_cast<int64_t>(discList.Size()));
+    noDiscItem->SetProperty("isNoDisc", true);
     noDiscItem->SetProperty("isplaying", false);
 
     m_items.emplace_back(std::move(noDiscItem));

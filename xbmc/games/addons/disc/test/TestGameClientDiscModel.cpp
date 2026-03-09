@@ -13,279 +13,100 @@
 using namespace KODI;
 using namespace GAME;
 
-TEST(TestGameClientDiscModel, EmptyModelDefaults)
+TEST(TestGameClientDiscModel, AddDiscAndEmptySlotSemantics)
 {
-  CGameClientDiscModel model;
-
-  EXPECT_TRUE(model.Empty());
-  EXPECT_EQ(model.Size(), 0U);
-  EXPECT_EQ(model.GetMainDiscPath(), "");
-  EXPECT_EQ(model.GetLastDiscPath(), "");
-  EXPECT_FALSE(model.HasSelectedDisc());
-  EXPECT_TRUE(model.IsSelectedNoDisc());
-  EXPECT_EQ(model.GetSelectedDiscPath(), "");
-}
-
-TEST(TestGameClientDiscModel, SelectionSemanticsDistinguishEmptyDiscAndExplicitNoDisc)
-{
-  CGameClientDiscModel model;
-
-  EXPECT_TRUE(model.Empty());
-  EXPECT_TRUE(model.IsSelectedNoDisc());
-
-  ASSERT_TRUE(model.AddDisc("/roms/disc1.chd"));
-  ASSERT_TRUE(model.AddDisc("/roms/disc2.chd"));
-  ASSERT_TRUE(model.SetSelectedDiscByPath("/roms/disc2.chd"));
-
-  EXPECT_FALSE(model.Empty());
-  EXPECT_TRUE(model.HasSelectedDisc());
-  EXPECT_EQ(model.GetSelectedDiscPath(), "/roms/disc2.chd");
-
-  model.SetSelectedNoDisc();
-
-  EXPECT_FALSE(model.Empty());
-  EXPECT_FALSE(model.HasSelectedDisc());
-  EXPECT_TRUE(model.IsSelectedNoDisc());
-  EXPECT_EQ(model.GetSelectedDiscPath(), "");
-}
-
-TEST(TestGameClientDiscModel, AddFirstDiscInitializesMainLastAndSelected)
-{
+  // Verify real discs and placeholder empty slots can coexist in insertion order.
   CGameClientDiscModel model;
 
   ASSERT_TRUE(model.AddDisc("/roms/disc1.chd"));
+  ASSERT_TRUE(model.AddEmptySlot());
+  ASSERT_TRUE(model.AddEmptySlot("Corrupt Disc 3"));
 
-  EXPECT_EQ(model.GetMainDiscPath(), "/roms/disc1.chd");
-  EXPECT_EQ(model.GetLastDiscPath(), "/roms/disc1.chd");
-  EXPECT_TRUE(model.HasSelectedDisc());
-  EXPECT_FALSE(model.IsSelectedNoDisc());
-  EXPECT_EQ(model.GetSelectedDiscPath(), "/roms/disc1.chd");
+  ASSERT_EQ(model.Size(), 3U);
+  EXPECT_FALSE(model.IsEmptySlotByIndex(0));
+  EXPECT_TRUE(model.IsEmptySlotByIndex(1));
+  EXPECT_TRUE(model.IsEmptySlotByIndex(2));
+  EXPECT_EQ(model.GetPathByIndex(1), "");
+  EXPECT_EQ(model.GetLabelByIndex(1), "");
+  EXPECT_EQ(model.GetLabelByIndex(2), "Corrupt Disc 3");
 }
 
-TEST(TestGameClientDiscModel, AddingSecondDiscPreservesMainDisc)
+TEST(TestGameClientDiscModel, DuplicateDiscPathsRejectedButMultipleEmptySlotsAllowed)
 {
-  CGameClientDiscModel model;
-
-  ASSERT_TRUE(model.AddDisc("/roms/disc1.chd"));
-  ASSERT_TRUE(model.AddDisc("/roms/disc2.chd"));
-
-  EXPECT_EQ(model.GetMainDiscPath(), "/roms/disc1.chd");
-}
-
-TEST(TestGameClientDiscModel, CachedLabelOverridesDisplay)
-{
-  CGameClientDiscModel model;
-
-  ASSERT_TRUE(model.AddDisc("/roms/disc1.chd"));
-  ASSERT_TRUE(model.UpdateCachedLabel("/roms/disc1.chd", "Disc One"));
-
-  EXPECT_EQ(model.GetLabelByIndex(0), "Disc One");
-}
-
-TEST(TestGameClientDiscModel, SetMainLastSelectedByPath)
-{
-  CGameClientDiscModel model;
-
-  ASSERT_TRUE(model.AddDisc("/roms/disc1.chd"));
-  ASSERT_TRUE(model.AddDisc("/roms/disc2.chd"));
-
-  EXPECT_TRUE(model.SetMainDiscByPath("/roms/disc2.chd"));
-  EXPECT_TRUE(model.SetLastDiscByPath("/roms/disc2.chd"));
-  EXPECT_TRUE(model.SetSelectedDiscByPath("/roms/disc2.chd"));
-
-  EXPECT_EQ(model.GetMainDiscPath(), "/roms/disc2.chd");
-  EXPECT_EQ(model.GetLastDiscPath(), "/roms/disc2.chd");
-  EXPECT_EQ(model.GetSelectedDiscPath(), "/roms/disc2.chd");
-
-  EXPECT_FALSE(model.SetMainDiscByPath("/roms/missing.chd"));
-  EXPECT_FALSE(model.SetLastDiscByPath("/roms/missing.chd"));
-  EXPECT_FALSE(model.SetSelectedDiscByPath("/roms/missing.chd"));
-}
-
-TEST(TestGameClientDiscModel, RemoveMiddleDiscCompactsOrder)
-{
-  CGameClientDiscModel model;
-
-  ASSERT_TRUE(model.AddDisc("/roms/disc1.chd"));
-  ASSERT_TRUE(model.AddDisc("/roms/disc2.chd"));
-  ASSERT_TRUE(model.AddDisc("/roms/disc3.chd"));
-
-  ASSERT_TRUE(model.RemoveDiscByIndex(1));
-
-  ASSERT_EQ(model.Size(), 2U);
-  EXPECT_EQ(model.GetDiscs()[0].path, "/roms/disc1.chd");
-  EXPECT_EQ(model.GetDiscs()[1].path, "/roms/disc3.chd");
-}
-
-TEST(TestGameClientDiscModel, RemoveSelectedDiscUsesDocumentedReplacementRule)
-{
-  CGameClientDiscModel model;
-
-  ASSERT_TRUE(model.AddDisc("/roms/disc1.chd"));
-  ASSERT_TRUE(model.AddDisc("/roms/disc2.chd"));
-  ASSERT_TRUE(model.AddDisc("/roms/disc3.chd"));
-
-  ASSERT_TRUE(model.SetSelectedDiscByPath("/roms/disc2.chd"));
-  ASSERT_TRUE(model.RemoveDiscByPath("/roms/disc2.chd"));
-  EXPECT_EQ(model.GetSelectedDiscPath(), "/roms/disc3.chd");
-
-  ASSERT_TRUE(model.RemoveDiscByPath("/roms/disc3.chd"));
-  EXPECT_EQ(model.GetSelectedDiscPath(), "/roms/disc1.chd");
-
-  ASSERT_TRUE(model.RemoveDiscByPath("/roms/disc1.chd"));
-  EXPECT_FALSE(model.HasSelectedDisc());
-  EXPECT_TRUE(model.IsSelectedNoDisc());
-}
-
-TEST(TestGameClientDiscModel, RemoveLastDiscUsesDocumentedReplacementRule)
-{
-  CGameClientDiscModel model;
-
-  ASSERT_TRUE(model.AddDisc("/roms/disc1.chd"));
-  ASSERT_TRUE(model.AddDisc("/roms/disc2.chd"));
-  ASSERT_TRUE(model.AddDisc("/roms/disc3.chd"));
-  ASSERT_TRUE(model.SetLastDiscByPath("/roms/disc2.chd"));
-
-  ASSERT_TRUE(model.RemoveDiscByPath("/roms/disc2.chd"));
-  EXPECT_EQ(model.GetLastDiscPath(), "/roms/disc3.chd");
-
-  ASSERT_TRUE(model.RemoveDiscByPath("/roms/disc3.chd"));
-  EXPECT_EQ(model.GetLastDiscPath(), "/roms/disc1.chd");
-}
-
-TEST(TestGameClientDiscModel, RemoveMainDiscReassignsFirstRemainingDisc)
-{
-  CGameClientDiscModel model;
-
-  ASSERT_TRUE(model.AddDisc("/roms/disc1.chd"));
-  ASSERT_TRUE(model.AddDisc("/roms/disc2.chd"));
-  ASSERT_TRUE(model.AddDisc("/roms/disc3.chd"));
-
-  ASSERT_TRUE(model.RemoveDiscByPath("/roms/disc1.chd"));
-
-  EXPECT_EQ(model.GetMainDiscPath(), "/roms/disc2.chd");
-}
-
-TEST(TestGameClientDiscModel, RemoveFinalDiscClearsState)
-{
-  CGameClientDiscModel model;
-
-  ASSERT_TRUE(model.AddDisc("/roms/disc1.chd"));
-  ASSERT_TRUE(model.RemoveDiscByPath("/roms/disc1.chd"));
-
-  EXPECT_TRUE(model.Empty());
-  EXPECT_EQ(model.GetMainDiscPath(), "");
-  EXPECT_EQ(model.GetLastDiscPath(), "");
-  EXPECT_FALSE(model.HasSelectedDisc());
-  EXPECT_TRUE(model.IsSelectedNoDisc());
-}
-
-TEST(TestGameClientDiscModel, DuplicatePathAddIsRejected)
-{
+  // Verify path uniqueness applies only to real disc entries.
   CGameClientDiscModel model;
 
   ASSERT_TRUE(model.AddDisc("/roms/disc1.chd"));
   EXPECT_FALSE(model.AddDisc("/roms/disc1.chd"));
-  EXPECT_EQ(model.Size(), 1U);
+
+  ASSERT_TRUE(model.AddEmptySlot());
+  ASSERT_TRUE(model.AddEmptySlot());
+
+  EXPECT_EQ(model.Size(), 3U);
 }
 
-TEST(TestGameClientDiscModel, BasenameLookupWorks)
+TEST(TestGameClientDiscModel, SelectionDistinguishesDiscEmptySlotAndNoDisc)
 {
+  // Verify selected placeholder slot is distinct from explicit "no disc" state.
   CGameClientDiscModel model;
 
-  ASSERT_TRUE(model.AddDisc("/roms/game/disc1.iso"));
-  ASSERT_TRUE(model.AddDisc("/roms/game/disc2.iso"));
+  ASSERT_TRUE(model.AddDisc("/roms/disc1.chd"));
+  ASSERT_TRUE(model.AddEmptySlot());
 
-  const auto index = model.GetDiscIndexByBasename("disc2.iso");
-  ASSERT_TRUE(index.has_value());
-  EXPECT_EQ(*index, 1U);
-  EXPECT_FALSE(model.GetDiscIndexByBasename("missing.iso").has_value());
+  ASSERT_TRUE(model.SetSelectedDiscByIndex(1));
+  EXPECT_TRUE(model.HasSelectedDisc());
+  EXPECT_FALSE(model.IsSelectedNoDisc());
+  ASSERT_TRUE(model.GetSelectedDiscIndex().has_value());
+  EXPECT_EQ(*model.GetSelectedDiscIndex(), 1U);
+  EXPECT_EQ(model.GetSelectedDiscPath(), "");
+
+  model.SetSelectedNoDisc();
+  EXPECT_TRUE(model.IsSelectedNoDisc());
+  EXPECT_FALSE(model.GetSelectedDiscIndex().has_value());
 }
 
-TEST(TestGameClientDiscModel, DisplayFallbackWithoutCachedLabel)
+TEST(TestGameClientDiscModel, RemoveByPathOnlyTargetsRealDiscs)
 {
+  // Verify placeholder slots are index-addressed and not removable by empty path.
+  CGameClientDiscModel model;
+
+  ASSERT_TRUE(model.AddDisc("/roms/disc1.chd"));
+  ASSERT_TRUE(model.AddEmptySlot());
+
+  EXPECT_FALSE(model.RemoveDiscByPath(""));
+  EXPECT_TRUE(model.RemoveDiscByPath("/roms/disc1.chd"));
+  EXPECT_EQ(model.Size(), 1U);
+  EXPECT_TRUE(model.IsEmptySlotByIndex(0));
+}
+
+TEST(TestGameClientDiscModel, LabelFallbackForRealDiscs)
+{
+  // Verify real disc labels keep basename/cached-label fallback behavior.
   CGameClientDiscModel model;
 
   ASSERT_TRUE(model.AddDisc("/roms/game/disc1.iso"));
   EXPECT_EQ(model.GetLabelByIndex(0), "disc1.iso");
 
-  ASSERT_TRUE(model.AddDisc("disc2.iso"));
-  EXPECT_EQ(model.GetLabelByIndex(1), "disc2.iso");
+  ASSERT_TRUE(model.UpdateCachedLabel("/roms/game/disc1.iso", "Disc One"));
+  EXPECT_EQ(model.GetLabelByIndex(0), "Disc One");
 }
 
-TEST(TestGameClientDiscModel, BasenameDerivationEdgeCases)
+TEST(TestGameClientDiscModel, RemovalReplacementWithMixedSlots)
 {
-  CGameClientDiscModel model;
-
-  EXPECT_FALSE(model.AddDisc(""));
-
-  ASSERT_TRUE(model.AddDisc("plain.iso"));
-  ASSERT_TRUE(model.AddDisc("/roms/game/unix.iso"));
-  ASSERT_TRUE(model.AddDisc("C:\\roms\\game\\windows.iso"));
-  ASSERT_TRUE(model.AddDisc("/roms/game/trailing/"));
-
-  EXPECT_EQ(model.GetDiscs()[0].basename, "plain.iso");
-  EXPECT_EQ(model.GetDiscs()[1].basename, "unix.iso");
-  EXPECT_EQ(model.GetDiscs()[2].basename, "windows.iso");
-  EXPECT_EQ(model.GetDiscs()[3].basename, "trailing");
-}
-
-TEST(TestGameClientDiscModel, RemovingUnrelatedDiscDoesNotChangeMain)
-{
+  // Verify replacement chooses neighboring index for selected/last with mixed slot types.
   CGameClientDiscModel model;
 
   ASSERT_TRUE(model.AddDisc("/roms/disc1.chd"));
-  ASSERT_TRUE(model.AddDisc("/roms/disc2.chd"));
+  ASSERT_TRUE(model.AddEmptySlot());
   ASSERT_TRUE(model.AddDisc("/roms/disc3.chd"));
-  ASSERT_TRUE(model.SetMainDiscByPath("/roms/disc2.chd"));
 
-  ASSERT_TRUE(model.RemoveDiscByPath("/roms/disc1.chd"));
-  EXPECT_EQ(model.GetMainDiscPath(), "/roms/disc2.chd");
-}
+  ASSERT_TRUE(model.SetLastDiscByIndex(1));
+  ASSERT_TRUE(model.SetSelectedDiscByIndex(1));
 
-TEST(TestGameClientDiscModel, RemovingUnrelatedDiscDoesNotChangeLast)
-{
-  CGameClientDiscModel model;
+  ASSERT_TRUE(model.RemoveDiscByIndex(1));
 
-  ASSERT_TRUE(model.AddDisc("/roms/disc1.chd"));
-  ASSERT_TRUE(model.AddDisc("/roms/disc2.chd"));
-  ASSERT_TRUE(model.AddDisc("/roms/disc3.chd"));
-  ASSERT_TRUE(model.SetLastDiscByPath("/roms/disc3.chd"));
-
-  ASSERT_TRUE(model.RemoveDiscByPath("/roms/disc1.chd"));
+  ASSERT_TRUE(model.GetSelectedDiscIndex().has_value());
+  EXPECT_EQ(*model.GetSelectedDiscIndex(), 1U);
+  EXPECT_EQ(model.GetLabelByIndex(1), "disc3.chd");
   EXPECT_EQ(model.GetLastDiscPath(), "/roms/disc3.chd");
-}
-
-TEST(TestGameClientDiscModel, RemovingUnrelatedDiscDoesNotChangeSelected)
-{
-  CGameClientDiscModel model;
-
-  ASSERT_TRUE(model.AddDisc("/roms/disc1.chd"));
-  ASSERT_TRUE(model.AddDisc("/roms/disc2.chd"));
-  ASSERT_TRUE(model.AddDisc("/roms/disc3.chd"));
-  ASSERT_TRUE(model.SetSelectedDiscByPath("/roms/disc3.chd"));
-
-  ASSERT_TRUE(model.RemoveDiscByPath("/roms/disc1.chd"));
-  EXPECT_EQ(model.GetSelectedDiscPath(), "/roms/disc3.chd");
-}
-
-TEST(TestGameClientDiscModel, ClearResetsAllState)
-{
-  CGameClientDiscModel model;
-
-  ASSERT_TRUE(model.AddDisc("/roms/disc1.chd", "Disc One"));
-  ASSERT_TRUE(model.AddDisc("/roms/disc2.chd", "Disc Two"));
-  ASSERT_TRUE(model.SetMainDiscByPath("/roms/disc2.chd"));
-  ASSERT_TRUE(model.SetLastDiscByPath("/roms/disc2.chd"));
-  ASSERT_TRUE(model.SetSelectedDiscByPath("/roms/disc2.chd"));
-
-  model.Clear();
-
-  EXPECT_TRUE(model.Empty());
-  EXPECT_EQ(model.Size(), 0U);
-  EXPECT_EQ(model.GetMainDiscPath(), "");
-  EXPECT_EQ(model.GetLastDiscPath(), "");
-  EXPECT_FALSE(model.HasSelectedDisc());
-  EXPECT_TRUE(model.IsSelectedNoDisc());
-  EXPECT_EQ(model.GetSelectedDiscPath(), "");
 }

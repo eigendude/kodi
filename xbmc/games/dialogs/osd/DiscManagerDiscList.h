@@ -50,7 +50,7 @@ private:
 
   // GUI parameters
   std::vector<std::shared_ptr<CFileItem>> m_items;
-  bool m_dirty;
+  bool m_dirty{false};
 };
 } // namespace GAME
 } // namespace KODI
