@@ -26,6 +26,8 @@
 #include "input/actions/Action.h"
 #include "input/actions/ActionIDs.h"
 
+#include <optional>
+
 using namespace KODI;
 using namespace GAME;
 
@@ -109,8 +111,8 @@ bool CDialogGameDiscManager::OnAction(const CAction& action)
   return CGUIDialog::OnAction(action);
 }
 
-void CDialogGameDiscManager::SelectDiscToInsert(const std::string& selectedPath,
-                                                std::function<void(std::string)> callback)
+void CDialogGameDiscManager::SelectDiscToInsert(std::optional<size_t> selectedIndex,
+                                                std::function<void(std::optional<size_t>)> callback)
 {
   m_insertCallback = callback;
 
@@ -119,18 +121,18 @@ void CDialogGameDiscManager::SelectDiscToInsert(const std::string& selectedPath,
 
   // Find the item index to focus/select. Empty path means "No disc", which
   // is the last item in the insert list.
-  const unsigned int selectedIndex = GetSelectedIndex(selectedPath);
+  const unsigned int selectedItemIndex = GetSelectedIndex(selectedIndex);
 
   // Select the current disc
   CGUIMessage msgSelectDisc(GUI_MSG_ITEM_SELECT, GetID(), CONTROL_DISC_MANAGER_DISC_LIST,
-                            static_cast<int64_t>(selectedIndex));
+                            static_cast<int64_t>(selectedItemIndex));
   OnMessage(msgSelectDisc);
 
   // Show the disc list
   ShowControl(CONTROL_DISC_MANAGER_DISC_LIST);
 }
 
-void CDialogGameDiscManager::SelectDiscToRemove(std::function<void(std::string)> callback)
+void CDialogGameDiscManager::SelectDiscToRemove(std::function<void(size_t)> callback)
 {
   m_removeCallback = callback;
 
@@ -145,12 +147,12 @@ void CDialogGameDiscManager::SelectDiscToRemove(std::function<void(std::string)>
   ShowControl(CONTROL_DISC_MANAGER_DISC_LIST);
 }
 
-void CDialogGameDiscManager::OnDiscSelect(const std::string& filePath)
+void CDialogGameDiscManager::OnDiscSelect(size_t discIndex, bool isNoDisc)
 {
   if (m_insertCallback)
-    m_insertCallback(filePath);
-  else if (m_removeCallback)
-    m_removeCallback(filePath);
+    m_insertCallback(isNoDisc ? std::nullopt : std::optional<size_t>{discIndex});
+  else if (m_removeCallback && !isNoDisc)
+    m_removeCallback(discIndex);
 
   // Return to the main menu
   ShowControl(CONTROL_DISC_MANAGER_MENU);
@@ -197,27 +199,19 @@ void CDialogGameDiscManager::ResetDiscList()
   }
 }
 
-unsigned int CDialogGameDiscManager::GetSelectedIndex(const std::string& selectedPath)
+unsigned int CDialogGameDiscManager::GetSelectedIndex(std::optional<size_t> selectedIndex)
 {
-  unsigned int selectedIndex = 0;
-
   if (m_gameClient)
   {
     const CGameClientDiscModel& discList = m_gameClient->Discs().GetDiscs();
 
-    if (selectedPath.empty())
-    {
-      selectedIndex = static_cast<int>(discList.Size());
-    }
-    else
-    {
-      const auto discIndex = discList.GetDiscIndexByPath(selectedPath);
-      if (discIndex.has_value())
-        selectedIndex = static_cast<unsigned int>(*discIndex);
-    }
+    if (selectedIndex.has_value() && *selectedIndex < discList.Size())
+      return static_cast<unsigned int>(*selectedIndex);
+
+    return static_cast<unsigned int>(discList.Size());
   }
 
-  return selectedIndex;
+  return 0;
 }
 
 void CDialogGameDiscManager::ShowControl(int controlId)

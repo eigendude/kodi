@@ -12,7 +12,6 @@
 #include "games/addons/GameClient.h"
 #include "games/addons/disc/GameClientDiscModel.h"
 #include "games/addons/disc/GameClientDiscTransport.h"
-#include "utils/StringUtils.h"
 
 using namespace KODI;
 using namespace GAME;
@@ -104,12 +103,20 @@ bool CGameClientDiscs::RemoveDisc(const std::string& filePath)
   if (!discIndex.has_value())
     return true;
 
+  return RemoveDiscByIndex(*discIndex);
+}
+
+bool CGameClientDiscs::RemoveDiscByIndex(size_t index)
+{
   // Libretro only allows mutating the image list while ejected
   if (!m_isEjected)
     return true;
 
+  if (index >= m_discModel->Size())
+    return true;
+
   // Remove from the core by current index
-  if (!m_transport->RemoveImageIndex(static_cast<unsigned int>(*discIndex)))
+  if (!m_transport->RemoveImageIndex(static_cast<unsigned int>(index)))
     return false;
 
   RefreshDiscState();
@@ -122,18 +129,33 @@ bool CGameClientDiscs::InsertDisc(const std::string& filePath)
   if (!m_isEjected)
     return true;
 
-  unsigned int imageIndex = m_transport->GetImageCount(); // "No disc" sentinel
-
-  if (!filePath.empty())
+  if (filePath.empty())
   {
-    const auto discIndex = m_discModel->GetDiscIndexByPath(filePath);
-    if (!discIndex.has_value())
-      return true;
+    const unsigned int imageIndex = m_transport->GetImageCount(); // "No disc" sentinel
+    if (!m_transport->SetImageIndex(imageIndex))
+      return false;
 
-    imageIndex = static_cast<unsigned int>(*discIndex);
+    RefreshDiscState();
+    return true;
   }
 
-  if (!m_transport->SetImageIndex(imageIndex))
+  const auto discIndex = m_discModel->GetDiscIndexByPath(filePath);
+  if (!discIndex.has_value())
+    return true;
+
+  return InsertDiscByIndex(*discIndex);
+}
+
+bool CGameClientDiscs::InsertDiscByIndex(size_t index)
+{
+  // Libretro only allows mutating the image list while ejected
+  if (!m_isEjected)
+    return true;
+
+  if (index >= m_discModel->Size())
+    return true;
+
+  if (!m_transport->SetImageIndex(static_cast<unsigned int>(index)))
     return false;
 
   RefreshDiscState();
@@ -148,33 +170,30 @@ void CGameClientDiscs::PopulateModelFromCore(CGameClientDiscModel& model)
 
   for (unsigned int i = 0; i < imageCount; ++i)
   {
-    std::string imagePath = m_transport->GetImagePath(i);
-    std::string imageLabel = m_transport->GetImageLabel(i);
+    const std::string imagePath = m_transport->GetImagePath(i);
+    const std::string imageLabel = m_transport->GetImageLabel(i);
 
-    //! @todo Better handling of bad paths
     if (imagePath.empty())
-      imagePath = StringUtils::Format("disc://{}", i);
-
-    model.AddDisc(imagePath, imageLabel);
+      model.AddEmptySlot(imageLabel);
+    else
+      model.AddDisc(imagePath, imageLabel);
   }
 
   if (model.Empty())
     return;
 
-  const std::string& firstDiscPath = model.GetDiscs().front().path;
-  model.SetMainDiscByPath(firstDiscPath);
+  model.SetMainDiscByIndex(0);
 
   const unsigned int imageIndex = m_transport->GetImageIndex();
 
   if (imageIndex < imageCount)
   {
-    const std::string insertedDiscPath = model.GetDiscs()[imageIndex].path;
-    model.SetLastDiscByPath(insertedDiscPath);
-    model.SetSelectedDiscByPath(insertedDiscPath);
+    model.SetLastDiscByIndex(imageIndex);
+    model.SetSelectedDiscByIndex(imageIndex);
   }
   else
   {
-    model.SetLastDiscByPath(firstDiscPath);
+    model.SetLastDiscByIndex(0);
     model.SetSelectedNoDisc();
   }
 }

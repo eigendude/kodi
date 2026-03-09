@@ -11,8 +11,10 @@
 #include "games/GameTypes.h"
 #include "guilib/GUIDialog.h"
 
+#include <cstddef>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 
 class CGUIBaseContainer;
@@ -34,10 +36,10 @@ public:
   bool OnAction(const CAction& action) override;
 
   // Disc menu interface
-  void SelectDiscToInsert(const std::string& selectedPath,
-                          std::function<void(std::string)> callback);
-  void SelectDiscToRemove(std::function<void(std::string)> callback);
-  void OnDiscSelect(const std::string& filePath);
+  void SelectDiscToInsert(std::optional<size_t> selectedIndex,
+                          std::function<void(std::optional<size_t>)> callback);
+  void SelectDiscToRemove(std::function<void(size_t)> callback);
+  void OnDiscSelect(size_t discIndex, bool isNoDisc);
   bool AllowSelectNoDisc() const;
 
 protected:
@@ -49,7 +51,7 @@ private:
   // Helper functions
   void InitializeDialog();
   void ResetDiscList();
-  unsigned int GetSelectedIndex(const std::string& selectedPath);
+  unsigned int GetSelectedIndex(std::optional<size_t> selectedIndex);
   void ShowControl(int controlId);
 
   CGUIBaseContainer* GetMenu();
@@ -59,8 +61,8 @@ private:
   GameClientPtr m_gameClient;
 
   // Dialog parameters
-  std::function<void(std::string)> m_insertCallback;
-  std::function<void(std::string)> m_removeCallback;
+  std::function<void(std::optional<size_t>)> m_insertCallback;
+  std::function<void(size_t)> m_removeCallback;
 };
 } // namespace GAME
 } // namespace KODI

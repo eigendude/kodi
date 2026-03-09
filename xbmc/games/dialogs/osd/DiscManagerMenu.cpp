@@ -27,6 +27,8 @@
 
 #include <assert.h>
 
+#include <optional>
+
 using namespace KODI;
 using namespace GAME;
 
@@ -134,8 +136,7 @@ void CDiscManagerMenu::UpdateItems()
   }
   else
   {
-    const std::string selectedPath = discList.GetSelectedDiscPath();
-    const auto selectedIndex = discList.GetDiscIndexByPath(selectedPath);
+    const auto selectedIndex = discList.GetSelectedDiscIndex();
     if (selectedIndex.has_value())
       insertedDiscLabel = discList.GetLabelByIndex(*selectedIndex);
   }
@@ -165,18 +166,24 @@ void CDiscManagerMenu::OnSelectDisc()
 
   // Get currently-selected disc
   const CGameClientDiscModel& discList = discs.GetDiscs();
-  const std::string selectedPath =
-      discList.IsSelectedNoDisc() ? std::string{} : discList.GetSelectedDiscPath();
+  const std::optional<size_t> selectedIndex = discList.GetSelectedDiscIndex();
 
-  m_discManager.SelectDiscToInsert(selectedPath,
-                                   [this, selectedPath](const std::string& filePath)
+  m_discManager.SelectDiscToInsert(selectedIndex,
+                                   [this, selectedIndex](std::optional<size_t> discIndex)
                                    {
-                                     // Do nothing if the path didn't change
-                                     if (selectedPath == filePath)
+                                     // Do nothing if the selection didn't change
+                                     if (selectedIndex == discIndex)
                                        return;
 
-                                     if (!m_gameClient->Discs().InsertDisc(filePath))
+                                     if (discIndex.has_value())
+                                     {
+                                       if (!m_gameClient->Discs().InsertDiscByIndex(*discIndex))
+                                         ShowInternalError();
+                                     }
+                                     else if (!m_gameClient->Discs().InsertDisc(""))
+                                     {
                                        ShowInternalError();
+                                     }
 
                                      UpdateItems();
                                    });
@@ -245,13 +252,10 @@ void CDiscManagerMenu::OnRemove()
     return;
 
   m_discManager.SelectDiscToRemove(
-      [this](const std::string& filePath)
+      [this](size_t discIndex)
       {
-        if (!filePath.empty())
-        {
-          if (!m_gameClient->Discs().RemoveDisc(filePath))
-            ShowInternalError();
-        }
+        if (!m_gameClient->Discs().RemoveDiscByIndex(discIndex))
+          ShowInternalError();
       });
 }
 

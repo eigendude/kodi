@@ -20,6 +20,13 @@ namespace GAME
 
 struct GameClientDiscEntry
 {
+  enum class DiscSlotType
+  {
+    Disc,
+    EmptySlot,
+  };
+
+  DiscSlotType slotType{DiscSlotType::Disc};
   std::string path;
   std::string basename;
   std::string cachedLabel;
@@ -37,7 +44,7 @@ public:
   };
 
   // Model invariants:
-  // - m_mainDiscPath, m_lastDiscPath and m_selectedDiscPath (when selection type is Disc)
+  // - m_mainDiscIndex, m_lastDiscIndex and m_selectedDiscIndex (when selection type is Disc)
   //   always refer to an existing entry in m_discs.
   // - For removal replacement (selected/last): prefer same index if still valid, otherwise
   //   previous valid index, otherwise no replacement.
@@ -48,6 +55,7 @@ public:
   void Clear();
 
   bool AddDisc(const std::string& path, const std::string& cachedLabel = "");
+  bool AddEmptySlot(const std::string& cachedLabel = "");
   bool RemoveDiscByPath(const std::string& path);
   bool RemoveDiscByIndex(size_t index);
 
@@ -57,31 +65,37 @@ public:
   std::optional<size_t> GetDiscIndexByBasename(const std::string& basename) const;
 
   bool SetMainDiscByPath(const std::string& path);
+  bool SetMainDiscByIndex(size_t index);
   bool SetLastDiscByPath(const std::string& path);
+  bool SetLastDiscByIndex(size_t index);
   bool SetSelectedDiscByPath(const std::string& path);
+  bool SetSelectedDiscByIndex(size_t index);
   void SetSelectedNoDisc();
   bool IsSelectedNoDisc() const { return m_selectedType == DiscSelectionType::NoDisc; }
   bool HasSelectedDisc() const { return m_selectedType == DiscSelectionType::Disc; }
+  std::optional<size_t> GetSelectedDiscIndex() const;
 
-  const std::string& GetSelectedDiscPath() const { return m_selectedDiscPath; }
-  const std::string& GetMainDiscPath() const { return m_mainDiscPath; }
-  const std::string& GetLastDiscPath() const { return m_lastDiscPath; }
+  std::string GetSelectedDiscPath() const;
+  std::string GetMainDiscPath() const;
+  std::string GetLastDiscPath() const;
 
   bool UpdateCachedLabel(const std::string& path, const std::string& label);
 
   std::string GetPathByIndex(size_t index) const;
   std::string GetLabelByIndex(size_t index) const;
 
+  bool IsEmptySlotByIndex(size_t index) const;
+  const GameClientDiscEntry* GetDiscByIndex(size_t index) const;
+
 private:
   static std::string DeriveBasename(const std::string& path);
-  std::optional<std::string> GetReplacementPath(size_t removedIndex) const;
-  bool HasDiscPath(const std::string& path) const;
+  std::optional<size_t> GetReplacementIndex(size_t removedIndex) const;
 
   std::vector<GameClientDiscEntry> m_discs;
-  std::string m_mainDiscPath;
-  std::string m_lastDiscPath;
+  std::optional<size_t> m_mainDiscIndex;
+  std::optional<size_t> m_lastDiscIndex;
   DiscSelectionType m_selectedType{DiscSelectionType::NoDisc};
-  std::string m_selectedDiscPath;
+  std::optional<size_t> m_selectedDiscIndex;
 };
 
 } // namespace GAME
