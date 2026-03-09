@@ -24,6 +24,7 @@ namespace GAME
 
 class CGameClient;
 class CGameClientDiscModel;
+class CGameClientDiscTransport;
 
 /*!
  * \ingroup games
@@ -50,23 +51,12 @@ public:
   bool QueueInsertDisc(const std::string& filePath);
 
 private:
-  // Game client functions
-  bool GetEjectState();
-  bool SetEjectState(bool ejected);
-  unsigned int GetImageIndex();
-  bool SetImageIndex(unsigned int imageIndex);
-  unsigned int GetImageCount();
-  bool AddImageIndex();
-  bool ReplaceImageIndex(unsigned int imageIndex, const std::string& filePath);
-  bool RemoveImageIndex(unsigned int imageIndex);
-  bool SetInitialImage(unsigned int imageIndex, const std::string& filePath);
-  std::string GetImagePath(unsigned int imageIndex);
-  std::string GetImageLabel(unsigned int imageIndex);
-
-private:
   void PopulateModelFromCore(CGameClientDiscModel& model);
   bool SyncDiscsAfterEject();
   bool BuildCoreDiscModel(CGameClientDiscModel& coreModel);
+
+  // Add-on parameters
+  std::unique_ptr<CGameClientDiscTransport> m_transport;
 
   // Game parameters
   std::unique_ptr<CGameClientDiscModel> m_discModel;
