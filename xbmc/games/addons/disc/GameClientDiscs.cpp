@@ -62,7 +62,7 @@ bool CGameClientDiscs::SetEjected(bool ejected)
     return false;
 
   m_isEjected = m_transport->GetEjectState();
-  
+
   if (m_isEjected)
   {
     // Tray is now actually open, so queued frontend edits can be pushed
@@ -74,7 +74,7 @@ bool CGameClientDiscs::SetEjected(bool ejected)
     // Refresh after closing too
     RefreshDiscState(true);
   }
-  
+
   return true;
 }
 

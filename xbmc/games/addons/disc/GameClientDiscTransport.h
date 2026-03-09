@@ -27,8 +27,8 @@ class CGameClientDiscTransport
 {
 public:
   CGameClientDiscTransport(CGameClient& gameClient,
-                   AddonInstance_Game& addonStruct,
-                   CCriticalSection& clientAccess);
+                           AddonInstance_Game& addonStruct,
+                           CCriticalSection& clientAccess);
 
   // Game client functions
   bool GetEjectState();

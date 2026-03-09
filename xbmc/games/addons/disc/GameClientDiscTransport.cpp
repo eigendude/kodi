@@ -17,11 +17,11 @@ using namespace KODI;
 using namespace GAME;
 
 CGameClientDiscTransport::CGameClientDiscTransport(CGameClient& gameClient,
-                                   AddonInstance_Game& addonStruct,
-                                   CCriticalSection& clientAccess)
+                                                   AddonInstance_Game& addonStruct,
+                                                   CCriticalSection& clientAccess)
   : m_gameClient(gameClient),
-m_struct(addonStruct),
-m_clientAccess(clientAccess)
+    m_struct(addonStruct),
+    m_clientAccess(clientAccess)
 {
 }
 
@@ -58,7 +58,7 @@ bool CGameClientDiscTransport::SetEjectState(bool ejected)
   {
     m_gameClient.LogException("SetEjectState()");
   }
-  
+
   return error == GAME_ERROR_NO_ERROR;
 }
 
@@ -135,7 +135,8 @@ bool CGameClientDiscTransport::AddImageIndex()
   return error == GAME_ERROR_NO_ERROR;
 }
 
-bool CGameClientDiscTransport::ReplaceImageIndex(unsigned int imageIndex, const std::string& filePath)
+bool CGameClientDiscTransport::ReplaceImageIndex(unsigned int imageIndex,
+                                                 const std::string& filePath)
 {
   GAME_ERROR error = GAME_ERROR_NO_ERROR;
 
