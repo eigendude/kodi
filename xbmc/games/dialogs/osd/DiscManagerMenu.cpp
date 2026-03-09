@@ -201,9 +201,7 @@ void CDiscManagerMenu::OnEjectInsert()
     }
   }
 
-  //! @todo
-  //const bool isEjected = discs.IsEjected();
-  const bool isEjected = !wasEjected;
+  const bool isEjected = discs.IsEjected();
 
   if (isEjected)
   {
