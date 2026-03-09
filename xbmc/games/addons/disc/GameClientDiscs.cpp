@@ -14,8 +14,6 @@
 #include "games/addons/disc/GameClientDiscTransport.h"
 #include "utils/StringUtils.h"
 
-#include <mutex>
-
 using namespace KODI;
 using namespace GAME;
 
@@ -37,22 +35,19 @@ bool CGameClientDiscs::SupportsDiskControl() const
 
 void CGameClientDiscs::Initialize()
 {
-  //! @todo Initialize the disc model/XML-backed session state
+  //! @todo Restore XML-backed session state if implemented
   const unsigned int startupIndex = 0;
   const std::string startupPath;
 
-  // Restore last-used disc from the XML
   if (!startupPath.empty())
     m_transport->SetInitialImage(startupIndex, startupPath);
 
   m_isEjected = m_transport->GetEjectState();
+  RefreshDiscState();
 }
 
-void CGameClientDiscs::RefreshDiscState(bool force)
+void CGameClientDiscs::RefreshDiscState()
 {
-  if (!force && m_hasPendingFrontendChanges && !m_isEjected)
-    return;
-
   PopulateModelFromCore(*m_discModel);
 }
 
@@ -62,18 +57,7 @@ bool CGameClientDiscs::SetEjected(bool ejected)
     return false;
 
   m_isEjected = m_transport->GetEjectState();
-
-  if (m_isEjected)
-  {
-    // Tray is now actually open, so queued frontend edits can be pushed
-    if (!SyncDiscsAfterEject())
-      return false;
-  }
-  else
-  {
-    // Refresh after closing too
-    RefreshDiscState(true);
-  }
+  RefreshDiscState();
 
   return true;
 }
@@ -81,104 +65,52 @@ bool CGameClientDiscs::SetEjected(bool ejected)
 bool CGameClientDiscs::QueueAddDisc(const std::string& filePath)
 {
   if (filePath.empty())
-    return true;
+    return false;
 
-  // Skip duplicates in the frontend model
   if (m_discModel->GetDiscIndexByPath(filePath).has_value())
     return true;
 
-  // Queue in frontend model first
-  m_discModel->AddDisc(filePath, "");
-
-  // Libretro only allows changing the inserted image while ejected. If the
-  // tray is closed, keep the selection queued in the model and let the caller
-  // apply it after opening the tray.
   if (!m_isEjected)
-  {
-    m_hasPendingFrontendChanges = true;
-    return true;
-  }
+    return false;
 
-  // Add a new slot in the core
   if (!m_transport->AddImageIndex())
+    return false;
+
+  const unsigned int newIndex = m_transport->GetImageCount() - 1;
+
+  if (!m_transport->ReplaceImageIndex(newIndex, filePath))
   {
-    // Roll back frontend model on failure.
-    m_discModel->RemoveDiscByPath(filePath);
+    m_transport->RemoveImageIndex(newIndex);
     return false;
   }
 
-  // New slot is the last one
-  const unsigned int imageIndex = m_transport->GetImageCount() - 1;
-
-  // Populate the new slot
-  if (!m_transport->ReplaceImageIndex(imageIndex, filePath))
-  {
-    // Best effort rollback in the core
-    m_transport->RemoveImageIndex(imageIndex);
-
-    // Roll back frontend model
-    m_discModel->RemoveDiscByPath(filePath);
-
-    return false;
-  }
-
-  m_hasPendingFrontendChanges = false;
-
-  // Re-sync from live core state
-  RefreshDiscState(true);
-
+  RefreshDiscState();
   return true;
 }
 
 bool CGameClientDiscs::QueueRemoveDisc(const std::string& filePath)
 {
   if (filePath.empty())
-    return true;
+    return false;
 
   const auto discIndex = m_discModel->GetDiscIndexByPath(filePath);
   if (!discIndex.has_value())
-    return true;
-
-  // Update frontend model first
-  m_discModel->RemoveDiscByPath(filePath);
-
-  // Libretro only allows mutating the image list while ejected
-  if (!m_isEjected)
-  {
-    m_hasPendingFrontendChanges = true;
-    return true;
-  }
-
-  // Remove from the core by current index
-  if (!m_transport->RemoveImageIndex(static_cast<unsigned int>(*discIndex)))
-  {
-    // Core failed, so rebuild frontend model from live core state
-    RefreshDiscState(true);
     return false;
-  }
 
-  m_hasPendingFrontendChanges = false;
+  if (!m_isEjected)
+    return false;
 
-  // Re-sync from live core state because indexes compact after removal
-  RefreshDiscState(true);
+  if (!m_transport->RemoveImageIndex(static_cast<unsigned int>(*discIndex)))
+    return false;
 
+  RefreshDiscState();
   return true;
 }
 
 bool CGameClientDiscs::QueueInsertDisc(const std::string& filePath)
 {
-  // Update frontend selection first
-  if (filePath.empty())
-    m_discModel->SetSelectedNoDisc();
-  else
-    m_discModel->SetSelectedDiscByPath(filePath);
-
-  // Libretro only allows mutating the image list while ejected
   if (!m_isEjected)
-  {
-    m_hasPendingFrontendChanges = true;
-    return true;
-  }
+    return false;
 
   unsigned int imageIndex = m_transport->GetImageCount(); // "No disc" sentinel
 
@@ -194,97 +126,7 @@ bool CGameClientDiscs::QueueInsertDisc(const std::string& filePath)
   if (!m_transport->SetImageIndex(imageIndex))
     return false;
 
-  if (filePath.empty())
-  {
-    // Keep last disc as-is when temporarily selecting "No disc"
-    m_discModel->SetSelectedNoDisc();
-  }
-  else
-  {
-    m_discModel->SetLastDiscByPath(filePath);
-    m_discModel->SetSelectedDiscByPath(filePath);
-  }
-
-  m_hasPendingFrontendChanges = false;
-
-  RefreshDiscState(true);
-
-  return true;
-}
-
-bool CGameClientDiscs::SyncDiscsAfterEject()
-{
-  if (!m_isEjected)
-    return true;
-
-  CGameClientDiscModel coreModel;
-  if (!BuildCoreDiscModel(coreModel))
-    return false;
-
-  // Remove discs missing from frontend model. Do this from highest index to
-  // lowest because indices compact.
-  std::vector<unsigned int> indicesToRemove;
-
-  for (size_t i = 0; i < coreModel.Size(); ++i)
-  {
-    const std::string& corePath = coreModel.GetDiscs()[i].path;
-
-    if (!m_discModel->GetDiscIndexByPath(corePath).has_value())
-      indicesToRemove.emplace_back(static_cast<unsigned int>(i));
-  }
-
-  std::sort(indicesToRemove.rbegin(), indicesToRemove.rend());
-
-  for (unsigned int index : indicesToRemove)
-  {
-    if (!m_transport->RemoveImageIndex(index))
-      return false;
-  }
-
-  // Rebuild snapshot after removals so later indexes are correct
-  if (!BuildCoreDiscModel(coreModel))
-    return false;
-
-  // Add discs present in frontend model but missing from core model
-  for (size_t i = 0; i < m_discModel->Size(); ++i)
-  {
-    const auto& frontendDisc = m_discModel->GetDiscs()[i];
-
-    if (coreModel.GetDiscIndexByPath(frontendDisc.path).has_value())
-      continue;
-
-    if (!m_transport->AddImageIndex())
-      return false;
-
-    const unsigned int newIndex = m_transport->GetImageCount() - 1;
-
-    if (!m_transport->ReplaceImageIndex(newIndex, frontendDisc.path))
-      return false;
-  }
-
-  // Rebuild snapshot after additions
-  if (!BuildCoreDiscModel(coreModel))
-    return false;
-
-  // Apply selected inserted disc, or "No disc"
-  unsigned int imageIndex = m_transport->GetImageCount(); // "No disc" sentinel
-
-  if (!m_discModel->IsSelectedNoDisc())
-  {
-    const std::string selectedPath = m_discModel->GetSelectedDiscPath();
-    const auto selectedIndex = coreModel.GetDiscIndexByPath(selectedPath);
-
-    if (!selectedIndex.has_value())
-      return false;
-
-    imageIndex = static_cast<unsigned int>(*selectedIndex);
-  }
-
-  if (!m_transport->SetImageIndex(imageIndex))
-    return false;
-
-  m_hasPendingFrontendChanges = false;
-  RefreshDiscState(true);
+  RefreshDiscState();
   return true;
 }
 
@@ -327,10 +169,4 @@ void CGameClientDiscs::PopulateModelFromCore(CGameClientDiscModel& model)
     model.SetLastDiscByPath(firstDiscPath);
     model.SetSelectedNoDisc();
   }
-}
-
-bool CGameClientDiscs::BuildCoreDiscModel(CGameClientDiscModel& coreModel)
-{
-  PopulateModelFromCore(coreModel);
-  return true;
 }
