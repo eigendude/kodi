@@ -41,7 +41,7 @@ public:
 
   // Disc interface
   void Initialize();
-  void RefreshDiscState();
+  void RefreshDiscState(bool force = false);
   const CGameClientDiscModel& GetDiscs() const { return *m_discModel; }
   bool IsEjected() const { return m_isEjected; }
   bool QueueAddDisc(const std::string& filePath);
@@ -62,12 +62,14 @@ public:
   std::string GetImageLabel(unsigned int imageIndex);
 
 private:
+  void PopulateModelFromCore(CGameClientDiscModel& model);
   bool SyncDiscs();
   bool BuildCoreDiscModel(CGameClientDiscModel& coreModel);
 
   // Game parameters
   std::unique_ptr<CGameClientDiscModel> m_discModel;
   std::atomic<bool> m_isEjected{false};
+  bool m_hasPendingFrontendChanges{false};
 };
 } // namespace GAME
 } // namespace KODI
