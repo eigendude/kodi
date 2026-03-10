@@ -89,14 +89,13 @@ TEST(TestGameClientDiscModel, ReplacementSkipsRemovedSlots)
   EXPECT_EQ(model.GetLastDiscPath(), "/roms/disc1.chd");
 }
 
-TEST(TestGameClientDiscModel, SelectionMainAndLastDoNotPointToRemoved)
+TEST(TestGameClientDiscModel, SelectionAndLastDoNotPointToRemoved)
 {
   // Verify tracked indices are redirected away from removed slots.
   CGameClientDiscModel model;
 
   ASSERT_TRUE(model.AddDisc("/roms/disc1.chd"));
   ASSERT_TRUE(model.AddDisc("/roms/disc2.chd"));
-  ASSERT_TRUE(model.SetMainDiscByIndex(1));
   ASSERT_TRUE(model.SetLastDiscByIndex(1));
   ASSERT_TRUE(model.SetSelectedDiscByIndex(1));
 
@@ -104,8 +103,23 @@ TEST(TestGameClientDiscModel, SelectionMainAndLastDoNotPointToRemoved)
 
   ASSERT_TRUE(model.GetSelectedDiscIndex().has_value());
   EXPECT_EQ(*model.GetSelectedDiscIndex(), 0U);
-  EXPECT_EQ(model.GetMainDiscPath(), "/roms/disc1.chd");
   EXPECT_EQ(model.GetLastDiscPath(), "/roms/disc1.chd");
+}
+
+
+TEST(TestGameClientDiscModel, RemovingOnlySelectedDiscClearsSelectionAndLast)
+{
+  CGameClientDiscModel model;
+
+  ASSERT_TRUE(model.AddDisc("/roms/disc1.chd"));
+  ASSERT_TRUE(model.SetLastDiscByIndex(0));
+  ASSERT_TRUE(model.SetSelectedDiscByIndex(0));
+
+  ASSERT_TRUE(model.MarkRemovedByIndex(0));
+
+  EXPECT_TRUE(model.IsSelectedNoDisc());
+  EXPECT_FALSE(model.GetSelectedDiscIndex().has_value());
+  EXPECT_EQ(model.GetLastDiscPath(), "");
 }
 
 TEST(TestGameClientDiscModel, MixedSlotModelBehavior)
