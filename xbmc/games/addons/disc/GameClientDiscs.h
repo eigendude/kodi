@@ -13,6 +13,7 @@
 #include <atomic>
 #include <cstddef>
 #include <memory>
+#include <optional>
 #include <string>
 
 struct AddonInstance_Game;
@@ -27,6 +28,10 @@ class CGameClient;
 class CGameClientDiscModel;
 class CGameClientDiscTransport;
 class CGameClientDiscXML;
+
+bool HasUsableStartupDisc(const CGameClientDiscModel& model,
+                          std::optional<size_t>& selectedIndex,
+                          std::string& startupPath);
 
 /*!
  * \ingroup games
