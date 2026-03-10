@@ -13,6 +13,7 @@
 #include <atomic>
 #include <cstddef>
 #include <memory>
+#include <optional>
 #include <string>
 
 struct AddonInstance_Game;
@@ -43,7 +44,8 @@ public:
   bool SupportsDiskControl() const;
 
   // Disc interface
-  void Initialize();
+  void Initialize(const std::string& gamePath);
+  void RestoreDiscList();
   void RefreshDiscState();
   const CGameClientDiscModel& GetDiscs() const { return *m_discModel; }
   bool IsEjected() const { return m_isEjected; }

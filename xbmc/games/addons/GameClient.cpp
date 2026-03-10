@@ -213,7 +213,6 @@ bool CGameClient::OpenFile(const CFileItem& file,
   // Some cores "succeed" to load the file even if it doesn't exist
   if (!CFileUtils::Exists(file.GetPath()))
   {
-
     // Failed to play game
     // The required files can't be found.
     MESSAGING::HELPERS::ShowOKDialogText(
@@ -249,7 +248,7 @@ bool CGameClient::OpenFile(const CFileItem& file,
 
   // Initialize disc control subsystem, if supported
   if (SupportsDiscControl())
-    Discs().Initialize();
+    Discs().Initialize(path);
 
   try
   {
@@ -267,7 +266,7 @@ bool CGameClient::OpenFile(const CFileItem& file,
     return false;
   }
 
-  if (!InitializeGameplay(file.GetPath(), streamManager, input))
+  if (!InitializeGameplay(path, streamManager, input))
   {
     NotifyError(GAME_ERROR_UNKNOWN);
     Streams().Deinitialize();
@@ -603,6 +602,13 @@ bool CGameClient::Deserialize(const uint8_t* data, size_t size)
     std::unique_lock lock(m_critSection);
 
     bSuccess = LogError(m_ifc.game->toAddon->Deserialize(m_ifc.game, data, size), "Deserialize()");
+  }
+
+  if (bSuccess)
+  {
+    // Deserialization may reset disc information, so restore it now
+    if (SupportsDiscControl())
+      Discs().RestoreDiscList();
   }
 
   return bSuccess;

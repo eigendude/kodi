@@ -35,13 +35,15 @@ constexpr auto XML_ROOT = "discstate";
 constexpr auto XML_SLOTS = "slots";
 constexpr auto XML_SLOT = "slot";
 constexpr auto XML_SELECTED = "selected";
+constexpr auto XML_TRAY = "tray";
 constexpr auto XML_ATTR_TYPE = "type";
 constexpr auto XML_ATTR_PATH = "path";
 constexpr auto XML_ATTR_LABEL = "label";
 constexpr auto XML_ATTR_INDEX = "index";
+constexpr auto XML_ATTR_EJECTED = "ejected";
 
 constexpr auto TYPE_DISC = "disc";
-constexpr auto TYPE_EMPTY = "empty";
+constexpr auto TYPE_EMPTY = "empty"; // legacy: load-only, maps to removed tombstone
 constexpr auto TYPE_REMOVED = "removed";
 constexpr auto TYPE_NONE = "none";
 
@@ -55,15 +57,154 @@ bool IsPersistableDiscPath(const std::string& path)
   return !path.empty() && !URIUtils::IsProtocol(path, "disc");
 }
 
-std::optional<size_t> GetFirstSelectable(const CGameClientDiscModel& model)
+std::vector<GameClientDiscEntry> ReadSlotsFromXML(const tinyxml2::XMLElement* rootElement)
 {
-  for (size_t i = 0; i < model.Size(); ++i)
+  std::vector<GameClientDiscEntry> discs;
+
+  const tinyxml2::XMLElement* slotsElement =
+      rootElement != nullptr ? rootElement->FirstChildElement(XML_SLOTS) : nullptr;
+  const tinyxml2::XMLElement* slotElement =
+      slotsElement != nullptr ? slotsElement->FirstChildElement(XML_SLOT) : nullptr;
+
+  while (slotElement != nullptr)
   {
-    if (model.IsSelectableSlotByIndex(i))
-      return i;
+    const char* type = slotElement->Attribute(XML_ATTR_TYPE);
+    const std::string label = slotElement->Attribute(XML_ATTR_LABEL) != nullptr
+                                  ? slotElement->Attribute(XML_ATTR_LABEL)
+                                  : "";
+
+    if (type != nullptr && std::strcmp(type, TYPE_REMOVED) == 0)
+    {
+      discs.push_back({GameClientDiscEntry::DiscSlotType::RemovedSlot, "", "", ""});
+    }
+    else if (type != nullptr && std::strcmp(type, TYPE_EMPTY) == 0)
+    {
+      // Backward compatibility: old empty slots are now removed tombstones.
+      discs.push_back({GameClientDiscEntry::DiscSlotType::RemovedSlot, "", "", ""});
+    }
+    else
+    {
+      const char* path = slotElement->Attribute(XML_ATTR_PATH);
+      if (path != nullptr && IsPersistableDiscPath(path))
+      {
+        discs.push_back({GameClientDiscEntry::DiscSlotType::Disc, path,
+                         CGameClientDiscModel::DeriveBasename(path), label});
+      }
+      else
+      {
+        discs.push_back({GameClientDiscEntry::DiscSlotType::RemovedSlot, "", "", ""});
+      }
+    }
+
+    slotElement = slotElement->NextSiblingElement(XML_SLOT);
   }
 
-  return std::nullopt;
+  return discs;
+}
+
+void ReadSelectedFromXML(const tinyxml2::XMLElement* rootElement, CGameClientDiscModel& model)
+{
+  const tinyxml2::XMLElement* selectedElement =
+      rootElement != nullptr ? rootElement->FirstChildElement(XML_SELECTED) : nullptr;
+  if (selectedElement != nullptr)
+  {
+    const char* selectedType = selectedElement->Attribute(XML_ATTR_TYPE);
+    if (selectedType != nullptr && std::strcmp(selectedType, TYPE_NONE) == 0)
+    {
+      model.SetSelectedNoDisc();
+    }
+    else
+    {
+      const int selectedIndex = selectedElement->IntAttribute(XML_ATTR_INDEX, -1);
+      if (selectedIndex >= 0 && model.IsRealDiscByIndex(static_cast<size_t>(selectedIndex)))
+        model.SetSelectedDiscByIndex(static_cast<size_t>(selectedIndex));
+      else
+        model.SetSelectedNoDisc();
+    }
+  }
+  else
+  {
+    model.SetSelectedNoDisc();
+  }
+}
+
+void ReadTrayFromXML(const tinyxml2::XMLElement* rootElement, CGameClientDiscModel& model)
+{
+  const tinyxml2::XMLElement* trayElement =
+      rootElement != nullptr ? rootElement->FirstChildElement(XML_TRAY) : nullptr;
+
+  const bool isEjected =
+      trayElement != nullptr && trayElement->BoolAttribute(XML_ATTR_EJECTED, false);
+  model.SetEjected(isEjected);
+}
+
+void WriteSlotsToXML(CXBMCTinyXML2& xmlDoc,
+                     tinyxml2::XMLElement* rootElement,
+                     const CGameClientDiscModel& model)
+{
+  tinyxml2::XMLElement* slotsElement = xmlDoc.NewElement(XML_SLOTS);
+  rootElement->InsertEndChild(slotsElement);
+
+  for (const GameClientDiscEntry& disc : model.GetDiscs())
+  {
+    tinyxml2::XMLElement* slotElement = xmlDoc.NewElement(XML_SLOT);
+
+    switch (disc.slotType)
+    {
+      case GameClientDiscEntry::DiscSlotType::Disc:
+      {
+        if (IsPersistableDiscPath(disc.path))
+        {
+          slotElement->SetAttribute(XML_ATTR_TYPE, TYPE_DISC);
+          slotElement->SetAttribute(XML_ATTR_PATH, disc.path.c_str());
+        }
+        else
+        {
+          slotElement->SetAttribute(XML_ATTR_TYPE, TYPE_REMOVED);
+        }
+
+        if (!disc.cachedLabel.empty())
+          slotElement->SetAttribute(XML_ATTR_LABEL, disc.cachedLabel.c_str());
+        break;
+      }
+      case GameClientDiscEntry::DiscSlotType::RemovedSlot:
+      {
+        slotElement->SetAttribute(XML_ATTR_TYPE, TYPE_REMOVED);
+        break;
+      }
+    }
+
+    slotsElement->InsertEndChild(slotElement);
+  }
+}
+
+void WriteTrayToXML(CXBMCTinyXML2& xmlDoc,
+                    tinyxml2::XMLElement* rootElement,
+                    const CGameClientDiscModel& model)
+{
+  tinyxml2::XMLElement* trayElement = xmlDoc.NewElement(XML_TRAY);
+  rootElement->InsertEndChild(trayElement);
+  trayElement->SetAttribute(XML_ATTR_EJECTED, model.IsEjected());
+}
+
+void WriteSelectedToXML(CXBMCTinyXML2& xmlDoc,
+                        tinyxml2::XMLElement* rootElement,
+                        const CGameClientDiscModel& model)
+{
+  tinyxml2::XMLElement* selectedElement = xmlDoc.NewElement(XML_SELECTED);
+  rootElement->InsertEndChild(selectedElement);
+
+  const std::optional<size_t> selectedIndex = model.GetSelectedDiscIndex();
+  if (selectedIndex.has_value() && model.IsRealDiscByIndex(*selectedIndex) &&
+      IsPersistableDiscPath(model.GetPathByIndex(*selectedIndex)))
+  {
+    selectedElement->SetAttribute(XML_ATTR_TYPE, TYPE_DISC);
+    selectedElement->SetAttribute(XML_ATTR_INDEX, static_cast<unsigned int>(*selectedIndex));
+  }
+  else
+  {
+    selectedElement->SetAttribute(XML_ATTR_TYPE, TYPE_NONE);
+  }
 }
 } // namespace
 
@@ -102,74 +243,10 @@ bool CGameClientDiscXML::Load(const std::string& gamePath, CGameClientDiscModel&
     return false;
   }
 
-  std::vector<GameClientDiscEntry> discs;
+  model.SetDiscs(ReadSlotsFromXML(rootElement));
 
-  const tinyxml2::XMLElement* slotsElement = rootElement->FirstChildElement(XML_SLOTS);
-  const tinyxml2::XMLElement* slotElement =
-      slotsElement != nullptr ? slotsElement->FirstChildElement(XML_SLOT) : nullptr;
-
-  while (slotElement != nullptr)
-  {
-    const char* type = slotElement->Attribute(XML_ATTR_TYPE);
-    const std::string label = slotElement->Attribute(XML_ATTR_LABEL) != nullptr
-                                  ? slotElement->Attribute(XML_ATTR_LABEL)
-                                  : "";
-
-    if (type != nullptr && std::strcmp(type, TYPE_REMOVED) == 0)
-    {
-      discs.push_back({GameClientDiscEntry::DiscSlotType::RemovedSlot, "", "", ""});
-    }
-    else if (type != nullptr && std::strcmp(type, TYPE_EMPTY) == 0)
-    {
-      discs.push_back({GameClientDiscEntry::DiscSlotType::EmptySlot, "", "", label});
-    }
-    else
-    {
-      const char* path = slotElement->Attribute(XML_ATTR_PATH);
-      if (path != nullptr && IsPersistableDiscPath(path))
-      {
-        discs.push_back({GameClientDiscEntry::DiscSlotType::Disc, path,
-                         CGameClientDiscModel::DeriveBasename(path), label});
-      }
-      else
-      {
-        discs.push_back({GameClientDiscEntry::DiscSlotType::EmptySlot, "", "", label});
-      }
-    }
-
-    slotElement = slotElement->NextSiblingElement(XML_SLOT);
-  }
-
-  model.SetDiscs(discs);
-
-  const std::optional<size_t> firstSelectable = GetFirstSelectable(model);
-  if (firstSelectable.has_value())
-  {
-    model.SetMainDiscByIndex(*firstSelectable);
-    model.SetLastDiscByIndex(*firstSelectable);
-  }
-
-  const tinyxml2::XMLElement* selectedElement = rootElement->FirstChildElement(XML_SELECTED);
-  if (selectedElement != nullptr)
-  {
-    const char* selectedType = selectedElement->Attribute(XML_ATTR_TYPE);
-    if (selectedType != nullptr && std::strcmp(selectedType, TYPE_NONE) == 0)
-    {
-      model.SetSelectedNoDisc();
-    }
-    else
-    {
-      const int selectedIndex = selectedElement->IntAttribute(XML_ATTR_INDEX, -1);
-      if (selectedIndex >= 0 && model.IsRealDiscByIndex(static_cast<size_t>(selectedIndex)))
-        model.SetSelectedDiscByIndex(static_cast<size_t>(selectedIndex));
-      else
-        model.SetSelectedNoDisc();
-    }
-  }
-  else
-  {
-    model.SetSelectedNoDisc();
-  }
+  ReadSelectedFromXML(rootElement, model);
+  ReadTrayFromXML(rootElement, model);
 
   return true;
 }
@@ -191,62 +268,9 @@ bool CGameClientDiscXML::Save(const std::string& gamePath, const CGameClientDisc
   tinyxml2::XMLElement* rootElement = xmlDoc.NewElement(XML_ROOT);
   xmlDoc.InsertEndChild(rootElement);
 
-  tinyxml2::XMLElement* slotsElement = xmlDoc.NewElement(XML_SLOTS);
-  rootElement->InsertEndChild(slotsElement);
-
-  for (const GameClientDiscEntry& disc : model.GetDiscs())
-  {
-    tinyxml2::XMLElement* slotElement = xmlDoc.NewElement(XML_SLOT);
-
-    switch (disc.slotType)
-    {
-      case GameClientDiscEntry::DiscSlotType::Disc:
-      {
-        if (IsPersistableDiscPath(disc.path))
-        {
-          slotElement->SetAttribute(XML_ATTR_TYPE, TYPE_DISC);
-          slotElement->SetAttribute(XML_ATTR_PATH, disc.path.c_str());
-        }
-        else
-        {
-          slotElement->SetAttribute(XML_ATTR_TYPE, TYPE_EMPTY);
-        }
-
-        if (!disc.cachedLabel.empty())
-          slotElement->SetAttribute(XML_ATTR_LABEL, disc.cachedLabel.c_str());
-        break;
-      }
-      case GameClientDiscEntry::DiscSlotType::EmptySlot:
-      {
-        slotElement->SetAttribute(XML_ATTR_TYPE, TYPE_EMPTY);
-        if (!disc.cachedLabel.empty())
-          slotElement->SetAttribute(XML_ATTR_LABEL, disc.cachedLabel.c_str());
-        break;
-      }
-      case GameClientDiscEntry::DiscSlotType::RemovedSlot:
-      {
-        slotElement->SetAttribute(XML_ATTR_TYPE, TYPE_REMOVED);
-        break;
-      }
-    }
-
-    slotsElement->InsertEndChild(slotElement);
-  }
-
-  tinyxml2::XMLElement* selectedElement = xmlDoc.NewElement(XML_SELECTED);
-  rootElement->InsertEndChild(selectedElement);
-
-  const std::optional<size_t> selectedIndex = model.GetSelectedDiscIndex();
-  if (selectedIndex.has_value() && model.IsRealDiscByIndex(*selectedIndex) &&
-      IsPersistableDiscPath(model.GetPathByIndex(*selectedIndex)))
-  {
-    selectedElement->SetAttribute(XML_ATTR_TYPE, TYPE_DISC);
-    selectedElement->SetAttribute(XML_ATTR_INDEX, static_cast<unsigned int>(*selectedIndex));
-  }
-  else
-  {
-    selectedElement->SetAttribute(XML_ATTR_TYPE, TYPE_NONE);
-  }
+  WriteSlotsToXML(xmlDoc, rootElement, model);
+  WriteSelectedToXML(xmlDoc, rootElement, model);
+  WriteTrayToXML(xmlDoc, rootElement, model);
 
   const std::string xmlPath = GetXMLPath(gamePath);
   if (!xmlDoc.SaveFile(xmlPath))
