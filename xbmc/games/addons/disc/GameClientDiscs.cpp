@@ -299,7 +299,7 @@ void CGameClientDiscs::BuildModelFromCore(CGameClientDiscModel& model) const
     const std::string imageLabel = m_transport->GetImageLabel(i);
 
     if (imagePath.empty())
-      model.AddEmptySlot(imageLabel);
+      model.AddRemovedSlot();
     else
       model.AddDisc(imagePath, imageLabel);
   }

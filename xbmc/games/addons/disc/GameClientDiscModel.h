@@ -23,7 +23,6 @@ struct GameClientDiscEntry
   enum class DiscSlotType
   {
     Disc,
-    EmptySlot,
     RemovedSlot,
   };
 
@@ -57,7 +56,6 @@ public:
   void SetDiscs(const std::vector<GameClientDiscEntry>& discs);
 
   bool AddDisc(const std::string& path, const std::string& cachedLabel = "");
-  bool AddEmptySlot(const std::string& cachedLabel = "");
   bool AddRemovedSlot();
   bool RemoveDiscByPath(const std::string& path);
   bool RemoveDiscByIndex(size_t index);
@@ -90,7 +88,6 @@ public:
   std::string GetPathByIndex(size_t index) const;
   std::string GetLabelByIndex(size_t index) const;
 
-  bool IsEmptySlotByIndex(size_t index) const;
   bool IsRemovedSlotByIndex(size_t index) const;
   bool IsSelectableSlotByIndex(size_t index) const;
   bool IsRealDiscByIndex(size_t index) const;
