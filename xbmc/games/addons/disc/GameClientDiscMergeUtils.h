@@ -23,10 +23,7 @@ struct MergedDiscSlots
 {
   std::vector<GameClientDiscEntry> discs;
   std::vector<std::optional<size_t>> coreToMerged;
-  std::optional<size_t> firstSelectable;
 };
-
-bool IsSelectableDiscSlot(const GameClientDiscEntry& discEntry);
 
 MergedDiscSlots MergeCoreSlotsByIndex(const std::vector<GameClientDiscEntry>& previousDiscs,
                                       const std::vector<GameClientDiscEntry>& coreDiscs);

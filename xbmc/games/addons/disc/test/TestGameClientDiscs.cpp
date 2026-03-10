@@ -70,7 +70,6 @@ TEST(TestGameClientDiscs, EmptyPersistedAndEmptyCoreRemainEmpty)
   const MergedDiscSlots merged = MergeCoreSlotsByIndex(persisted.GetDiscs(), core.GetDiscs());
 
   EXPECT_TRUE(merged.discs.empty());
-  EXPECT_FALSE(merged.firstSelectable.has_value());
 }
 
 TEST(TestGameClientDiscs, PersistedAndCoreNonEmptyStillMerge)
@@ -88,6 +87,4 @@ TEST(TestGameClientDiscs, PersistedAndCoreNonEmptyStillMerge)
   ASSERT_EQ(merged.discs.size(), 2U);
   EXPECT_EQ(merged.discs[0].slotType, GameClientDiscEntry::DiscSlotType::RemovedSlot);
   EXPECT_EQ(merged.discs[1].slotType, GameClientDiscEntry::DiscSlotType::Disc);
-  ASSERT_TRUE(merged.firstSelectable.has_value());
-  EXPECT_EQ(*merged.firstSelectable, 1U);
 }

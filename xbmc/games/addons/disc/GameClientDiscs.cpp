@@ -312,12 +312,10 @@ void CGameClientDiscs::BuildModelFromCore(CGameClientDiscModel& model) const
 
   if (imageIndex < imageCount)
   {
-    model.SetLastDiscByIndex(imageIndex);
     model.SetSelectedDiscByIndex(imageIndex);
   }
   else
   {
-    model.SetLastDiscByIndex(0);
     model.SetSelectedNoDisc();
   }
 }
@@ -335,9 +333,6 @@ void CGameClientDiscs::MergeCoreModelIntoFrontend(const CGameClientDiscModel& co
   m_discModel->SetDiscs(merged.discs);
   m_discModel->SetEjected(isEjected);
 
-  if (!merged.firstSelectable.has_value())
-    return;
-
   const std::optional<size_t> selectedCoreIndex = coreModel.GetSelectedDiscIndex();
   if (selectedCoreIndex.has_value() && *selectedCoreIndex < merged.coreToMerged.size())
   {
@@ -346,12 +341,10 @@ void CGameClientDiscs::MergeCoreModelIntoFrontend(const CGameClientDiscModel& co
     if (selectedMergedIndex.has_value() &&
         m_discModel->IsSelectableSlotByIndex(*selectedMergedIndex))
     {
-      m_discModel->SetLastDiscByIndex(*selectedMergedIndex);
       m_discModel->SetSelectedDiscByIndex(*selectedMergedIndex);
       return;
     }
   }
 
-  m_discModel->SetLastDiscByIndex(*merged.firstSelectable);
   m_discModel->SetSelectedNoDisc();
 }

@@ -57,17 +57,6 @@ bool IsPersistableDiscPath(const std::string& path)
   return !path.empty() && !URIUtils::IsProtocol(path, "disc");
 }
 
-std::optional<size_t> GetFirstSelectable(const CGameClientDiscModel& model)
-{
-  for (size_t i = 0; i < model.Size(); ++i)
-  {
-    if (model.IsSelectableSlotByIndex(i))
-      return i;
-  }
-
-  return std::nullopt;
-}
-
 std::vector<GameClientDiscEntry> ReadSlotsFromXML(const tinyxml2::XMLElement* rootElement)
 {
   std::vector<GameClientDiscEntry> discs;
@@ -255,10 +244,6 @@ bool CGameClientDiscXML::Load(const std::string& gamePath, CGameClientDiscModel&
   }
 
   model.SetDiscs(ReadSlotsFromXML(rootElement));
-
-  const std::optional<size_t> firstSelectable = GetFirstSelectable(model);
-  if (firstSelectable.has_value())
-    model.SetLastDiscByIndex(*firstSelectable);
 
   ReadSelectedFromXML(rootElement, model);
   ReadTrayFromXML(rootElement, model);

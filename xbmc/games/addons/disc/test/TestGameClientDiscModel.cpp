@@ -71,55 +71,33 @@ TEST(TestGameClientDiscModel, MultipleRemovedSlotsCanCoexist)
   EXPECT_TRUE(model.IsRemovedSlotByIndex(2));
 }
 
-TEST(TestGameClientDiscModel, ReplacementSkipsRemovedSlots)
+TEST(TestGameClientDiscModel, SelectionReplacementSkipsRemovedSlots)
 {
-  // Verify selected/last replacement skips removed tombstones.
+  // Verify selected replacement skips removed tombstones.
   CGameClientDiscModel model;
 
   ASSERT_TRUE(model.AddDisc("/roms/disc1.chd"));
   ASSERT_TRUE(model.AddDisc("/roms/disc2.chd"));
   ASSERT_TRUE(model.AddDisc("/roms/disc3.chd"));
 
-  ASSERT_TRUE(model.SetLastDiscByIndex(1));
   ASSERT_TRUE(model.SetSelectedDiscByIndex(1));
   ASSERT_TRUE(model.MarkRemovedByIndex(1));
 
   ASSERT_TRUE(model.GetSelectedDiscIndex().has_value());
   EXPECT_EQ(*model.GetSelectedDiscIndex(), 0U);
-  EXPECT_EQ(model.GetLastDiscPath(), "/roms/disc1.chd");
 }
 
-TEST(TestGameClientDiscModel, SelectionAndLastDoNotPointToRemoved)
-{
-  // Verify tracked indices are redirected away from removed slots.
-  CGameClientDiscModel model;
-
-  ASSERT_TRUE(model.AddDisc("/roms/disc1.chd"));
-  ASSERT_TRUE(model.AddDisc("/roms/disc2.chd"));
-  ASSERT_TRUE(model.SetLastDiscByIndex(1));
-  ASSERT_TRUE(model.SetSelectedDiscByIndex(1));
-
-  ASSERT_TRUE(model.MarkRemovedByIndex(1));
-
-  ASSERT_TRUE(model.GetSelectedDiscIndex().has_value());
-  EXPECT_EQ(*model.GetSelectedDiscIndex(), 0U);
-  EXPECT_EQ(model.GetLastDiscPath(), "/roms/disc1.chd");
-}
-
-
-TEST(TestGameClientDiscModel, RemovingOnlySelectedDiscClearsSelectionAndLast)
+TEST(TestGameClientDiscModel, RemovingOnlySelectedDiscClearsSelection)
 {
   CGameClientDiscModel model;
 
   ASSERT_TRUE(model.AddDisc("/roms/disc1.chd"));
-  ASSERT_TRUE(model.SetLastDiscByIndex(0));
   ASSERT_TRUE(model.SetSelectedDiscByIndex(0));
 
   ASSERT_TRUE(model.MarkRemovedByIndex(0));
 
   EXPECT_TRUE(model.IsSelectedNoDisc());
   EXPECT_FALSE(model.GetSelectedDiscIndex().has_value());
-  EXPECT_EQ(model.GetLastDiscPath(), "");
 }
 
 TEST(TestGameClientDiscModel, MixedSlotModelBehavior)
@@ -206,8 +184,6 @@ TEST(TestGameClientDiscModel, MergeSelectionMappingKeepsDiscIndex)
 
   const MergedDiscSlots merged = MergeCoreSlotsByIndex(previousDiscs, coreDiscs);
 
-  ASSERT_TRUE(merged.firstSelectable.has_value());
-  EXPECT_EQ(*merged.firstSelectable, 1U);
   ASSERT_EQ(merged.coreToMerged.size(), 2U);
   ASSERT_TRUE(merged.coreToMerged[0].has_value());
   EXPECT_EQ(*merged.coreToMerged[0], 0U);

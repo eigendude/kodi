@@ -13,11 +13,6 @@
 using namespace KODI;
 using namespace GAME;
 
-bool KODI::GAME::IsSelectableDiscSlot(const GameClientDiscEntry& discEntry)
-{
-  return discEntry.slotType != GameClientDiscEntry::DiscSlotType::RemovedSlot;
-}
-
 MergedDiscSlots KODI::GAME::MergeCoreSlotsByIndex(
     const std::vector<GameClientDiscEntry>& previousDiscs,
     const std::vector<GameClientDiscEntry>& coreDiscs)
@@ -43,15 +38,6 @@ MergedDiscSlots KODI::GAME::MergeCoreSlotsByIndex(
   {
     merged.coreToMerged[i] = merged.discs.size();
     merged.discs.push_back(coreDiscs[i]);
-  }
-
-  for (size_t i = 0; i < merged.discs.size(); ++i)
-  {
-    if (IsSelectableDiscSlot(merged.discs[i]))
-    {
-      merged.firstSelectable = i;
-      break;
-    }
   }
 
   return merged;

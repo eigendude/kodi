@@ -44,10 +44,10 @@ public:
   };
 
   // Model invariants:
-  // - m_lastDiscIndex and m_selectedDiscIndex (when selection type is Disc) always refer to
-  //   an existing entry in m_discs.
-  // - For removal replacement (selected/last): prefer same index if still valid, otherwise
-  //   previous valid index, otherwise no replacement.
+  // - m_selectedDiscIndex (when selection type is Disc) always refers to an existing entry
+  //   in m_discs.
+  // - For removal replacement (selected): prefer same index if still valid, otherwise previous
+  //   valid index, otherwise no replacement.
   size_t Size() const;
   bool Empty() const;
 
@@ -65,8 +65,6 @@ public:
   std::optional<size_t> GetDiscIndexByPath(const std::string& path) const;
   std::optional<size_t> GetDiscIndexByBasename(const std::string& basename) const;
 
-  bool SetLastDiscByPath(const std::string& path);
-  bool SetLastDiscByIndex(size_t index);
   bool SetSelectedDiscByPath(const std::string& path);
   bool SetSelectedDiscByIndex(size_t index);
   void SetSelectedNoDisc();
@@ -77,8 +75,6 @@ public:
   void SetEjected(bool ejected) { m_isEjected = ejected; }
 
   std::string GetSelectedDiscPath() const;
-  std::string GetLastDiscPath() const;
-
   bool UpdateCachedLabel(const std::string& path, const std::string& label);
 
   std::string GetPathByIndex(size_t index) const;
@@ -95,7 +91,6 @@ private:
   std::optional<size_t> GetReplacementIndex(size_t removedIndex) const;
 
   std::vector<GameClientDiscEntry> m_discs;
-  std::optional<size_t> m_lastDiscIndex;
   DiscSelectionType m_selectedType{DiscSelectionType::NoDisc};
   std::optional<size_t> m_selectedDiscIndex;
   bool m_isEjected{false};

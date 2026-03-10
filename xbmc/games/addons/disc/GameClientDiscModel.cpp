@@ -26,7 +26,6 @@ bool CGameClientDiscModel::Empty() const
 void CGameClientDiscModel::Clear()
 {
   m_discs.clear();
-  m_lastDiscIndex.reset();
   m_selectedType = DiscSelectionType::NoDisc;
   m_selectedDiscIndex.reset();
   m_isEjected = false;
@@ -35,7 +34,6 @@ void CGameClientDiscModel::Clear()
 void CGameClientDiscModel::SetDiscs(const std::vector<GameClientDiscEntry>& discs)
 {
   m_discs = discs;
-  m_lastDiscIndex.reset();
   m_selectedType = DiscSelectionType::NoDisc;
   m_selectedDiscIndex.reset();
 }
@@ -50,7 +48,6 @@ bool CGameClientDiscModel::AddDisc(const std::string& path, const std::string& c
 
   if (m_discs.size() == 1)
   {
-    m_lastDiscIndex = 0;
     m_selectedType = DiscSelectionType::Disc;
     m_selectedDiscIndex = 0;
   }
@@ -95,11 +92,6 @@ bool CGameClientDiscModel::MarkRemovedByIndex(size_t index)
   const bool wasSelectedDisc = (m_selectedType == DiscSelectionType::Disc &&
                                 m_selectedDiscIndex.has_value() && *m_selectedDiscIndex == index);
 
-  const bool wasLastDisc = m_lastDiscIndex.has_value() && *m_lastDiscIndex == index;
-
-  if (wasLastDisc)
-    m_lastDiscIndex = GetReplacementIndex(index);
-
   if (wasSelectedDisc)
   {
     const auto replacement = GetReplacementIndex(index);
@@ -143,24 +135,6 @@ std::optional<size_t> CGameClientDiscModel::GetDiscIndexByBasename(
   return static_cast<size_t>(it - m_discs.begin());
 }
 
-bool CGameClientDiscModel::SetLastDiscByPath(const std::string& path)
-{
-  const auto index = GetDiscIndexByPath(path);
-  if (!index.has_value())
-    return false;
-
-  return SetLastDiscByIndex(*index);
-}
-
-bool CGameClientDiscModel::SetLastDiscByIndex(size_t index)
-{
-  if (!IsSelectableSlotByIndex(index))
-    return false;
-
-  m_lastDiscIndex = index;
-  return true;
-}
-
 bool CGameClientDiscModel::SetSelectedDiscByPath(const std::string& path)
 {
   const auto index = GetDiscIndexByPath(path);
@@ -200,14 +174,6 @@ std::string CGameClientDiscModel::GetSelectedDiscPath() const
     return "";
 
   return GetPathByIndex(*m_selectedDiscIndex);
-}
-
-std::string CGameClientDiscModel::GetLastDiscPath() const
-{
-  if (!m_lastDiscIndex.has_value())
-    return "";
-
-  return GetPathByIndex(*m_lastDiscIndex);
 }
 
 bool CGameClientDiscModel::UpdateCachedLabel(const std::string& path, const std::string& label)
