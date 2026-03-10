@@ -266,7 +266,7 @@ bool CGameClient::OpenFile(const CFileItem& file,
     return false;
   }
 
-  if (!InitializeGameplay(file.GetPath(), streamManager, input))
+  if (!InitializeGameplay(path, streamManager, input))
   {
     NotifyError(GAME_ERROR_UNKNOWN);
     Streams().Deinitialize();

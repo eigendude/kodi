@@ -65,46 +65,13 @@ std::optional<size_t> GetFirstSelectable(const CGameClientDiscModel& model)
 
   return std::nullopt;
 }
-} // namespace
 
-std::string CGameClientDiscXML::GetXMLPath(const std::string& gamePath)
+std::vector<GameClientDiscEntry> ReadSlotsFromXML(const tinyxml2::XMLElement* rootElement)
 {
-  const std::string fileName = StringUtils::Format("{:08x}.xml", Crc32::Compute(gamePath));
-  return URIUtils::AddFileToFolder(GetDiscStateDirectory(), fileName);
-}
-
-bool CGameClientDiscXML::Load(const std::string& gamePath, CGameClientDiscModel& model) const
-{
-  model.Clear();
-
-  if (gamePath.empty())
-    return true;
-
-  const std::string xmlPath = GetXMLPath(gamePath);
-
-  if (!CFileUtils::Exists(xmlPath))
-    return true;
-
-  CXBMCTinyXML2 xmlDoc;
-  if (!xmlDoc.LoadFile(xmlPath))
-  {
-    CLog::Log(LOGWARNING, "Failed to load disc state XML {}: {} at line {}",
-              CURL::GetRedacted(xmlPath), xmlDoc.ErrorStr(), xmlDoc.ErrorLineNum());
-    return false;
-  }
-
-  const tinyxml2::XMLElement* rootElement = xmlDoc.RootElement();
-  if (rootElement == nullptr || std::strcmp(rootElement->Name(), XML_ROOT) != 0)
-  {
-    CLog::Log(LOGWARNING, "Failed to parse disc state XML {}, missing root element '{}'",
-              CURL::GetRedacted(xmlPath), XML_ROOT);
-    model.Clear();
-    return false;
-  }
-
   std::vector<GameClientDiscEntry> discs;
 
-  const tinyxml2::XMLElement* slotsElement = rootElement->FirstChildElement(XML_SLOTS);
+  const tinyxml2::XMLElement* slotsElement =
+      rootElement != nullptr ? rootElement->FirstChildElement(XML_SLOTS) : nullptr;
   const tinyxml2::XMLElement* slotElement =
       slotsElement != nullptr ? slotsElement->FirstChildElement(XML_SLOT) : nullptr;
 
@@ -140,16 +107,13 @@ bool CGameClientDiscXML::Load(const std::string& gamePath, CGameClientDiscModel&
     slotElement = slotElement->NextSiblingElement(XML_SLOT);
   }
 
-  model.SetDiscs(discs);
+  return discs;
+}
 
-  const std::optional<size_t> firstSelectable = GetFirstSelectable(model);
-  if (firstSelectable.has_value())
-  {
-    model.SetMainDiscByIndex(*firstSelectable);
-    model.SetLastDiscByIndex(*firstSelectable);
-  }
-
-  const tinyxml2::XMLElement* selectedElement = rootElement->FirstChildElement(XML_SELECTED);
+void ReadSelectedFromXML(const tinyxml2::XMLElement* rootElement, CGameClientDiscModel& model)
+{
+  const tinyxml2::XMLElement* selectedElement =
+      rootElement != nullptr ? rootElement->FirstChildElement(XML_SELECTED) : nullptr;
   if (selectedElement != nullptr)
   {
     const char* selectedType = selectedElement->Attribute(XML_ATTR_TYPE);
@@ -170,27 +134,12 @@ bool CGameClientDiscXML::Load(const std::string& gamePath, CGameClientDiscModel&
   {
     model.SetSelectedNoDisc();
   }
-
-  return true;
 }
 
-bool CGameClientDiscXML::Save(const std::string& gamePath, const CGameClientDiscModel& model) const
+void WriteSlotsToXML(CXBMCTinyXML2& xmlDoc,
+                     tinyxml2::XMLElement* rootElement,
+                     const CGameClientDiscModel& model)
 {
-  if (gamePath.empty())
-    return true;
-
-  const std::string directory = GetDiscStateDirectory();
-  if (!XFILE::CDirectory::Exists(directory) && !XFILE::CDirectory::Create(directory))
-  {
-    CLog::Log(LOGWARNING, "Failed to create disc state directory {}", CURL::GetRedacted(directory));
-    return false;
-  }
-
-  CXBMCTinyXML2 xmlDoc;
-
-  tinyxml2::XMLElement* rootElement = xmlDoc.NewElement(XML_ROOT);
-  xmlDoc.InsertEndChild(rootElement);
-
   tinyxml2::XMLElement* slotsElement = xmlDoc.NewElement(XML_SLOTS);
   rootElement->InsertEndChild(slotsElement);
 
@@ -232,7 +181,12 @@ bool CGameClientDiscXML::Save(const std::string& gamePath, const CGameClientDisc
 
     slotsElement->InsertEndChild(slotElement);
   }
+}
 
+void WriteSelectedToXML(CXBMCTinyXML2& xmlDoc,
+                        tinyxml2::XMLElement* rootElement,
+                        const CGameClientDiscModel& model)
+{
   tinyxml2::XMLElement* selectedElement = xmlDoc.NewElement(XML_SELECTED);
   rootElement->InsertEndChild(selectedElement);
 
@@ -247,6 +201,77 @@ bool CGameClientDiscXML::Save(const std::string& gamePath, const CGameClientDisc
   {
     selectedElement->SetAttribute(XML_ATTR_TYPE, TYPE_NONE);
   }
+}
+} // namespace
+
+std::string CGameClientDiscXML::GetXMLPath(const std::string& gamePath)
+{
+  const std::string fileName = StringUtils::Format("{:08x}.xml", Crc32::Compute(gamePath));
+  return URIUtils::AddFileToFolder(GetDiscStateDirectory(), fileName);
+}
+
+bool CGameClientDiscXML::Load(const std::string& gamePath, CGameClientDiscModel& model) const
+{
+  model.Clear();
+
+  if (gamePath.empty())
+    return true;
+
+  const std::string xmlPath = GetXMLPath(gamePath);
+
+  if (!CFileUtils::Exists(xmlPath))
+    return true;
+
+  CXBMCTinyXML2 xmlDoc;
+  if (!xmlDoc.LoadFile(xmlPath))
+  {
+    CLog::Log(LOGWARNING, "Failed to load disc state XML {}: {} at line {}",
+              CURL::GetRedacted(xmlPath), xmlDoc.ErrorStr(), xmlDoc.ErrorLineNum());
+    return false;
+  }
+
+  const tinyxml2::XMLElement* rootElement = xmlDoc.RootElement();
+  if (rootElement == nullptr || std::strcmp(rootElement->Name(), XML_ROOT) != 0)
+  {
+    CLog::Log(LOGWARNING, "Failed to parse disc state XML {}, missing root element '{}'",
+              CURL::GetRedacted(xmlPath), XML_ROOT);
+    model.Clear();
+    return false;
+  }
+
+  model.SetDiscs(ReadSlotsFromXML(rootElement));
+
+  const std::optional<size_t> firstSelectable = GetFirstSelectable(model);
+  if (firstSelectable.has_value())
+  {
+    model.SetMainDiscByIndex(*firstSelectable);
+    model.SetLastDiscByIndex(*firstSelectable);
+  }
+
+  ReadSelectedFromXML(rootElement, model);
+
+  return true;
+}
+
+bool CGameClientDiscXML::Save(const std::string& gamePath, const CGameClientDiscModel& model) const
+{
+  if (gamePath.empty())
+    return true;
+
+  const std::string directory = GetDiscStateDirectory();
+  if (!XFILE::CDirectory::Exists(directory) && !XFILE::CDirectory::Create(directory))
+  {
+    CLog::Log(LOGWARNING, "Failed to create disc state directory {}", CURL::GetRedacted(directory));
+    return false;
+  }
+
+  CXBMCTinyXML2 xmlDoc;
+
+  tinyxml2::XMLElement* rootElement = xmlDoc.NewElement(XML_ROOT);
+  xmlDoc.InsertEndChild(rootElement);
+
+  WriteSlotsToXML(xmlDoc, rootElement, model);
+  WriteSelectedToXML(xmlDoc, rootElement, model);
 
   const std::string xmlPath = GetXMLPath(gamePath);
   if (!xmlDoc.SaveFile(xmlPath))
