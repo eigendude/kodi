@@ -43,7 +43,7 @@ public:
   bool SupportsDiskControl() const;
 
   // Disc interface
-  void Initialize();
+  void Initialize(const std::string& gamePath);
   void RefreshDiscState();
   const CGameClientDiscModel& GetDiscs() const { return *m_discModel; }
   bool IsEjected() const { return m_isEjected; }

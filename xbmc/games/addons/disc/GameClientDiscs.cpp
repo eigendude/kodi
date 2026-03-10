@@ -25,8 +25,8 @@ CGameClientDiscs::CGameClientDiscs(CGameClient& gameClient,
                                    CCriticalSection& clientAccess)
   : CGameClientSubsystem(gameClient, addonStruct, clientAccess),
     m_transport(std::make_unique<CGameClientDiscTransport>(gameClient, addonStruct, clientAccess)),
-    m_discModel(std::make_unique<CGameClientDiscModel>()),
-    m_discXml(std::make_unique<CGameClientDiscXML>())
+    m_discXml(std::make_unique<CGameClientDiscXML>()),
+    m_discModel(std::make_unique<CGameClientDiscModel>())
 {
 }
 
@@ -37,9 +37,9 @@ bool CGameClientDiscs::SupportsDiskControl() const
   return m_gameClient.SupportsDiscControl();
 }
 
-void CGameClientDiscs::Initialize()
+void CGameClientDiscs::Initialize(const std::string& gamePath)
 {
-  m_discXml->Load(m_gameClient.GetGamePath(), *m_discModel);
+  m_discXml->Load(gamePath, *m_discModel);
 
   const std::optional<size_t> selectedIndex = m_discModel->GetSelectedDiscIndex();
   if (selectedIndex.has_value() && m_discModel->IsRealDiscByIndex(*selectedIndex))

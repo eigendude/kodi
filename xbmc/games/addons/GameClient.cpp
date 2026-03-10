@@ -213,7 +213,6 @@ bool CGameClient::OpenFile(const CFileItem& file,
   // Some cores "succeed" to load the file even if it doesn't exist
   if (!CFileUtils::Exists(file.GetPath()))
   {
-
     // Failed to play game
     // The required files can't be found.
     MESSAGING::HELPERS::ShowOKDialogText(
@@ -249,7 +248,7 @@ bool CGameClient::OpenFile(const CFileItem& file,
 
   // Initialize disc control subsystem, if supported
   if (SupportsDiscControl())
-    Discs().Initialize();
+    Discs().Initialize(path);
 
   try
   {
