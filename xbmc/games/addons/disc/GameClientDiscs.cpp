@@ -130,7 +130,7 @@ void CGameClientDiscs::RefreshDiscState()
   BuildModelFromCore(coreModel);
   MergeCoreModelIntoFrontend(coreModel);
 
-  m_isEjected = m_transport->GetEjectState();
+  m_isEjected = coreModel.IsEjected();
   m_discModel->SetEjected(m_isEjected);
 
   SaveDiscState();
@@ -290,6 +290,9 @@ void CGameClientDiscs::SaveDiscState()
 void CGameClientDiscs::BuildModelFromCore(CGameClientDiscModel& model) const
 {
   model.Clear();
+  
+  // Load ejected state
+  model.SetEjected(m_transport->GetEjectState());
 
   const unsigned int imageCount = m_transport->GetImageCount();
 
@@ -328,7 +331,7 @@ void CGameClientDiscs::MergeCoreModelIntoFrontend(const CGameClientDiscModel& co
   if (coreModel.Empty() && !m_discModel->Empty())
     return;
 
-  const bool isEjected = m_discModel->IsEjected();
+  const bool isEjected = coreModel.IsEjected();
 
   const MergedDiscSlots merged =
       MergeCoreSlotsByIndex(m_discModel->GetDiscs(), coreModel.GetDiscs());
