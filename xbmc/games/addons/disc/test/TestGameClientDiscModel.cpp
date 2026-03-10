@@ -126,7 +126,6 @@ TEST(TestGameClientDiscModel, MixedSlotModelBehavior)
   EXPECT_EQ(model.GetLabelByIndex(2), "");
 }
 
-
 TEST(TestGameClientDiscModel, RemovedSlotsAreNotSelectable)
 {
   CGameClientDiscModel model;

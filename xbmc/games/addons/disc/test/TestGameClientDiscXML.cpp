@@ -144,7 +144,6 @@ TEST(TestGameClientDiscXML, MergeAfterLoadPreservesRemovedTombstoneAgainstCoreRe
   EXPECT_EQ(merged.discs[1].slotType, GameClientDiscEntry::DiscSlotType::Disc);
 }
 
-
 TEST(TestGameClientDiscXML, LoadLegacyEmptyTypeMapsToRemovedSlot)
 {
   CleanupStateFile();
