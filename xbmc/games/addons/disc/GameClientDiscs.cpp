@@ -10,11 +10,11 @@
 
 #include "addons/kodi-dev-kit/include/kodi/c-api/addon-instance/game.h"
 #include "games/addons/GameClient.h"
+#include "games/addons/disc/GameClientDiscMergeUtils.h"
 #include "games/addons/disc/GameClientDiscModel.h"
 #include "games/addons/disc/GameClientDiscTransport.h"
 
 #include <optional>
-#include <vector>
 
 using namespace KODI;
 using namespace GAME;
@@ -206,62 +206,28 @@ void CGameClientDiscs::BuildModelFromCore(CGameClientDiscModel& model) const
 
 void CGameClientDiscs::MergeCoreModelIntoFrontend(const CGameClientDiscModel& coreModel)
 {
-  const std::vector<GameClientDiscEntry>& previousDiscs = m_discModel->GetDiscs();
-  const std::vector<GameClientDiscEntry>& coreDiscs = coreModel.GetDiscs();
+  const MergedDiscSlots merged = MergeCoreSlotsByIndex(m_discModel->GetDiscs(), coreModel.GetDiscs());
 
-  std::vector<GameClientDiscEntry> mergedDiscs(
-      previousDiscs.size(), {GameClientDiscEntry::DiscSlotType::RemovedSlot, "", "", ""});
+  m_discModel->SetDiscs(merged.discs);
 
-  std::vector<size_t> coreToMerged(coreDiscs.size());
-  size_t corePosition = 0;
+  if (!merged.firstSelectable.has_value())
+    return;
 
-  for (size_t i = 0; i < previousDiscs.size(); ++i)
+  m_discModel->SetMainDiscByIndex(*merged.firstSelectable);
+
+  const std::optional<size_t> selectedCoreIndex = coreModel.GetSelectedDiscIndex();
+  if (selectedCoreIndex.has_value() && *selectedCoreIndex < merged.coreToMerged.size())
   {
-    if (previousDiscs[i].slotType == GameClientDiscEntry::DiscSlotType::RemovedSlot)
-      continue;
+    const std::optional<size_t> selectedMergedIndex = merged.coreToMerged[*selectedCoreIndex];
 
-    if (corePosition >= coreDiscs.size())
-      break;
-
-    mergedDiscs[i] = coreDiscs[corePosition];
-    coreToMerged[corePosition] = i;
-    ++corePosition;
-  }
-
-  while (corePosition < coreDiscs.size())
-  {
-    coreToMerged[corePosition] = mergedDiscs.size();
-    mergedDiscs.push_back(coreDiscs[corePosition]);
-    ++corePosition;
-  }
-
-  m_discModel->SetDiscs(mergedDiscs);
-
-  size_t firstSelectable = m_discModel->Size();
-  for (size_t i = 0; i < m_discModel->Size(); ++i)
-  {
-    if (m_discModel->IsSelectableSlotByIndex(i))
+    if (selectedMergedIndex.has_value() && m_discModel->IsSelectableSlotByIndex(*selectedMergedIndex))
     {
-      firstSelectable = i;
-      break;
+      m_discModel->SetLastDiscByIndex(*selectedMergedIndex);
+      m_discModel->SetSelectedDiscByIndex(*selectedMergedIndex);
+      return;
     }
   }
 
-  if (firstSelectable == m_discModel->Size())
-    return;
-
-  m_discModel->SetMainDiscByIndex(firstSelectable);
-
-  const std::optional<size_t> selectedCoreIndex = coreModel.GetSelectedDiscIndex();
-  if (selectedCoreIndex.has_value() && *selectedCoreIndex < coreToMerged.size())
-  {
-    const size_t selectedMergedIndex = coreToMerged[*selectedCoreIndex];
-    m_discModel->SetLastDiscByIndex(selectedMergedIndex);
-    m_discModel->SetSelectedDiscByIndex(selectedMergedIndex);
-  }
-  else
-  {
-    m_discModel->SetLastDiscByIndex(firstSelectable);
-    m_discModel->SetSelectedNoDisc();
-  }
+  m_discModel->SetLastDiscByIndex(*merged.firstSelectable);
+  m_discModel->SetSelectedNoDisc();
 }
