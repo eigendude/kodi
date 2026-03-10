@@ -24,6 +24,7 @@ struct GameClientDiscEntry
   {
     Disc,
     EmptySlot,
+    RemovedSlot,
   };
 
   DiscSlotType slotType{DiscSlotType::Disc};
@@ -53,11 +54,15 @@ public:
   bool Empty() const;
 
   void Clear();
+  void SetDiscs(const std::vector<GameClientDiscEntry>& discs);
+
 
   bool AddDisc(const std::string& path, const std::string& cachedLabel = "");
   bool AddEmptySlot(const std::string& cachedLabel = "");
+  bool AddRemovedSlot();
   bool RemoveDiscByPath(const std::string& path);
   bool RemoveDiscByIndex(size_t index);
+  bool MarkRemovedByIndex(size_t index);
 
   const std::vector<GameClientDiscEntry>& GetDiscs() const { return m_discs; }
 
@@ -85,6 +90,9 @@ public:
   std::string GetLabelByIndex(size_t index) const;
 
   bool IsEmptySlotByIndex(size_t index) const;
+  bool IsRemovedSlotByIndex(size_t index) const;
+  bool IsSelectableSlotByIndex(size_t index) const;
+  bool IsRealDiscByIndex(size_t index) const;
   const GameClientDiscEntry* GetDiscByIndex(size_t index) const;
 
 private:
