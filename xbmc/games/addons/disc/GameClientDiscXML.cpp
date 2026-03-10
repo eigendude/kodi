@@ -35,10 +35,12 @@ constexpr auto XML_ROOT = "discstate";
 constexpr auto XML_SLOTS = "slots";
 constexpr auto XML_SLOT = "slot";
 constexpr auto XML_SELECTED = "selected";
+constexpr auto XML_TRAY = "tray";
 constexpr auto XML_ATTR_TYPE = "type";
 constexpr auto XML_ATTR_PATH = "path";
 constexpr auto XML_ATTR_LABEL = "label";
 constexpr auto XML_ATTR_INDEX = "index";
+constexpr auto XML_ATTR_EJECTED = "ejected";
 
 constexpr auto TYPE_DISC = "disc";
 constexpr auto TYPE_EMPTY = "empty";
@@ -136,6 +138,16 @@ void ReadSelectedFromXML(const tinyxml2::XMLElement* rootElement, CGameClientDis
   }
 }
 
+void ReadTrayFromXML(const tinyxml2::XMLElement* rootElement, CGameClientDiscModel& model)
+{
+  const tinyxml2::XMLElement* trayElement =
+      rootElement != nullptr ? rootElement->FirstChildElement(XML_TRAY) : nullptr;
+
+  const bool isEjected =
+      trayElement != nullptr && trayElement->BoolAttribute(XML_ATTR_EJECTED, false);
+  model.SetEjected(isEjected);
+}
+
 void WriteSlotsToXML(CXBMCTinyXML2& xmlDoc,
                      tinyxml2::XMLElement* rootElement,
                      const CGameClientDiscModel& model)
@@ -181,6 +193,15 @@ void WriteSlotsToXML(CXBMCTinyXML2& xmlDoc,
 
     slotsElement->InsertEndChild(slotElement);
   }
+}
+
+void WriteTrayToXML(CXBMCTinyXML2& xmlDoc,
+                    tinyxml2::XMLElement* rootElement,
+                    const CGameClientDiscModel& model)
+{
+  tinyxml2::XMLElement* trayElement = xmlDoc.NewElement(XML_TRAY);
+  rootElement->InsertEndChild(trayElement);
+  trayElement->SetAttribute(XML_ATTR_EJECTED, model.IsEjected());
 }
 
 void WriteSelectedToXML(CXBMCTinyXML2& xmlDoc,
@@ -249,6 +270,7 @@ bool CGameClientDiscXML::Load(const std::string& gamePath, CGameClientDiscModel&
   }
 
   ReadSelectedFromXML(rootElement, model);
+  ReadTrayFromXML(rootElement, model);
 
   return true;
 }
@@ -272,6 +294,7 @@ bool CGameClientDiscXML::Save(const std::string& gamePath, const CGameClientDisc
 
   WriteSlotsToXML(xmlDoc, rootElement, model);
   WriteSelectedToXML(xmlDoc, rootElement, model);
+  WriteTrayToXML(xmlDoc, rootElement, model);
 
   const std::string xmlPath = GetXMLPath(gamePath);
   if (!xmlDoc.SaveFile(xmlPath))

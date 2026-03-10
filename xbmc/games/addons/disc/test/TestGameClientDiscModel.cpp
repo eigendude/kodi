@@ -244,3 +244,15 @@ TEST(TestGameClientDiscModel, MergePreservesTrailingRemovedSlotsWhenCoreShrinks)
   EXPECT_EQ(merged.discs[1].slotType, GameClientDiscEntry::DiscSlotType::RemovedSlot);
   EXPECT_EQ(merged.discs[2].slotType, GameClientDiscEntry::DiscSlotType::RemovedSlot);
 }
+
+TEST(TestGameClientDiscModel, ClearResetsEjectedState)
+{
+  CGameClientDiscModel model;
+
+  model.SetEjected(true);
+  ASSERT_TRUE(model.IsEjected());
+
+  model.Clear();
+
+  EXPECT_FALSE(model.IsEjected());
+}
