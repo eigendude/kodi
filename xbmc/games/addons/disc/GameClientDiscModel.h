@@ -94,8 +94,9 @@ public:
   bool IsRealDiscByIndex(size_t index) const;
   const GameClientDiscEntry* GetDiscByIndex(size_t index) const;
 
-private:
   static std::string DeriveBasename(const std::string& path);
+
+private:
   std::optional<size_t> GetReplacementIndex(size_t removedIndex) const;
 
   std::vector<GameClientDiscEntry> m_discs;

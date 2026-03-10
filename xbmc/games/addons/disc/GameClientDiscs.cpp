@@ -13,6 +13,7 @@
 #include "games/addons/disc/GameClientDiscMergeUtils.h"
 #include "games/addons/disc/GameClientDiscModel.h"
 #include "games/addons/disc/GameClientDiscTransport.h"
+#include "games/addons/disc/GameClientDiscXML.h"
 
 #include <optional>
 
@@ -24,7 +25,8 @@ CGameClientDiscs::CGameClientDiscs(CGameClient& gameClient,
                                    CCriticalSection& clientAccess)
   : CGameClientSubsystem(gameClient, addonStruct, clientAccess),
     m_transport(std::make_unique<CGameClientDiscTransport>(gameClient, addonStruct, clientAccess)),
-    m_discModel(std::make_unique<CGameClientDiscModel>())
+    m_discModel(std::make_unique<CGameClientDiscModel>()),
+    m_discXml(std::make_unique<CGameClientDiscXML>())
 {
 }
 
@@ -37,13 +39,15 @@ bool CGameClientDiscs::SupportsDiskControl() const
 
 void CGameClientDiscs::Initialize()
 {
-  //! @todo Restore XML-backed session state if implemented
-  const unsigned int startupIndex = 0;
-  const std::string startupPath;
+  m_discXml->Load(m_gameClient.GetGamePath(), *m_discModel);
 
-  // Restore last-used disc from the XML
-  if (!startupPath.empty())
-    m_transport->SetInitialImage(startupIndex, startupPath);
+  const std::optional<size_t> selectedIndex = m_discModel->GetSelectedDiscIndex();
+  if (selectedIndex.has_value() && m_discModel->IsRealDiscByIndex(*selectedIndex))
+  {
+    const std::string startupPath = m_discModel->GetPathByIndex(*selectedIndex);
+    if (!startupPath.empty())
+      m_transport->SetInitialImage(static_cast<unsigned int>(*selectedIndex), startupPath);
+  }
 
   m_isEjected = m_transport->GetEjectState();
   RefreshDiscState();
@@ -54,6 +58,7 @@ void CGameClientDiscs::RefreshDiscState()
   CGameClientDiscModel coreModel;
   BuildModelFromCore(coreModel);
   MergeCoreModelIntoFrontend(coreModel);
+  SaveDiscState();
 }
 
 bool CGameClientDiscs::SetEjected(bool ejected)
@@ -198,6 +203,11 @@ bool CGameClientDiscs::InsertDiscByIndex(size_t index)
 
   RefreshDiscState();
   return true;
+}
+
+void CGameClientDiscs::SaveDiscState()
+{
+  m_discXml->Save(m_gameClient.GetGamePath(), *m_discModel);
 }
 
 void CGameClientDiscs::BuildModelFromCore(CGameClientDiscModel& model) const

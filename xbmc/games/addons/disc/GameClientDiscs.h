@@ -26,6 +26,7 @@ namespace GAME
 class CGameClient;
 class CGameClientDiscModel;
 class CGameClientDiscTransport;
+class CGameClientDiscXML;
 
 /*!
  * \ingroup games
@@ -56,9 +57,11 @@ public:
 private:
   void BuildModelFromCore(CGameClientDiscModel& model) const;
   void MergeCoreModelIntoFrontend(const CGameClientDiscModel& coreModel);
+  void SaveDiscState();
 
   // Add-on parameters
   std::unique_ptr<CGameClientDiscTransport> m_transport;
+  std::unique_ptr<CGameClientDiscXML> m_discXml;
 
   // Game parameters
   std::unique_ptr<CGameClientDiscModel> m_discModel;
