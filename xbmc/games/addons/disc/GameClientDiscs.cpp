@@ -290,7 +290,7 @@ void CGameClientDiscs::SaveDiscState()
 void CGameClientDiscs::BuildModelFromCore(CGameClientDiscModel& model) const
 {
   model.Clear();
-  
+
   // Load ejected state
   model.SetEjected(m_transport->GetEjectState());
 
