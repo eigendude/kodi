@@ -89,23 +89,6 @@ TEST(TestGameClientDiscModel, ReplacementSkipsRemovedSlots)
   EXPECT_EQ(model.GetLastDiscPath(), "/roms/disc1.chd");
 }
 
-TEST(TestGameClientDiscModel, EmptyAndRemovedSlotsRemainDistinct)
-{
-  // Verify zombie empty slots are distinct from frontend removed slots.
-  CGameClientDiscModel model;
-
-  ASSERT_TRUE(model.AddEmptySlot("Zombie Slot"));
-  ASSERT_TRUE(model.AddDisc("/roms/disc2.chd"));
-  ASSERT_TRUE(model.MarkRemovedByIndex(1));
-
-  EXPECT_TRUE(model.IsEmptySlotByIndex(0));
-  EXPECT_FALSE(model.IsRemovedSlotByIndex(0));
-  EXPECT_TRUE(model.IsRemovedSlotByIndex(1));
-  EXPECT_FALSE(model.IsEmptySlotByIndex(1));
-  EXPECT_EQ(model.GetLabelByIndex(0), "Zombie Slot");
-  EXPECT_EQ(model.GetLabelByIndex(1), "");
-}
-
 TEST(TestGameClientDiscModel, SelectionMainAndLastDoNotPointToRemoved)
 {
   // Verify tracked indices are redirected away from removed slots.
@@ -127,30 +110,42 @@ TEST(TestGameClientDiscModel, SelectionMainAndLastDoNotPointToRemoved)
 
 TEST(TestGameClientDiscModel, MixedSlotModelBehavior)
 {
-  // Verify mixed Disc/EmptySlot/RemovedSlot behavior for labels and paths.
+  // Verify mixed Disc/RemovedSlot behavior for labels and paths.
   CGameClientDiscModel model;
 
   ASSERT_TRUE(model.AddDisc("/roms/disc1.chd"));
-  ASSERT_TRUE(model.AddEmptySlot("Core Empty"));
+  ASSERT_TRUE(model.AddRemovedSlot());
   ASSERT_TRUE(model.AddDisc("/roms/disc3.chd", "Disc 3"));
   ASSERT_TRUE(model.MarkRemovedByIndex(2));
 
   EXPECT_EQ(model.GetPathByIndex(0), "/roms/disc1.chd");
   EXPECT_EQ(model.GetLabelByIndex(0), "disc1.chd");
   EXPECT_EQ(model.GetPathByIndex(1), "");
-  EXPECT_EQ(model.GetLabelByIndex(1), "Core Empty");
+  EXPECT_EQ(model.GetLabelByIndex(1), "");
   EXPECT_EQ(model.GetPathByIndex(2), "");
   EXPECT_EQ(model.GetLabelByIndex(2), "");
 }
 
-TEST(TestGameClientDiscModel, MergePreservesRemovedTombstoneWhenCoreReportsEmpty)
+
+TEST(TestGameClientDiscModel, RemovedSlotsAreNotSelectable)
+{
+  CGameClientDiscModel model;
+
+  ASSERT_TRUE(model.AddDisc("/roms/disc1.chd"));
+  ASSERT_TRUE(model.AddRemovedSlot());
+
+  EXPECT_TRUE(model.IsSelectableSlotByIndex(0));
+  EXPECT_FALSE(model.IsSelectableSlotByIndex(1));
+}
+
+TEST(TestGameClientDiscModel, MergePreservesRemovedTombstoneWhenCoreReportsRemoved)
 {
   std::vector<GameClientDiscEntry> previousDiscs{
       {GameClientDiscEntry::DiscSlotType::RemovedSlot, "", "", ""},
       {GameClientDiscEntry::DiscSlotType::Disc, "/roms/disc2.chd", "disc2.chd", ""}};
 
   std::vector<GameClientDiscEntry> coreDiscs{
-      {GameClientDiscEntry::DiscSlotType::EmptySlot, "", "", "Zombie"},
+      {GameClientDiscEntry::DiscSlotType::RemovedSlot, "", "", ""},
       {GameClientDiscEntry::DiscSlotType::Disc, "/roms/disc2.chd", "disc2.chd", ""}};
 
   const MergedDiscSlots merged = MergeCoreSlotsByIndex(previousDiscs, coreDiscs);
@@ -160,22 +155,6 @@ TEST(TestGameClientDiscModel, MergePreservesRemovedTombstoneWhenCoreReportsEmpty
   EXPECT_EQ(merged.discs[1].slotType, GameClientDiscEntry::DiscSlotType::Disc);
 }
 
-TEST(TestGameClientDiscModel, MergePreservesGenuineEmptySlotWhenNoRemovedTombstone)
-{
-  std::vector<GameClientDiscEntry> previousDiscs{
-      {GameClientDiscEntry::DiscSlotType::Disc, "/roms/disc1.chd", "disc1.chd", ""}};
-
-  std::vector<GameClientDiscEntry> coreDiscs{
-      {GameClientDiscEntry::DiscSlotType::Disc, "/roms/disc1.chd", "disc1.chd", ""},
-      {GameClientDiscEntry::DiscSlotType::EmptySlot, "", "", "Core Empty"}};
-
-  const MergedDiscSlots merged = MergeCoreSlotsByIndex(previousDiscs, coreDiscs);
-
-  ASSERT_EQ(merged.discs.size(), 2U);
-  EXPECT_EQ(merged.discs[1].slotType, GameClientDiscEntry::DiscSlotType::EmptySlot);
-  EXPECT_EQ(merged.discs[1].cachedLabel, "Core Empty");
-}
-
 TEST(TestGameClientDiscModel, MergeDoesNotDuplicateRemovedTombstone)
 {
   std::vector<GameClientDiscEntry> previousDiscs{
@@ -183,38 +162,33 @@ TEST(TestGameClientDiscModel, MergeDoesNotDuplicateRemovedTombstone)
       {GameClientDiscEntry::DiscSlotType::Disc, "/roms/disc2.chd", "disc2.chd", ""}};
 
   std::vector<GameClientDiscEntry> coreDiscs{
-      {GameClientDiscEntry::DiscSlotType::EmptySlot, "", "", "Zombie"},
+      {GameClientDiscEntry::DiscSlotType::RemovedSlot, "", "", ""},
       {GameClientDiscEntry::DiscSlotType::Disc, "/roms/disc2.chd", "disc2.chd", ""}};
 
   const MergedDiscSlots merged = MergeCoreSlotsByIndex(previousDiscs, coreDiscs);
 
   size_t removedCount = 0;
   size_t discCount = 0;
-  size_t emptyCount = 0;
-
   for (const auto& disc : merged.discs)
   {
     if (disc.slotType == GameClientDiscEntry::DiscSlotType::RemovedSlot)
       ++removedCount;
     else if (disc.slotType == GameClientDiscEntry::DiscSlotType::Disc)
       ++discCount;
-    else
-      ++emptyCount;
   }
 
   EXPECT_EQ(removedCount, 1U);
   EXPECT_EQ(discCount, 1U);
-  EXPECT_EQ(emptyCount, 0U);
 }
 
-TEST(TestGameClientDiscModel, MergeSelectionMappingSkipsRemovedSlot)
+TEST(TestGameClientDiscModel, MergeSelectionMappingKeepsDiscIndex)
 {
   std::vector<GameClientDiscEntry> previousDiscs{
       {GameClientDiscEntry::DiscSlotType::RemovedSlot, "", "", ""},
       {GameClientDiscEntry::DiscSlotType::Disc, "/roms/disc2.chd", "disc2.chd", ""}};
 
   std::vector<GameClientDiscEntry> coreDiscs{
-      {GameClientDiscEntry::DiscSlotType::EmptySlot, "", "", "Zombie"},
+      {GameClientDiscEntry::DiscSlotType::RemovedSlot, "", "", ""},
       {GameClientDiscEntry::DiscSlotType::Disc, "/roms/disc2.chd", "disc2.chd", ""}};
 
   const MergedDiscSlots merged = MergeCoreSlotsByIndex(previousDiscs, coreDiscs);
@@ -222,7 +196,8 @@ TEST(TestGameClientDiscModel, MergeSelectionMappingSkipsRemovedSlot)
   ASSERT_TRUE(merged.firstSelectable.has_value());
   EXPECT_EQ(*merged.firstSelectable, 1U);
   ASSERT_EQ(merged.coreToMerged.size(), 2U);
-  EXPECT_FALSE(merged.coreToMerged[0].has_value());
+  ASSERT_TRUE(merged.coreToMerged[0].has_value());
+  EXPECT_EQ(*merged.coreToMerged[0], 0U);
   ASSERT_TRUE(merged.coreToMerged[1].has_value());
   EXPECT_EQ(*merged.coreToMerged[1], 1U);
 }

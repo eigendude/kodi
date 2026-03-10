@@ -13,16 +13,6 @@
 using namespace KODI;
 using namespace GAME;
 
-namespace
-{
-bool ShouldPreserveRemovedTombstone(const GameClientDiscEntry& previousDisc,
-                                    const GameClientDiscEntry& coreDisc)
-{
-  return previousDisc.slotType == GameClientDiscEntry::DiscSlotType::RemovedSlot &&
-         coreDisc.slotType == GameClientDiscEntry::DiscSlotType::EmptySlot;
-}
-} // namespace
-
 bool KODI::GAME::IsSelectableDiscSlot(const GameClientDiscEntry& discEntry)
 {
   return discEntry.slotType != GameClientDiscEntry::DiscSlotType::RemovedSlot;
@@ -39,12 +29,6 @@ MergedDiscSlots KODI::GAME::MergeCoreSlotsByIndex(
   const size_t overlapCount = std::min(previousDiscs.size(), coreDiscs.size());
   for (size_t i = 0; i < overlapCount; ++i)
   {
-    if (ShouldPreserveRemovedTombstone(previousDiscs[i], coreDiscs[i]))
-    {
-      merged.discs.push_back(previousDiscs[i]);
-      continue;
-    }
-
     merged.discs.push_back(coreDiscs[i]);
     merged.coreToMerged[i] = i;
   }

@@ -43,7 +43,7 @@ constexpr auto XML_ATTR_INDEX = "index";
 constexpr auto XML_ATTR_EJECTED = "ejected";
 
 constexpr auto TYPE_DISC = "disc";
-constexpr auto TYPE_EMPTY = "empty";
+constexpr auto TYPE_EMPTY = "empty"; // legacy: load-only, maps to removed tombstone
 constexpr auto TYPE_REMOVED = "removed";
 constexpr auto TYPE_NONE = "none";
 
@@ -90,7 +90,8 @@ std::vector<GameClientDiscEntry> ReadSlotsFromXML(const tinyxml2::XMLElement* ro
     }
     else if (type != nullptr && std::strcmp(type, TYPE_EMPTY) == 0)
     {
-      discs.push_back({GameClientDiscEntry::DiscSlotType::EmptySlot, "", "", label});
+      // Backward compatibility: old empty slots are now removed tombstones.
+      discs.push_back({GameClientDiscEntry::DiscSlotType::RemovedSlot, "", "", ""});
     }
     else
     {
@@ -102,7 +103,7 @@ std::vector<GameClientDiscEntry> ReadSlotsFromXML(const tinyxml2::XMLElement* ro
       }
       else
       {
-        discs.push_back({GameClientDiscEntry::DiscSlotType::EmptySlot, "", "", label});
+        discs.push_back({GameClientDiscEntry::DiscSlotType::RemovedSlot, "", "", ""});
       }
     }
 
@@ -170,16 +171,9 @@ void WriteSlotsToXML(CXBMCTinyXML2& xmlDoc,
         }
         else
         {
-          slotElement->SetAttribute(XML_ATTR_TYPE, TYPE_EMPTY);
+          slotElement->SetAttribute(XML_ATTR_TYPE, TYPE_REMOVED);
         }
 
-        if (!disc.cachedLabel.empty())
-          slotElement->SetAttribute(XML_ATTR_LABEL, disc.cachedLabel.c_str());
-        break;
-      }
-      case GameClientDiscEntry::DiscSlotType::EmptySlot:
-      {
-        slotElement->SetAttribute(XML_ATTR_TYPE, TYPE_EMPTY);
         if (!disc.cachedLabel.empty())
           slotElement->SetAttribute(XML_ATTR_LABEL, disc.cachedLabel.c_str());
         break;

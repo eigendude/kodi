@@ -61,21 +61,6 @@ bool CGameClientDiscModel::AddDisc(const std::string& path, const std::string& c
   return true;
 }
 
-bool CGameClientDiscModel::AddEmptySlot(const std::string& cachedLabel)
-{
-  m_discs.push_back({GameClientDiscEntry::DiscSlotType::EmptySlot, "", "", cachedLabel});
-
-  if (m_discs.size() == 1)
-  {
-    m_mainDiscIndex = 0;
-    m_lastDiscIndex = 0;
-    m_selectedType = DiscSelectionType::Disc;
-    m_selectedDiscIndex = 0;
-  }
-
-  return true;
-}
-
 bool CGameClientDiscModel::AddRemovedSlot()
 {
   m_discs.push_back({GameClientDiscEntry::DiscSlotType::RemovedSlot, "", "", ""});
@@ -304,9 +289,6 @@ std::string CGameClientDiscModel::GetLabelByIndex(size_t index) const
   if (!disc->cachedLabel.empty())
     return disc->cachedLabel;
 
-  if (disc->slotType == GameClientDiscEntry::DiscSlotType::EmptySlot)
-    return "";
-
   if (!disc->basename.empty())
     return disc->basename;
 
@@ -315,15 +297,6 @@ std::string CGameClientDiscModel::GetLabelByIndex(size_t index) const
     return basename;
 
   return disc->path;
-}
-
-bool CGameClientDiscModel::IsEmptySlotByIndex(size_t index) const
-{
-  const GameClientDiscEntry* disc = GetDiscByIndex(index);
-  if (disc == nullptr)
-    return false;
-
-  return disc->slotType == GameClientDiscEntry::DiscSlotType::EmptySlot;
 }
 
 bool CGameClientDiscModel::IsRemovedSlotByIndex(size_t index) const

@@ -43,13 +43,13 @@ std::string ReadStateXml()
 }
 } // namespace
 
-TEST(TestGameClientDiscXML, SaveLoadRoundtripPreservesSlotTypesAndLabels)
+TEST(TestGameClientDiscXML, SaveLoadRoundtripPreservesSlotTypes)
 {
   CleanupStateFile();
 
   CGameClientDiscModel savedModel;
   ASSERT_TRUE(savedModel.AddDisc("/roms/disc1.chd", "Disc One"));
-  ASSERT_TRUE(savedModel.AddEmptySlot("Zombie"));
+  ASSERT_TRUE(savedModel.AddRemovedSlot());
   ASSERT_TRUE(savedModel.AddRemovedSlot());
 
   ASSERT_TRUE(savedModel.SetSelectedDiscByIndex(0));
@@ -62,11 +62,10 @@ TEST(TestGameClientDiscXML, SaveLoadRoundtripPreservesSlotTypesAndLabels)
 
   ASSERT_EQ(loadedModel.Size(), 3U);
   EXPECT_TRUE(loadedModel.IsRealDiscByIndex(0));
-  EXPECT_TRUE(loadedModel.IsEmptySlotByIndex(1));
+  EXPECT_TRUE(loadedModel.IsRemovedSlotByIndex(1));
   EXPECT_TRUE(loadedModel.IsRemovedSlotByIndex(2));
   EXPECT_EQ(loadedModel.GetPathByIndex(0), "/roms/disc1.chd");
   EXPECT_EQ(loadedModel.GetLabelByIndex(0), "Disc One");
-  EXPECT_EQ(loadedModel.GetLabelByIndex(1), "Zombie");
 
   ASSERT_TRUE(loadedModel.GetSelectedDiscIndex().has_value());
   EXPECT_EQ(*loadedModel.GetSelectedDiscIndex(), 0U);
@@ -127,14 +126,14 @@ TEST(TestGameClientDiscXML, MalformedXmlFailsAndClearsModel)
   CleanupStateFile();
 }
 
-TEST(TestGameClientDiscXML, MergeAfterLoadPreservesRemovedTombstoneAgainstCoreEmpty)
+TEST(TestGameClientDiscXML, MergeAfterLoadPreservesRemovedTombstoneAgainstCoreRemoved)
 {
   CGameClientDiscModel loadedModel;
   ASSERT_TRUE(loadedModel.AddRemovedSlot());
   ASSERT_TRUE(loadedModel.AddDisc("/roms/disc2.chd"));
 
   CGameClientDiscModel coreModel;
-  ASSERT_TRUE(coreModel.AddEmptySlot("Zombie"));
+  ASSERT_TRUE(coreModel.AddRemovedSlot());
   ASSERT_TRUE(coreModel.AddDisc("/roms/disc2.chd"));
 
   const MergedDiscSlots merged =
@@ -143,6 +142,32 @@ TEST(TestGameClientDiscXML, MergeAfterLoadPreservesRemovedTombstoneAgainstCoreEm
   ASSERT_EQ(merged.discs.size(), 2U);
   EXPECT_EQ(merged.discs[0].slotType, GameClientDiscEntry::DiscSlotType::RemovedSlot);
   EXPECT_EQ(merged.discs[1].slotType, GameClientDiscEntry::DiscSlotType::Disc);
+}
+
+
+TEST(TestGameClientDiscXML, LoadLegacyEmptyTypeMapsToRemovedSlot)
+{
+  CleanupStateFile();
+
+  const std::string xmlPath = CGameClientDiscXML::GetXMLPath(GAME_PATH);
+
+  XFILE::CFile file;
+  ASSERT_TRUE(file.OpenForWrite(xmlPath, true));
+  static constexpr char xml[] =
+      "<discstate><slots><slot type=\"empty\" label=\"Zombie\"/></slots></discstate>";
+  ASSERT_EQ(file.Write(xml, sizeof(xml) - 1), sizeof(xml) - 1);
+  file.Close();
+
+  CGameClientDiscXML discXml;
+  CGameClientDiscModel loadedModel;
+  ASSERT_TRUE(discXml.Load(GAME_PATH, loadedModel));
+
+  ASSERT_EQ(loadedModel.Size(), 1U);
+  EXPECT_TRUE(loadedModel.IsRemovedSlotByIndex(0));
+  EXPECT_EQ(loadedModel.GetPathByIndex(0), "");
+  EXPECT_EQ(loadedModel.GetLabelByIndex(0), "");
+
+  CleanupStateFile();
 }
 
 TEST(TestGameClientDiscXML, SaveWritesEjectedTrue)

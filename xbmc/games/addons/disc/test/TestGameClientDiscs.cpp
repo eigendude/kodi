@@ -80,7 +80,7 @@ TEST(TestGameClientDiscs, PersistedAndCoreNonEmptyStillMerge)
   ASSERT_TRUE(persisted.AddDisc("/roms/disc2.chd"));
 
   CGameClientDiscModel core;
-  ASSERT_TRUE(core.AddEmptySlot("Zombie"));
+  ASSERT_TRUE(core.AddRemovedSlot());
   ASSERT_TRUE(core.AddDisc("/roms/disc2.chd"));
 
   const MergedDiscSlots merged = MergeCoreSlotsByIndex(persisted.GetDiscs(), core.GetDiscs());
