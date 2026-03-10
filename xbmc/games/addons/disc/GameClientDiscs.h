@@ -58,6 +58,7 @@ public:
 private:
   void BuildModelFromCore(CGameClientDiscModel& model) const;
   void MergeCoreModelIntoFrontend(const CGameClientDiscModel& coreModel);
+  void RestoreDiscListBeforeLoad();
   void SaveDiscState();
 
   // Add-on parameters
