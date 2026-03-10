@@ -13,6 +13,7 @@
 #include <atomic>
 #include <cstddef>
 #include <memory>
+#include <optional>
 #include <string>
 
 struct AddonInstance_Game;

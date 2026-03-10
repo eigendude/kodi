@@ -20,6 +20,21 @@
 using namespace KODI;
 using namespace GAME;
 
+namespace
+{
+bool HasUsableStartupDisc(const CGameClientDiscModel& model,
+                          std::optional<size_t>& selectedIndex,
+                          std::string& startupPath)
+{
+  selectedIndex = model.GetSelectedDiscIndex();
+  if (!selectedIndex.has_value() || !model.IsRealDiscByIndex(*selectedIndex))
+    return false;
+
+  startupPath = model.GetPathByIndex(*selectedIndex);
+  return !startupPath.empty();
+}
+} // namespace
+
 CGameClientDiscs::CGameClientDiscs(CGameClient& gameClient,
                                    AddonInstance_Game& addonStruct,
                                    CCriticalSection& clientAccess)
@@ -39,15 +54,14 @@ bool CGameClientDiscs::SupportsDiskControl() const
 
 void CGameClientDiscs::Initialize(const std::string& gamePath)
 {
-  m_discXml->Load(gamePath, *m_discModel);
+  CGameClientDiscModel restoredModel;
+  if (m_discXml->Load(gamePath, restoredModel) && !restoredModel.Empty())
+    *m_discModel = restoredModel;
 
-  const std::optional<size_t> selectedIndex = m_discModel->GetSelectedDiscIndex();
-  if (selectedIndex.has_value() && m_discModel->IsRealDiscByIndex(*selectedIndex))
-  {
-    const std::string startupPath = m_discModel->GetPathByIndex(*selectedIndex);
-    if (!startupPath.empty())
-      m_transport->SetInitialImage(static_cast<unsigned int>(*selectedIndex), startupPath);
-  }
+  std::optional<size_t> selectedIndex;
+  std::string startupPath;
+  if (HasUsableStartupDisc(restoredModel, selectedIndex, startupPath))
+    m_transport->SetInitialImage(static_cast<unsigned int>(*selectedIndex), startupPath);
 
   m_isEjected = m_transport->GetEjectState();
   RefreshDiscState();
@@ -248,6 +262,9 @@ void CGameClientDiscs::BuildModelFromCore(CGameClientDiscModel& model) const
 
 void CGameClientDiscs::MergeCoreModelIntoFrontend(const CGameClientDiscModel& coreModel)
 {
+  if (coreModel.Empty() && !m_discModel->Empty())
+    return;
+
   const MergedDiscSlots merged =
       MergeCoreSlotsByIndex(m_discModel->GetDiscs(), coreModel.GetDiscs());
 
