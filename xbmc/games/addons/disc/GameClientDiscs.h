@@ -54,7 +54,8 @@ public:
   bool InsertDiscByIndex(size_t index);
 
 private:
-  void PopulateModelFromCore(CGameClientDiscModel& model);
+  void BuildModelFromCore(CGameClientDiscModel& model) const;
+  void MergeCoreModelIntoFrontend(const CGameClientDiscModel& coreModel);
 
   // Add-on parameters
   std::unique_ptr<CGameClientDiscTransport> m_transport;

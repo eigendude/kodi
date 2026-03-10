@@ -91,6 +91,10 @@ void CDiscManagerDiscList::UpdateItems()
 
   for (size_t i = 0; i < discList.Size(); ++i)
   {
+    // If disc has been removed from the list, this could be a zombie entry
+    if (discList.IsRemovedSlotByIndex(i))
+      continue;
+
     const std::string path = discList.GetPathByIndex(i);
     const std::string label = discList.GetLabelByIndex(i);
 

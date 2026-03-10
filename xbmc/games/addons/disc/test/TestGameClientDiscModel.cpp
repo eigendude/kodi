@@ -13,100 +13,131 @@
 using namespace KODI;
 using namespace GAME;
 
-TEST(TestGameClientDiscModel, AddDiscAndEmptySlotSemantics)
+TEST(TestGameClientDiscModel, AddDiscAndMarkRemovedKeepsSize)
 {
-  // Verify real discs and placeholder empty slots can coexist in insertion order.
+  // Verify removing a disc marks a tombstone without shrinking the model.
   CGameClientDiscModel model;
 
   ASSERT_TRUE(model.AddDisc("/roms/disc1.chd"));
-  ASSERT_TRUE(model.AddEmptySlot());
-  ASSERT_TRUE(model.AddEmptySlot("Corrupt Disc 3"));
+  ASSERT_TRUE(model.AddDisc("/roms/disc2.chd"));
 
-  ASSERT_EQ(model.Size(), 3U);
-  EXPECT_FALSE(model.IsEmptySlotByIndex(0));
-  EXPECT_TRUE(model.IsEmptySlotByIndex(1));
-  EXPECT_TRUE(model.IsEmptySlotByIndex(2));
-  EXPECT_EQ(model.GetPathByIndex(1), "");
-  EXPECT_EQ(model.GetLabelByIndex(1), "");
-  EXPECT_EQ(model.GetLabelByIndex(2), "Corrupt Disc 3");
+  ASSERT_TRUE(model.MarkRemovedByIndex(0));
+
+  EXPECT_EQ(model.Size(), 2U);
+  EXPECT_TRUE(model.IsRemovedSlotByIndex(0));
+  EXPECT_FALSE(model.IsRemovedSlotByIndex(1));
 }
 
-TEST(TestGameClientDiscModel, DuplicateDiscPathsRejectedButMultipleEmptySlotsAllowed)
+TEST(TestGameClientDiscModel, RemovedSlotClearsPathAndLabel)
 {
-  // Verify path uniqueness applies only to real disc entries.
+  // Verify removed slots no longer expose path/label information.
   CGameClientDiscModel model;
 
-  ASSERT_TRUE(model.AddDisc("/roms/disc1.chd"));
-  EXPECT_FALSE(model.AddDisc("/roms/disc1.chd"));
+  ASSERT_TRUE(model.AddDisc("/roms/game/disc1.iso", "Disc One"));
+  ASSERT_TRUE(model.MarkRemovedByIndex(0));
 
-  ASSERT_TRUE(model.AddEmptySlot());
-  ASSERT_TRUE(model.AddEmptySlot());
-
-  EXPECT_EQ(model.Size(), 3U);
+  EXPECT_EQ(model.GetPathByIndex(0), "");
+  EXPECT_EQ(model.GetLabelByIndex(0), "");
 }
 
-TEST(TestGameClientDiscModel, SelectionDistinguishesDiscEmptySlotAndNoDisc)
+TEST(TestGameClientDiscModel, LookupIgnoresRemovedSlots)
 {
-  // Verify selected placeholder slot is distinct from explicit "no disc" state.
-  CGameClientDiscModel model;
-
-  ASSERT_TRUE(model.AddDisc("/roms/disc1.chd"));
-  ASSERT_TRUE(model.AddEmptySlot());
-
-  ASSERT_TRUE(model.SetSelectedDiscByIndex(1));
-  EXPECT_TRUE(model.HasSelectedDisc());
-  EXPECT_FALSE(model.IsSelectedNoDisc());
-  ASSERT_TRUE(model.GetSelectedDiscIndex().has_value());
-  EXPECT_EQ(*model.GetSelectedDiscIndex(), 1U);
-  EXPECT_EQ(model.GetSelectedDiscPath(), "");
-
-  model.SetSelectedNoDisc();
-  EXPECT_TRUE(model.IsSelectedNoDisc());
-  EXPECT_FALSE(model.GetSelectedDiscIndex().has_value());
-}
-
-TEST(TestGameClientDiscModel, RemoveByPathOnlyTargetsRealDiscs)
-{
-  // Verify placeholder slots are index-addressed and not removable by empty path.
-  CGameClientDiscModel model;
-
-  ASSERT_TRUE(model.AddDisc("/roms/disc1.chd"));
-  ASSERT_TRUE(model.AddEmptySlot());
-
-  EXPECT_FALSE(model.RemoveDiscByPath(""));
-  EXPECT_TRUE(model.RemoveDiscByPath("/roms/disc1.chd"));
-  EXPECT_EQ(model.Size(), 1U);
-  EXPECT_TRUE(model.IsEmptySlotByIndex(0));
-}
-
-TEST(TestGameClientDiscModel, LabelFallbackForRealDiscs)
-{
-  // Verify real disc labels keep basename/cached-label fallback behavior.
+  // Verify removed slots are ignored by path/basename lookup.
   CGameClientDiscModel model;
 
   ASSERT_TRUE(model.AddDisc("/roms/game/disc1.iso"));
-  EXPECT_EQ(model.GetLabelByIndex(0), "disc1.iso");
+  ASSERT_TRUE(model.MarkRemovedByIndex(0));
 
-  ASSERT_TRUE(model.UpdateCachedLabel("/roms/game/disc1.iso", "Disc One"));
-  EXPECT_EQ(model.GetLabelByIndex(0), "Disc One");
+  EXPECT_FALSE(model.GetDiscIndexByPath("/roms/game/disc1.iso").has_value());
+  EXPECT_FALSE(model.GetDiscIndexByBasename("disc1.iso").has_value());
 }
 
-TEST(TestGameClientDiscModel, RemovalReplacementWithMixedSlots)
+TEST(TestGameClientDiscModel, MultipleRemovedSlotsCanCoexist)
 {
-  // Verify replacement chooses neighboring index for selected/last with mixed slot types.
+  // Verify multiple tombstones can coexist and preserve index slots.
   CGameClientDiscModel model;
 
   ASSERT_TRUE(model.AddDisc("/roms/disc1.chd"));
-  ASSERT_TRUE(model.AddEmptySlot());
+  ASSERT_TRUE(model.AddDisc("/roms/disc2.chd"));
+  ASSERT_TRUE(model.AddDisc("/roms/disc3.chd"));
+
+  ASSERT_TRUE(model.MarkRemovedByIndex(0));
+  ASSERT_TRUE(model.MarkRemovedByIndex(2));
+
+  EXPECT_EQ(model.Size(), 3U);
+  EXPECT_TRUE(model.IsRemovedSlotByIndex(0));
+  EXPECT_FALSE(model.IsRemovedSlotByIndex(1));
+  EXPECT_TRUE(model.IsRemovedSlotByIndex(2));
+}
+
+TEST(TestGameClientDiscModel, ReplacementSkipsRemovedSlots)
+{
+  // Verify selected/last replacement skips removed tombstones.
+  CGameClientDiscModel model;
+
+  ASSERT_TRUE(model.AddDisc("/roms/disc1.chd"));
+  ASSERT_TRUE(model.AddDisc("/roms/disc2.chd"));
   ASSERT_TRUE(model.AddDisc("/roms/disc3.chd"));
 
   ASSERT_TRUE(model.SetLastDiscByIndex(1));
   ASSERT_TRUE(model.SetSelectedDiscByIndex(1));
-
-  ASSERT_TRUE(model.RemoveDiscByIndex(1));
+  ASSERT_TRUE(model.MarkRemovedByIndex(1));
 
   ASSERT_TRUE(model.GetSelectedDiscIndex().has_value());
-  EXPECT_EQ(*model.GetSelectedDiscIndex(), 1U);
-  EXPECT_EQ(model.GetLabelByIndex(1), "disc3.chd");
-  EXPECT_EQ(model.GetLastDiscPath(), "/roms/disc3.chd");
+  EXPECT_EQ(*model.GetSelectedDiscIndex(), 0U);
+  EXPECT_EQ(model.GetLastDiscPath(), "/roms/disc1.chd");
+}
+
+TEST(TestGameClientDiscModel, EmptyAndRemovedSlotsRemainDistinct)
+{
+  // Verify zombie empty slots are distinct from frontend removed slots.
+  CGameClientDiscModel model;
+
+  ASSERT_TRUE(model.AddEmptySlot("Zombie Slot"));
+  ASSERT_TRUE(model.AddDisc("/roms/disc2.chd"));
+  ASSERT_TRUE(model.MarkRemovedByIndex(1));
+
+  EXPECT_TRUE(model.IsEmptySlotByIndex(0));
+  EXPECT_FALSE(model.IsRemovedSlotByIndex(0));
+  EXPECT_TRUE(model.IsRemovedSlotByIndex(1));
+  EXPECT_FALSE(model.IsEmptySlotByIndex(1));
+  EXPECT_EQ(model.GetLabelByIndex(0), "Zombie Slot");
+  EXPECT_EQ(model.GetLabelByIndex(1), "");
+}
+
+TEST(TestGameClientDiscModel, SelectionMainAndLastDoNotPointToRemoved)
+{
+  // Verify tracked indices are redirected away from removed slots.
+  CGameClientDiscModel model;
+
+  ASSERT_TRUE(model.AddDisc("/roms/disc1.chd"));
+  ASSERT_TRUE(model.AddDisc("/roms/disc2.chd"));
+  ASSERT_TRUE(model.SetMainDiscByIndex(1));
+  ASSERT_TRUE(model.SetLastDiscByIndex(1));
+  ASSERT_TRUE(model.SetSelectedDiscByIndex(1));
+
+  ASSERT_TRUE(model.MarkRemovedByIndex(1));
+
+  ASSERT_TRUE(model.GetSelectedDiscIndex().has_value());
+  EXPECT_EQ(*model.GetSelectedDiscIndex(), 0U);
+  EXPECT_EQ(model.GetMainDiscPath(), "/roms/disc1.chd");
+  EXPECT_EQ(model.GetLastDiscPath(), "/roms/disc1.chd");
+}
+
+TEST(TestGameClientDiscModel, MixedSlotModelBehavior)
+{
+  // Verify mixed Disc/EmptySlot/RemovedSlot behavior for labels and paths.
+  CGameClientDiscModel model;
+
+  ASSERT_TRUE(model.AddDisc("/roms/disc1.chd"));
+  ASSERT_TRUE(model.AddEmptySlot("Core Empty"));
+  ASSERT_TRUE(model.AddDisc("/roms/disc3.chd", "Disc 3"));
+  ASSERT_TRUE(model.MarkRemovedByIndex(2));
+
+  EXPECT_EQ(model.GetPathByIndex(0), "/roms/disc1.chd");
+  EXPECT_EQ(model.GetLabelByIndex(0), "disc1.chd");
+  EXPECT_EQ(model.GetPathByIndex(1), "");
+  EXPECT_EQ(model.GetLabelByIndex(1), "Core Empty");
+  EXPECT_EQ(model.GetPathByIndex(2), "");
+  EXPECT_EQ(model.GetLabelByIndex(2), "");
 }
