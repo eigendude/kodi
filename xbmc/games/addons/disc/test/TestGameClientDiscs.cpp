@@ -49,6 +49,20 @@ TEST(TestGameClientDiscs, HasUsableStartupDiscUsesPersistedSelectedDisc)
   EXPECT_EQ(startupPath, "/roms/disc2.chd");
 }
 
+
+TEST(TestGameClientDiscs, HasUsableStartupDiscRejectsNonDiscSelection)
+{
+  CGameClientDiscModel persisted;
+  ASSERT_TRUE(persisted.AddDisc("/roms/disc1.chd"));
+  ASSERT_TRUE(persisted.AddRemovedSlot());
+  ASSERT_TRUE(persisted.SetSelectedDiscByIndex(1));
+
+  std::optional<size_t> selectedIndex;
+  std::string startupPath;
+
+  EXPECT_FALSE(HasUsableStartupDisc(persisted, selectedIndex, startupPath));
+}
+
 TEST(TestGameClientDiscs, EmptyPersistedAndEmptyCoreRemainEmpty)
 {
   CGameClientDiscModel persisted;
