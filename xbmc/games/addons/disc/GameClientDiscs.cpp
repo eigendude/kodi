@@ -308,8 +308,6 @@ void CGameClientDiscs::BuildModelFromCore(CGameClientDiscModel& model) const
   if (model.Empty())
     return;
 
-  model.SetMainDiscByIndex(0);
-
   const unsigned int imageIndex = m_transport->GetImageIndex();
 
   if (imageIndex < imageCount)
@@ -339,8 +337,6 @@ void CGameClientDiscs::MergeCoreModelIntoFrontend(const CGameClientDiscModel& co
 
   if (!merged.firstSelectable.has_value())
     return;
-
-  m_discModel->SetMainDiscByIndex(*merged.firstSelectable);
 
   const std::optional<size_t> selectedCoreIndex = coreModel.GetSelectedDiscIndex();
   if (selectedCoreIndex.has_value() && *selectedCoreIndex < merged.coreToMerged.size())

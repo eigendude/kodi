@@ -258,10 +258,7 @@ bool CGameClientDiscXML::Load(const std::string& gamePath, CGameClientDiscModel&
 
   const std::optional<size_t> firstSelectable = GetFirstSelectable(model);
   if (firstSelectable.has_value())
-  {
-    model.SetMainDiscByIndex(*firstSelectable);
     model.SetLastDiscByIndex(*firstSelectable);
-  }
 
   ReadSelectedFromXML(rootElement, model);
   ReadTrayFromXML(rootElement, model);
