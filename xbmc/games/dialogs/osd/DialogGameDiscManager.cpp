@@ -26,8 +26,6 @@
 #include "input/actions/Action.h"
 #include "input/actions/ActionIDs.h"
 
-#include <optional>
-
 using namespace KODI;
 using namespace GAME;
 
@@ -35,6 +33,7 @@ namespace
 {
 constexpr int CONTROL_DISC_MANAGER_MENU = 3;
 constexpr int CONTROL_DISC_MANAGER_DISC_LIST = 108321;
+constexpr int CONTROL_DISC_MANAGER_SCROLL_BAR = 108322;
 } // namespace
 
 CDialogGameDiscManager::CDialogGameDiscManager()
@@ -71,6 +70,9 @@ void CDialogGameDiscManager::OnInitWindow()
     // Initialize dialog
     InitializeDialog();
   }
+
+  // Show the main menu
+  ShowControl(CONTROL_DISC_MANAGER_MENU);
 
   // Select first "Insert disc" item
   CGUIMessage msgSelectFirst(GUI_MSG_ITEM_SELECT, GetID(), CONTROL_DISC_MANAGER_MENU, 0);
@@ -218,15 +220,19 @@ void CDialogGameDiscManager::ShowControl(int controlId)
 {
   if (controlId == CONTROL_DISC_MANAGER_MENU)
   {
-    // Hide old control
+    // Hide disc list
     CGUIMessage msgHideDiscList(GUI_MSG_HIDDEN, GetID(), CONTROL_DISC_MANAGER_DISC_LIST);
     OnMessage(msgHideDiscList);
 
-    // Show new control
+    // Hide scroll bar
+    CGUIMessage msgHideScrollBar(GUI_MSG_HIDDEN, GetID(), CONTROL_DISC_MANAGER_SCROLL_BAR);
+    OnMessage(msgHideScrollBar);
+
+    // Show main menu
     CGUIMessage msgShowMenu(GUI_MSG_VISIBLE, GetID(), CONTROL_DISC_MANAGER_MENU);
     OnMessage(msgShowMenu);
 
-    // Give focus to control
+    // Give focus to main menu
     CGUIMessage msgSetFocus(GUI_MSG_SETFOCUS, GetID(), CONTROL_DISC_MANAGER_MENU);
     OnMessage(msgSetFocus);
 
@@ -236,15 +242,19 @@ void CDialogGameDiscManager::ShowControl(int controlId)
   }
   else if (controlId == CONTROL_DISC_MANAGER_DISC_LIST)
   {
-    // Hide old control
+    // Hide main menu
     CGUIMessage msgHideMenu(GUI_MSG_HIDDEN, GetID(), CONTROL_DISC_MANAGER_MENU);
     OnMessage(msgHideMenu);
 
-    // Show new control
+    // Show disc list
     CGUIMessage msgShowDiscList(GUI_MSG_VISIBLE, GetID(), CONTROL_DISC_MANAGER_DISC_LIST);
     OnMessage(msgShowDiscList);
 
-    // Give focus to control
+    // Show scroll bar
+    CGUIMessage msgShowScrollBar(GUI_MSG_VISIBLE, GetID(), CONTROL_DISC_MANAGER_SCROLL_BAR);
+    OnMessage(msgShowScrollBar);
+
+    // Give focus to disc list
     CGUIMessage msgSetFocus(GUI_MSG_SETFOCUS, GetID(), CONTROL_DISC_MANAGER_DISC_LIST);
     OnMessage(msgSetFocus);
   }

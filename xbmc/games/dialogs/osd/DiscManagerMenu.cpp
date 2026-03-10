@@ -240,6 +240,8 @@ void CDiscManagerMenu::OnAdd()
 
   if (!discs.AddDisc(filePath))
     ShowInternalError();
+
+  UpdateItems();
 }
 
 void CDiscManagerMenu::OnRemove()
@@ -255,6 +257,8 @@ void CDiscManagerMenu::OnRemove()
       {
         if (!m_gameClient->Discs().RemoveDiscByIndex(discIndex))
           ShowInternalError();
+
+        UpdateItems();
       });
 }
 
