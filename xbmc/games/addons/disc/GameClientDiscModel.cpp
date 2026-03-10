@@ -30,6 +30,7 @@ void CGameClientDiscModel::Clear()
   m_lastDiscIndex.reset();
   m_selectedType = DiscSelectionType::NoDisc;
   m_selectedDiscIndex.reset();
+  m_isEjected = false;
 }
 
 void CGameClientDiscModel::SetDiscs(const std::vector<GameClientDiscEntry>& discs)

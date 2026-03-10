@@ -58,10 +58,12 @@ void CGameClientDiscs::Initialize(const std::string& gamePath)
   if (m_discXml->Load(gamePath, restoredModel) && !restoredModel.Empty())
   {
     *m_discModel = restoredModel;
+    m_isEjected = m_discModel->IsEjected();
     RestoreDiscList();
   }
 
   m_isEjected = m_transport->GetEjectState();
+  m_discModel->SetEjected(m_isEjected);
   RefreshDiscState();
 }
 
@@ -117,7 +119,9 @@ void CGameClientDiscs::RestoreDiscList()
   if (HasUsableStartupDisc(*m_discModel, selectedIndex, startupPath))
     m_transport->SetInitialImage(static_cast<unsigned int>(*selectedIndex), startupPath);
 
-  m_transport->SetEjectState(false);
+  const bool finalEjected = m_discModel->IsEjected();
+  m_transport->SetEjectState(finalEjected);
+  m_isEjected = m_transport->GetEjectState();
 }
 
 void CGameClientDiscs::RefreshDiscState()
@@ -125,6 +129,10 @@ void CGameClientDiscs::RefreshDiscState()
   CGameClientDiscModel coreModel;
   BuildModelFromCore(coreModel);
   MergeCoreModelIntoFrontend(coreModel);
+
+  m_isEjected = m_transport->GetEjectState();
+  m_discModel->SetEjected(m_isEjected);
+
   SaveDiscState();
 }
 
@@ -134,6 +142,7 @@ bool CGameClientDiscs::SetEjected(bool ejected)
     return false;
 
   m_isEjected = m_transport->GetEjectState();
+  m_discModel->SetEjected(m_isEjected);
   RefreshDiscState();
 
   return true;
@@ -319,10 +328,13 @@ void CGameClientDiscs::MergeCoreModelIntoFrontend(const CGameClientDiscModel& co
   if (coreModel.Empty() && !m_discModel->Empty())
     return;
 
+  const bool isEjected = m_discModel->IsEjected();
+
   const MergedDiscSlots merged =
       MergeCoreSlotsByIndex(m_discModel->GetDiscs(), coreModel.GetDiscs());
 
   m_discModel->SetDiscs(merged.discs);
+  m_discModel->SetEjected(isEjected);
 
   if (!merged.firstSelectable.has_value())
     return;

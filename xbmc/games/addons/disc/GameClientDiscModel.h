@@ -78,6 +78,8 @@ public:
   bool IsSelectedNoDisc() const { return m_selectedType == DiscSelectionType::NoDisc; }
   bool HasSelectedDisc() const { return m_selectedType == DiscSelectionType::Disc; }
   std::optional<size_t> GetSelectedDiscIndex() const;
+  bool IsEjected() const { return m_isEjected; }
+  void SetEjected(bool ejected) { m_isEjected = ejected; }
 
   std::string GetSelectedDiscPath() const;
   std::string GetMainDiscPath() const;
@@ -104,6 +106,7 @@ private:
   std::optional<size_t> m_lastDiscIndex;
   DiscSelectionType m_selectedType{DiscSelectionType::NoDisc};
   std::optional<size_t> m_selectedDiscIndex;
+  bool m_isEjected{false};
 };
 
 } // namespace GAME
