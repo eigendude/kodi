@@ -62,8 +62,6 @@ void CGameClientDiscs::Initialize(const std::string& gamePath)
     RestoreDiscList();
   }
 
-  m_isEjected = m_transport->GetEjectState();
-  m_discModel->SetEjected(m_isEjected);
   RefreshDiscState();
 }
 
