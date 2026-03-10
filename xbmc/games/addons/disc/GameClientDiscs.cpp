@@ -16,6 +16,7 @@
 #include "games/addons/disc/GameClientDiscXML.h"
 
 #include <optional>
+#include <vector>
 
 using namespace KODI;
 using namespace GAME;
@@ -129,10 +130,16 @@ void CGameClientDiscs::RefreshDiscState()
 {
   CGameClientDiscModel coreModel;
   BuildModelFromCore(coreModel);
-  MergeCoreModelIntoFrontend(coreModel);
+  OverlayRemovedSlotsFromFrontend(coreModel);
 
   m_isEjected = coreModel.IsEjected();
   m_discModel->SetEjected(m_isEjected);
+
+  const std::optional<size_t> selectedCoreIndex = coreModel.GetSelectedDiscIndex();
+  if (selectedCoreIndex.has_value())
+    m_discModel->SetSelectedDiscByIndex(*selectedCoreIndex);
+  else
+    m_discModel->SetSelectedNoDisc();
 
   SaveDiscState();
 }
@@ -323,31 +330,10 @@ void CGameClientDiscs::BuildModelFromCore(CGameClientDiscModel& model) const
   }
 }
 
-void CGameClientDiscs::MergeCoreModelIntoFrontend(const CGameClientDiscModel& coreModel)
+void CGameClientDiscs::OverlayRemovedSlotsFromFrontend(const CGameClientDiscModel& coreModel)
 {
-  if (coreModel.Empty() && !m_discModel->Empty())
-    return;
+  const std::vector<GameClientDiscEntry> overlaidDiscs =
+      OverlayRemovedTombstonesByIndex(m_discModel->GetDiscs(), coreModel.GetDiscs());
 
-  const bool isEjected = coreModel.IsEjected();
-
-  const MergedDiscSlots merged =
-      MergeCoreSlotsByIndex(m_discModel->GetDiscs(), coreModel.GetDiscs());
-
-  m_discModel->SetDiscs(merged.discs);
-  m_discModel->SetEjected(isEjected);
-
-  const std::optional<size_t> selectedCoreIndex = coreModel.GetSelectedDiscIndex();
-  if (selectedCoreIndex.has_value() && *selectedCoreIndex < merged.coreToMerged.size())
-  {
-    const std::optional<size_t> selectedMergedIndex = merged.coreToMerged[*selectedCoreIndex];
-
-    if (selectedMergedIndex.has_value() &&
-        m_discModel->IsSelectableSlotByIndex(*selectedMergedIndex))
-    {
-      m_discModel->SetSelectedDiscByIndex(*selectedMergedIndex);
-      return;
-    }
-  }
-
-  m_discModel->SetSelectedNoDisc();
+  m_discModel->SetDiscs(overlaidDiscs);
 }

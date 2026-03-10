@@ -136,12 +136,12 @@ TEST(TestGameClientDiscXML, MergeAfterLoadPreservesRemovedTombstoneAgainstCoreRe
   ASSERT_TRUE(coreModel.AddRemovedSlot());
   ASSERT_TRUE(coreModel.AddDisc("/roms/disc2.chd"));
 
-  const MergedDiscSlots merged =
-      MergeCoreSlotsByIndex(loadedModel.GetDiscs(), coreModel.GetDiscs());
+  const std::vector<GameClientDiscEntry> merged =
+      OverlayRemovedTombstonesByIndex(loadedModel.GetDiscs(), coreModel.GetDiscs());
 
-  ASSERT_EQ(merged.discs.size(), 2U);
-  EXPECT_EQ(merged.discs[0].slotType, GameClientDiscEntry::DiscSlotType::RemovedSlot);
-  EXPECT_EQ(merged.discs[1].slotType, GameClientDiscEntry::DiscSlotType::Disc);
+  ASSERT_EQ(merged.size(), 2U);
+  EXPECT_EQ(merged[0].slotType, GameClientDiscEntry::DiscSlotType::RemovedSlot);
+  EXPECT_EQ(merged[1].slotType, GameClientDiscEntry::DiscSlotType::Disc);
 }
 
 TEST(TestGameClientDiscXML, LoadLegacyEmptyTypeMapsToRemovedSlot)

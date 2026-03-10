@@ -10,8 +10,6 @@
 
 #include "games/addons/disc/GameClientDiscModel.h"
 
-#include <cstddef>
-#include <optional>
 #include <vector>
 
 namespace KODI
@@ -19,14 +17,9 @@ namespace KODI
 namespace GAME
 {
 
-struct MergedDiscSlots
-{
-  std::vector<GameClientDiscEntry> discs;
-  std::vector<std::optional<size_t>> coreToMerged;
-};
-
-MergedDiscSlots MergeCoreSlotsByIndex(const std::vector<GameClientDiscEntry>& previousDiscs,
-                                      const std::vector<GameClientDiscEntry>& coreDiscs);
+std::vector<GameClientDiscEntry>
+OverlayRemovedTombstonesByIndex(const std::vector<GameClientDiscEntry>& previousDiscs,
+                                const std::vector<GameClientDiscEntry>& coreDiscs);
 
 } // namespace GAME
 } // namespace KODI

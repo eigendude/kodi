@@ -58,7 +58,7 @@ public:
 
 private:
   void BuildModelFromCore(CGameClientDiscModel& model) const;
-  void MergeCoreModelIntoFrontend(const CGameClientDiscModel& coreModel);
+  void OverlayRemovedSlotsFromFrontend(const CGameClientDiscModel& coreModel);
   void SaveDiscState();
 
   // Add-on parameters
