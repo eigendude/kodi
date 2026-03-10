@@ -27,6 +27,7 @@ struct MergedDiscSlots
 };
 
 bool IsSelectableDiscSlot(const GameClientDiscEntry& discEntry);
+
 MergedDiscSlots MergeCoreSlotsByIndex(const std::vector<GameClientDiscEntry>& previousDiscs,
                                       const std::vector<GameClientDiscEntry>& coreDiscs);
 

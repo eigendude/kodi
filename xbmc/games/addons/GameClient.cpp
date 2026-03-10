@@ -604,6 +604,13 @@ bool CGameClient::Deserialize(const uint8_t* data, size_t size)
     bSuccess = LogError(m_ifc.game->toAddon->Deserialize(m_ifc.game, data, size), "Deserialize()");
   }
 
+  if (bSuccess)
+  {
+    // Deserialization may reset disc information, so restore it now
+    if (SupportsDiscControl())
+      Discs().RestoreDiscList();
+  }
+
   return bSuccess;
 }
 

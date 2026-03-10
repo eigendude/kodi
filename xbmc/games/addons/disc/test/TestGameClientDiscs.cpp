@@ -49,7 +49,6 @@ TEST(TestGameClientDiscs, HasUsableStartupDiscUsesPersistedSelectedDisc)
   EXPECT_EQ(startupPath, "/roms/disc2.chd");
 }
 
-
 TEST(TestGameClientDiscs, HasUsableStartupDiscRejectsNonDiscSelection)
 {
   CGameClientDiscModel persisted;

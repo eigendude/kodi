@@ -58,11 +58,66 @@ void CGameClientDiscs::Initialize(const std::string& gamePath)
   if (m_discXml->Load(gamePath, restoredModel) && !restoredModel.Empty())
   {
     *m_discModel = restoredModel;
-    RestoreDiscListBeforeLoad();
+    RestoreDiscList();
   }
 
   m_isEjected = m_transport->GetEjectState();
   RefreshDiscState();
+}
+
+void CGameClientDiscs::RestoreDiscList()
+{
+  if (m_discModel->Empty())
+    return;
+
+  if (!m_transport->SetEjectState(true))
+    return;
+
+  if (!m_transport->GetEjectState())
+    return;
+
+  unsigned int imageCount = m_transport->GetImageCount();
+
+  for (size_t i = 0; i < m_discModel->Size(); ++i)
+  {
+    if (m_discModel->IsRemovedSlotByIndex(i))
+    {
+      if (i < imageCount)
+      {
+        m_transport->RemoveImageIndex(static_cast<unsigned int>(i));
+        imageCount = m_transport->GetImageCount();
+      }
+
+      continue;
+    }
+
+    if (!m_discModel->IsRealDiscByIndex(i))
+      continue;
+
+    const std::string imagePath = m_discModel->GetPathByIndex(i);
+    if (imagePath.empty())
+      continue;
+
+    while (i >= imageCount)
+    {
+      if (!m_transport->AddImageIndex())
+        return;
+
+      imageCount = m_transport->GetImageCount();
+      if (i >= imageCount && imageCount == 0)
+        return;
+    }
+
+    if (!m_transport->ReplaceImageIndex(static_cast<unsigned int>(i), imagePath))
+      return;
+  }
+
+  std::optional<size_t> selectedIndex;
+  std::string startupPath;
+  if (HasUsableStartupDisc(*m_discModel, selectedIndex, startupPath))
+    m_transport->SetInitialImage(static_cast<unsigned int>(*selectedIndex), startupPath);
+
+  m_transport->SetEjectState(false);
 }
 
 void CGameClientDiscs::RefreshDiscState()
@@ -217,62 +272,10 @@ bool CGameClientDiscs::InsertDiscByIndex(size_t index)
   return true;
 }
 
-void CGameClientDiscs::RestoreDiscListBeforeLoad()
-{
-  if (m_discModel->Empty())
-    return;
-
-  if (!m_transport->SetEjectState(true))
-    return;
-
-  if (!m_transport->GetEjectState())
-    return;
-
-  unsigned int imageCount = m_transport->GetImageCount();
-
-  for (size_t i = 0; i < m_discModel->Size(); ++i)
-  {
-    if (m_discModel->IsRemovedSlotByIndex(i))
-    {
-      if (i < imageCount)
-      {
-        m_transport->RemoveImageIndex(static_cast<unsigned int>(i));
-        imageCount = m_transport->GetImageCount();
-      }
-
-      continue;
-    }
-
-    if (!m_discModel->IsRealDiscByIndex(i))
-      continue;
-
-    const std::string imagePath = m_discModel->GetPathByIndex(i);
-    if (imagePath.empty())
-      continue;
-
-    while (i >= imageCount)
-    {
-      if (!m_transport->AddImageIndex())
-        return;
-
-      imageCount = m_transport->GetImageCount();
-      if (i >= imageCount && imageCount == 0)
-        return;
-    }
-
-    if (!m_transport->ReplaceImageIndex(static_cast<unsigned int>(i), imagePath))
-      return;
-  }
-
-  std::optional<size_t> selectedIndex;
-  std::string startupPath;
-  if (HasUsableStartupDisc(*m_discModel, selectedIndex, startupPath))
-    m_transport->SetInitialImage(static_cast<unsigned int>(*selectedIndex), startupPath);
-}
-
 void CGameClientDiscs::SaveDiscState()
 {
-  m_discXml->Save(m_gameClient.GetGamePath(), *m_discModel);
+  if (!m_gameClient.GetGamePath().empty())
+    m_discXml->Save(m_gameClient.GetGamePath(), *m_discModel);
 }
 
 void CGameClientDiscs::BuildModelFromCore(CGameClientDiscModel& model) const

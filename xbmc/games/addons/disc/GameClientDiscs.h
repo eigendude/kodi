@@ -45,6 +45,7 @@ public:
 
   // Disc interface
   void Initialize(const std::string& gamePath);
+  void RestoreDiscList();
   void RefreshDiscState();
   const CGameClientDiscModel& GetDiscs() const { return *m_discModel; }
   bool IsEjected() const { return m_isEjected; }
@@ -58,7 +59,6 @@ public:
 private:
   void BuildModelFromCore(CGameClientDiscModel& model) const;
   void MergeCoreModelIntoFrontend(const CGameClientDiscModel& coreModel);
-  void RestoreDiscListBeforeLoad();
   void SaveDiscState();
 
   // Add-on parameters
