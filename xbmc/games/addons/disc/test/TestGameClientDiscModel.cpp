@@ -193,6 +193,29 @@ TEST(TestGameClientDiscModel, MergePreservesTrailingRemovedSlotsWhenCoreShrinks)
   EXPECT_EQ(merged[2].slotType, GameClientDiscEntry::DiscSlotType::RemovedSlot);
 }
 
+TEST(TestGameClientDiscModel, MergeDropsTrailingNonRemovedEntriesWhenCoreShrinks)
+{
+  std::vector<GameClientDiscEntry> previousDiscs{
+      {GameClientDiscEntry::DiscSlotType::Disc, "/roms/disc1.chd", "disc1.chd", ""},
+      {GameClientDiscEntry::DiscSlotType::Disc, "/roms/disc2.chd", "disc2.chd", ""},
+      {GameClientDiscEntry::DiscSlotType::Disc, "/roms/disc3.chd", "disc3.chd", ""},
+      {GameClientDiscEntry::DiscSlotType::RemovedSlot, "", "", ""}};
+
+  std::vector<GameClientDiscEntry> coreDiscs{
+      {GameClientDiscEntry::DiscSlotType::Disc, "/roms/disc1.chd", "disc1.chd", ""},
+      {GameClientDiscEntry::DiscSlotType::Disc, "/roms/disc2.chd", "disc2.chd", ""}};
+
+  const std::vector<GameClientDiscEntry> merged =
+      OverlayRemovedTombstonesByIndex(previousDiscs, coreDiscs);
+
+  ASSERT_EQ(merged.size(), 3U);
+  EXPECT_EQ(merged[0].slotType, GameClientDiscEntry::DiscSlotType::Disc);
+  EXPECT_EQ(merged[0].path, "/roms/disc1.chd");
+  EXPECT_EQ(merged[1].slotType, GameClientDiscEntry::DiscSlotType::Disc);
+  EXPECT_EQ(merged[1].path, "/roms/disc2.chd");
+  EXPECT_EQ(merged[2].slotType, GameClientDiscEntry::DiscSlotType::RemovedSlot);
+}
+
 TEST(TestGameClientDiscModel, ClearResetsEjectedState)
 {
   CGameClientDiscModel model;
