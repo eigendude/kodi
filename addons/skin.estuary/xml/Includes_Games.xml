@@ -672,14 +672,14 @@
 						<content>
 							<item>
 								<description>"Inserted disc" item. Label2 is the inserted disc's label (or "No disc" if no disc is inserted).</description>
-								<label>Inserted disc</label>
-								<label2>No disc</label2>
+								<label>$LOCALIZE[35273]</label>
+								<label2>$LOCALIZE[35274]</label2>
 								<icon>DefaultAlbumCover.png</icon>
 								<property name="EnableOnEject">true</property>
 							</item>
 							<item>
 								<description>"Eject"/"Insert" item. Label2 is the tray status (only "Tray open" is shown).</description>
-								<label>Eject</label>
+								<label>$LOCALIZE[35275]</label>
 								<icon>DefaultAddonsUpdates.png</icon>
 							</item>
 							<item>
@@ -696,7 +696,7 @@
 							</item>
 							<item>
 								<description>"Resume game" item for resuming the game</description>
-								<label>Resume game</label>
+								<label>$LOCALIZE[35277]</label>
 								<icon>osd/fullscreen/buttons/play.png</icon>
 							</item>
 						</content>

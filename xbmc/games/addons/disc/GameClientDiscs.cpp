@@ -59,6 +59,10 @@ void CGameClientDiscs::Initialize(const std::string& gamePath)
         m_transport->SetInitialImage(static_cast<unsigned int>(*selectedIndex), startupPath);
     }
   }
+
+  // Avoid launching with an empty disc list
+  if (m_discModel->Empty())
+    m_discModel->AddDisc(gamePath);
 }
 
 void CGameClientDiscs::RestoreDiscList()
@@ -187,12 +191,19 @@ bool CGameClientDiscs::AddDisc(const std::string& filePath)
   }
   else
   {
+    const unsigned int currentImageCount = m_transport->GetImageCount();
+
     // No removed slot available, so add a new slot in the core
     if (!m_transport->AddImageIndex())
       return false;
 
+    const unsigned int newImageCount = m_transport->GetImageCount();
+
+    if (currentImageCount + 1 != newImageCount)
+      return false;
+
     // New slot is the last one
-    const unsigned int newIndex = m_transport->GetImageCount() - 1;
+    const unsigned int newIndex = newImageCount - 1;
 
     // Populate the new slot
     if (!m_transport->ReplaceImageIndex(newIndex, filePath))
@@ -201,6 +212,12 @@ bool CGameClientDiscs::AddDisc(const std::string& filePath)
       m_transport->RemoveImageIndex(newIndex);
       return false;
     }
+
+    // Add the image to the model. This can be overwritten when we refresh
+    // the disc state, but will serve as a fallback in case the libretro
+    // extended disc control interface (which allows retrieving path and label)
+    // isn't supported.
+    m_discModel->AddDisc(filePath);
   }
 
   RefreshDiscState();
@@ -304,36 +321,56 @@ void CGameClientDiscs::LoadModelFromCore(CGameClientDiscModel& model) const
   model.SetEjected(m_transport->GetEjectState());
 
   const unsigned int imageCount = m_transport->GetImageCount();
+  const unsigned int imageIndex = m_transport->GetImageIndex();
+  std::optional<size_t> selectedModelIndex;
 
   for (unsigned int i = 0; i < imageCount; ++i)
   {
-    const std::string imagePath = m_transport->GetImagePath(i);
-    const std::string imageLabel = m_transport->GetImageLabel(i);
+    std::string imagePath = m_transport->GetImagePath(i);
+    std::string imageLabel = m_transport->GetImageLabel(i);
 
     if (imagePath.empty())
-      model.AddRemovedSlot();
-    else
-      model.AddDisc(imagePath, imageLabel);
+    {
+      // Libretro's extended disc control interface might not be supported.
+      // Fall back to the persisted/frontend model at the same slot.
+      if (i < m_discModel->Size() && m_discModel->IsRealDiscByIndex(i))
+        imagePath = m_discModel->GetPathByIndex(i);
+    }
+
+    if (imagePath.empty())
+    {
+      // If we still can't identify this slot, skip it.
+      continue;
+    }
+
+    if (imageLabel.empty())
+    {
+      // Libretro's extended disc control interface might not be supported.
+      // Fall back to the persisted/frontend label, otherwise let the model
+      // derive a label from the basename.
+      if (i < m_discModel->Size() && m_discModel->IsRealDiscByIndex(i))
+        imageLabel = m_discModel->GetLabelByIndex(i);
+    }
+
+    const size_t modelIndex = model.Size();
+    model.AddDisc(imagePath, imageLabel);
+
+    if (i == imageIndex)
+      selectedModelIndex = modelIndex;
   }
 
   if (model.Empty())
     return;
 
-  const unsigned int imageIndex = m_transport->GetImageIndex();
-
-  if (imageIndex < imageCount)
-  {
-    model.SetSelectedDiscByIndex(imageIndex);
-  }
+  if (selectedModelIndex.has_value())
+    model.SetSelectedDiscByIndex(*selectedModelIndex);
   else
-  {
     model.SetSelectedNoDisc();
-  }
 }
 
 void CGameClientDiscs::PruneRemovedDiscs(CGameClientDiscModel& model) const
 {
-  for (size_t i = 0; i < model.Size(); )
+  for (size_t i = 0; i < model.Size();)
   {
     if (!model.IsRemovedSlotByIndex(i))
     {

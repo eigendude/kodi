@@ -195,7 +195,7 @@
 		<control type="button" id="22108">
 			<description>Disc Manager button</description>
 			<include>DialogSettingButton</include>
-			<label>Disc swap</label>
+			<label>$LOCALIZE[35272]</label>
 			<onclick>ActivateWindow(GameDiscManager)</onclick>
 		</control>
 	</include>

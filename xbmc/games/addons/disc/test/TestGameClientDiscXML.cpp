@@ -144,31 +144,6 @@ TEST(TestGameClientDiscXML, MergeAfterLoadPreservesRemovedTombstoneAgainstCoreRe
   EXPECT_EQ(merged[1].slotType, GameClientDiscEntry::DiscSlotType::Disc);
 }
 
-TEST(TestGameClientDiscXML, LoadLegacyEmptyTypeMapsToRemovedSlot)
-{
-  CleanupStateFile();
-
-  const std::string xmlPath = CGameClientDiscXML::GetXMLPath(GAME_PATH);
-
-  XFILE::CFile file;
-  ASSERT_TRUE(file.OpenForWrite(xmlPath, true));
-  static constexpr char xml[] =
-      "<discstate><slots><slot type=\"empty\" label=\"Zombie\"/></slots></discstate>";
-  ASSERT_EQ(file.Write(xml, sizeof(xml) - 1), sizeof(xml) - 1);
-  file.Close();
-
-  CGameClientDiscXML discXml;
-  CGameClientDiscModel loadedModel;
-  ASSERT_TRUE(discXml.Load(GAME_PATH, loadedModel));
-
-  ASSERT_EQ(loadedModel.Size(), 1U);
-  EXPECT_TRUE(loadedModel.IsRemovedSlotByIndex(0));
-  EXPECT_EQ(loadedModel.GetPathByIndex(0), "");
-  EXPECT_EQ(loadedModel.GetLabelByIndex(0), "");
-
-  CleanupStateFile();
-}
-
 TEST(TestGameClientDiscXML, SaveWritesEjectedTrue)
 {
   CleanupStateFile();

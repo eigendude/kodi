@@ -41,18 +41,12 @@ constexpr auto XML_ATTR_INDEX = "index";
 constexpr auto XML_ATTR_EJECTED = "ejected";
 
 constexpr auto TYPE_DISC = "disc";
-constexpr auto TYPE_EMPTY = "empty"; // legacy: load-only, maps to removed tombstone
 constexpr auto TYPE_REMOVED = "removed";
 constexpr auto TYPE_NONE = "none";
 
 std::string GetDiscStateDirectory()
 {
   return URIUtils::AddFileToFolder(PROFILE_ROOT, DISC_STATE_DIRECTORY);
-}
-
-bool IsPersistableDiscPath(const std::string& path)
-{
-  return !path.empty() && !URIUtils::IsProtocol(path, "disc");
 }
 } // namespace
 
@@ -151,22 +145,13 @@ std::vector<GameClientDiscEntry> CGameClientDiscXML::ReadSlotsFromXML(
     {
       discs.push_back({GameClientDiscEntry::DiscSlotType::RemovedSlot, "", "", ""});
     }
-    else if (type != nullptr && std::strcmp(type, TYPE_EMPTY) == 0)
-    {
-      // Backward compatibility: old empty slots are now removed tombstones.
-      discs.push_back({GameClientDiscEntry::DiscSlotType::RemovedSlot, "", "", ""});
-    }
     else
     {
       const char* path = slotElement->Attribute(XML_ATTR_PATH);
-      if (path != nullptr && IsPersistableDiscPath(path))
+      if (path != nullptr)
       {
         discs.push_back({GameClientDiscEntry::DiscSlotType::Disc, path,
                          CGameClientDiscModel::DeriveBasename(path), label});
-      }
-      else
-      {
-        discs.push_back({GameClientDiscEntry::DiscSlotType::RemovedSlot, "", "", ""});
       }
     }
 
@@ -191,18 +176,12 @@ void CGameClientDiscXML::WriteSlotsToXML(CXBMCTinyXML2& xmlDoc,
     {
       case GameClientDiscEntry::DiscSlotType::Disc:
       {
-        if (IsPersistableDiscPath(disc.path))
-        {
-          slotElement->SetAttribute(XML_ATTR_TYPE, TYPE_DISC);
-          slotElement->SetAttribute(XML_ATTR_PATH, disc.path.c_str());
-        }
-        else
-        {
-          slotElement->SetAttribute(XML_ATTR_TYPE, TYPE_REMOVED);
-        }
+        slotElement->SetAttribute(XML_ATTR_TYPE, TYPE_DISC);
+        slotElement->SetAttribute(XML_ATTR_PATH, disc.path.c_str());
 
         if (!disc.cachedLabel.empty())
           slotElement->SetAttribute(XML_ATTR_LABEL, disc.cachedLabel.c_str());
+
         break;
       }
       case GameClientDiscEntry::DiscSlotType::RemovedSlot:
@@ -271,8 +250,7 @@ void CGameClientDiscXML::WriteSelectedToXML(CXBMCTinyXML2& xmlDoc,
   rootElement->InsertEndChild(selectedElement);
 
   const std::optional<size_t> selectedIndex = model.GetSelectedDiscIndex();
-  if (selectedIndex.has_value() && model.IsRealDiscByIndex(*selectedIndex) &&
-      IsPersistableDiscPath(model.GetPathByIndex(*selectedIndex)))
+  if (selectedIndex.has_value() && model.IsRealDiscByIndex(*selectedIndex))
   {
     selectedElement->SetAttribute(XML_ATTR_TYPE, TYPE_DISC);
     selectedElement->SetAttribute(XML_ATTR_INDEX, static_cast<unsigned int>(*selectedIndex));

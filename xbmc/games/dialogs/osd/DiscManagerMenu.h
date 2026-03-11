@@ -53,6 +53,7 @@ private:
 
   // Helper functions
   bool BrowseForDiscImage(const std::string& startingPath, std::string& filePath);
+  void UpdateEjectButton(bool ejected);
   void ShowInternalError();
 
   // Construction parameters

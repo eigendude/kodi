@@ -122,6 +122,8 @@ void CDiscManagerMenu::OnReplace(IListProvider& previousProvider)
 
 void CDiscManagerMenu::UpdateItems()
 {
+  auto& strings = CServiceBroker::GetResourcesComponent().GetLocalizeStrings();
+
   while (m_items.size() < MENU_ITEM_COUNT)
     m_items.emplace_back(std::make_shared<CFileItem>());
 
@@ -131,7 +133,7 @@ void CDiscManagerMenu::UpdateItems()
   std::string insertedDiscLabel;
   if (discList.IsSelectedNoDisc())
   {
-    insertedDiscLabel = "No disc";
+    insertedDiscLabel = strings.Get(35274); // "No disc"
   }
   else
   {
@@ -142,17 +144,7 @@ void CDiscManagerMenu::UpdateItems()
   m_items[INDEX_SELECT_DISC]->SetLabel2(insertedDiscLabel);
 
   // Set eject/insert item labels
-  if (m_gameClient->Discs().IsEjected())
-  {
-    m_items[INDEX_EJECT_INSERT]->SetLabel("Insert"); // "Insert"
-    m_items[INDEX_EJECT_INSERT]->SetLabel2(
-        CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(162)); // "Tray open"
-  }
-  else
-  {
-    m_items[INDEX_EJECT_INSERT]->SetLabel("Eject"); // "Eject"
-    m_items[INDEX_EJECT_INSERT]->SetLabel2("");
-  }
+  UpdateEjectButton(m_gameClient->Discs().IsEjected());
 }
 
 void CDiscManagerMenu::OnSelectDisc()
@@ -190,6 +182,8 @@ void CDiscManagerMenu::OnSelectDisc()
 
 void CDiscManagerMenu::OnEjectInsert()
 {
+  auto& strings = CServiceBroker::GetResourcesComponent().GetLocalizeStrings();
+
   CGameClientDiscs& discs = m_gameClient->Discs();
 
   const bool wasEjected = discs.IsEjected();
@@ -198,32 +192,25 @@ void CDiscManagerMenu::OnEjectInsert()
 
   if (!success)
   {
-    // TODO: Replace with Kodi-localized notification/dialog text.
     if (wasEjected)
     {
-      MESSAGING::HELPERS::ShowOKDialogText(CVariant{"Disc swap"},
-                                           CVariant{"The disc can't be inserted right now."});
+      // "Disc menu"
+      // "The disc can't be inserted right now."
+      MESSAGING::HELPERS::ShowOKDialogText(CVariant{strings.Get(35272)},
+                                           CVariant{strings.Get(35279)});
     }
     else
     {
-      MESSAGING::HELPERS::ShowOKDialogText(CVariant{"Disc swap"},
-                                           CVariant{"The disc can't be ejected right now."});
+      // "Disc menu"
+      // "The disc can't be ejected right now."
+      MESSAGING::HELPERS::ShowOKDialogText(CVariant{strings.Get(35272)},
+                                           CVariant{strings.Get(35278)});
     }
   }
 
   const bool isEjected = discs.IsEjected();
 
-  if (isEjected)
-  {
-    m_items[INDEX_EJECT_INSERT]->SetLabel("Insert"); // "Insert"
-    m_items[INDEX_EJECT_INSERT]->SetLabel2(
-        CServiceBroker::GetResourcesComponent().GetLocalizeStrings().Get(162)); // "Tray open"
-  }
-  else
-  {
-    m_items[INDEX_EJECT_INSERT]->SetLabel("Eject"); // "Eject"
-    m_items[INDEX_EJECT_INSERT]->SetLabel2("");
-  }
+  UpdateEjectButton(isEjected);
 }
 
 void CDiscManagerMenu::OnAdd()
@@ -250,6 +237,10 @@ void CDiscManagerMenu::OnAdd()
       }
     }
   }
+
+  // Fall back to currently playing game
+  if (startingPath.empty())
+    startingPath = m_gameClient->GetGamePath();
 
   std::string filePath;
   if (!BrowseForDiscImage(startingPath, filePath) || filePath.empty())
@@ -287,20 +278,39 @@ void CDiscManagerMenu::OnResumeGame()
 
 bool CDiscManagerMenu::BrowseForDiscImage(const std::string& startingPath, std::string& filePath)
 {
-  std::set<std::string> extensions = CGameUtils::GetGameExtensions();
-  std::string strExtensions = StringUtils::Join(extensions, "|");
+  auto& strings = CServiceBroker::GetResourcesComponent().GetLocalizeStrings();
 
-  return CGUIDialogFileBrowser::ShowAndGetFile(startingPath, strExtensions, "Select file",
+  const std::set<std::string> extensions = CGameUtils::GetGameExtensions();
+  const std::string strExtensions = StringUtils::Join(extensions, "|");
+
+  return CGUIDialogFileBrowser::ShowAndGetFile(startingPath, strExtensions,
+                                               strings.Get(35280), // "Select disc"
                                                filePath);
+}
+
+void CDiscManagerMenu::UpdateEjectButton(bool ejected)
+{
+  auto& strings = CServiceBroker::GetResourcesComponent().GetLocalizeStrings();
+
+  if (ejected)
+  {
+    m_items[INDEX_EJECT_INSERT]->SetLabel(strings.Get(35276)); // "Insert"
+    m_items[INDEX_EJECT_INSERT]->SetLabel2(strings.Get(162)); // "Tray open"
+  }
+  else
+  {
+    m_items[INDEX_EJECT_INSERT]->SetLabel(strings.Get(35275)); // "Eject"
+    m_items[INDEX_EJECT_INSERT]->SetLabel2("");
+  }
 }
 
 void CDiscManagerMenu::ShowInternalError()
 {
-  CLocalizeStrings& strings = CServiceBroker::GetResourcesComponent().GetLocalizeStrings();
+  auto& strings = CServiceBroker::GetResourcesComponent().GetLocalizeStrings();
 
-  // "Disc swap"
+  // "Disc menu"
   // "The emulator \"{0:s}\" had an internal error."
   MESSAGING::HELPERS::ShowOKDialogText(
-      CVariant{"Disc swap"},
+      CVariant{strings.Get(35272)},
       CVariant{StringUtils::Format(strings.Get(35213), m_gameClient->Name())});
 }
