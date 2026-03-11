@@ -342,6 +342,7 @@ void CRPRenderManager::FrameMove()
 
   if (bIsConfigured)
   {
+    std::unique_lock<std::mutex> lock{m_oldRenderersMutex};
     for (auto& renderer : m_renderers)
       renderer->FrameMove();
   }
@@ -364,8 +365,11 @@ void CRPRenderManager::CheckFlush()
       m_bHasCachedFrame = false;
     }
 
-    for (const auto& renderer : m_renderers)
-      renderer->Flush();
+    {
+      std::unique_lock<std::mutex> lock{m_oldRenderersMutex};
+      for (const auto& renderer : m_renderers)
+        renderer->Flush();
+    }
 
     m_processInfo.GetBufferManager().FlushPools();
 
@@ -474,6 +478,8 @@ void CRPRenderManager::ClearBackground()
 bool CRPRenderManager::SupportsRenderFeature(RENDERFEATURE feature) const
 {
   //! @todo Move to ProcessInfo
+  std::unique_lock<std::mutex> lock{m_oldRenderersMutex};
+
   for (const auto& renderer : m_renderers)
   {
     if (renderer->Supports(feature))
@@ -569,16 +575,20 @@ std::shared_ptr<CRPBaseRenderer> CRPRenderManager::GetRendererForPool(
   }
 
   // Get compatible renderer for this buffer pool
-  for (const auto& it : m_renderers)
   {
-    if (it->GetBufferPool() != bufferPool)
-      continue;
+    std::unique_lock<std::mutex> lock{m_oldRenderersMutex};
 
-    if (!it->IsCompatible(renderSettings.VideoSettings()))
-      continue;
+    for (const auto& it : m_renderers)
+    {
+      if (it->GetBufferPool() != bufferPool)
+        continue;
 
-    renderer = it;
-    break;
+      if (!it->IsCompatible(renderSettings.VideoSettings()))
+        continue;
+
+      renderer = it;
+      break;
+    }
   }
 
   // If buffer pool has no compatible renderers, create one now
@@ -597,6 +607,8 @@ std::shared_ptr<CRPBaseRenderer> CRPRenderManager::GetRendererForPool(
     {
       // Ensure we have a render buffer for this renderer
       CreateRenderBuffer(renderer->GetBufferPool());
+
+      std::unique_lock<std::mutex> lock{m_oldRenderersMutex};
 
       m_renderers.insert(renderer);
     }
