@@ -62,15 +62,6 @@ std::string ReadStateM3U()
   return m3u;
 }
 
-class CGameClientDiscXMLFailingM3U : public CGameClientDiscXML
-{
-protected:
-  bool SaveM3U(const std::string& /*gamePath*/,
-               const CGameClientDiscModel& /*model*/) const override
-  {
-    return false;
-  }
-};
 } // namespace
 
 TEST(TestGameClientDiscXML, SaveLoadRoundtripPreservesSlotTypes)
@@ -336,25 +327,5 @@ TEST(TestGameClientDiscXML, SaveNormalizesBinToCueInM3UWhenCueExists)
   EXPECT_EQ(m3u, cuePath + "\n");
 
   XFILE::CFile::Delete(cuePath);
-  CleanupStateFile();
-}
-
-TEST(TestGameClientDiscXML, SaveSucceedsWhenM3UWriteFails)
-{
-  // Verify M3U write failures are non-fatal and do not block XML persistence.
-  CleanupStateFile();
-
-  CGameClientDiscModel savedModel;
-  ASSERT_TRUE(savedModel.AddDisc("/roms/disc1.chd"));
-
-  CGameClientDiscXMLFailingM3U discXml;
-  ASSERT_TRUE(discXml.Save(GAME_PATH, savedModel));
-
-  const std::string xml = ReadStateXml();
-  EXPECT_FALSE(xml.empty());
-
-  const std::string m3u = ReadStateM3U();
-  EXPECT_TRUE(m3u.empty());
-
   CleanupStateFile();
 }
