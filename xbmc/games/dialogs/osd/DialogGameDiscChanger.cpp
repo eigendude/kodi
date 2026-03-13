@@ -13,8 +13,16 @@
 #include "input/actions/Action.h"
 #include "input/actions/ActionIDs.h"
 
+#include <algorithm>
+#include <chrono>
+
 using namespace KODI;
 using namespace GAME;
+
+namespace
+{
+constexpr auto DISC_CHANGE_DURATION = std::chrono::seconds{2};
+} // namespace
 
 CDialogGameDiscChanger::CDialogGameDiscChanger()
 {
@@ -50,12 +58,16 @@ void CDialogGameDiscChanger::OnInitWindow()
   // Call ancestor
   CGUIDialogProgress::OnInitWindow();
 
-  //! @todo Start progress advancement
+  SetPercentage(0);
+  m_progressStartTime = std::chrono::steady_clock::now();
+  m_isProgressRunning = true;
 }
 
 void CDialogGameDiscChanger::OnDeinitWindow(int nextWindowID)
 {
-  //! @todo Reset progress to zero
+  SetPercentage(0);
+  m_progressStartTime = {};
+  m_isProgressRunning = false;
 
   // Call ancestor
   CGUIDialogProgress::OnDeinitWindow(nextWindowID);
@@ -63,8 +75,21 @@ void CDialogGameDiscChanger::OnDeinitWindow(int nextWindowID)
 
 void CDialogGameDiscChanger::FrameMove()
 {
+  if (m_isProgressRunning)
+  {
+    const auto elapsed = std::chrono::steady_clock::now() - m_progressStartTime;
+    const auto percent = std::clamp(
+        static_cast<int>((100 * elapsed) / DISC_CHANGE_DURATION), 0, 100);
+
+    SetPercentage(percent);
+
+    if (percent >= 100)
+    {
+      m_isProgressRunning = false;
+      Close();
+    }
+  }
+
   // Call ancestor
   CGUIDialogProgress::FrameMove();
-
-  //! @todo Update progress
 }

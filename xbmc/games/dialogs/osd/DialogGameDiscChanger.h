@@ -11,6 +11,8 @@
 #include "dialogs/GUIDialogProgress.h"
 #include "games/GameTypes.h"
 
+#include <chrono>
+
 namespace KODI
 {
 namespace GAME
@@ -34,6 +36,10 @@ public:
 protected:
   // Implementation of CGUIWindow via CGUIDialogProgress
   void OnInitWindow() override;
+
+private:
+  std::chrono::steady_clock::time_point m_progressStartTime{};
+  bool m_isProgressRunning{false};
 };
 } // namespace GAME
 } // namespace KODI
