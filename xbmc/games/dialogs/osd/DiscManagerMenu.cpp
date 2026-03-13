@@ -117,6 +117,12 @@ void CDiscManagerMenu::OnReplace(IListProvider& previousProvider)
 
   previousProvider.Fetch(m_items);
 
+  // Inform the skin developer if we don't have a complete menu
+  if (m_items.size() < MENU_ITEM_COUNT)
+    CLog::Log(LOGERROR, "Disc Manager menu has only {} items. Expected {}.", m_items.size(), MENU_ITEM_COUNT);
+  else if (m_items.size() > MENU_ITEM_COUNT)
+    CLog::Log(LOGWARNING, "Disc Manager menu has {} items. Expected {}. Extra items will be ignored.", m_items.size(), MENU_ITEM_COUNT);
+
   UpdateItems();
 }
 

@@ -31,6 +31,22 @@ class CGameClientDiscXML;
 
 /*!
  * \ingroup games
+ *
+ * \brief Subsystem for the Disc Control Interface
+ *
+ * The disc control interface provides add-ons with the ability to manage
+ * multiple discs, including disc swapping and ejection.
+ *
+ * For disc operation that return a bool, the following convention is used:
+ *
+ *   - False: Internal core failure. The user should be notified with a
+ *            dialog.
+ *   - True:  No internal core failure. Even if an error occurred, the UI
+ *            should quietly recover.
+ *
+ * The intention is to reduce friction by keeping the UI quiet when possible,
+ * while still surfacing errors when the add-on explicitly fails to perform an
+ * operation.
  */
 class CGameClientDiscs : protected CGameClientSubsystem
 {

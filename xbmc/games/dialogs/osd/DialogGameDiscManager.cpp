@@ -25,6 +25,7 @@
 #include "guilib/WindowIDs.h"
 #include "input/actions/Action.h"
 #include "input/actions/ActionIDs.h"
+#include "utils/log.h"
 
 using namespace KODI;
 using namespace GAME;
@@ -61,11 +62,16 @@ void CDialogGameDiscManager::OnInitWindow()
   }
   m_gameClient = std::move(gameClient);
 
+  if (!m_gameClient)
+    CLog::Log(LOGERROR, "No active game client. The Disc Manager dialog will not function correctly.");
+
   if (m_gameClient)
   {
     // Refresh discs from live core state
     if (m_gameClient->SupportsDiscControl())
       m_gameClient->Discs().RefreshDiscState();
+    else
+      CLog::Log(LOGWARNING, "Game client does not support disc control. The Disc Manager dialog will not function correctly.");
 
     // Initialize dialog
     InitializeDialog();
@@ -169,7 +175,10 @@ bool CDialogGameDiscManager::AllowSelectNoDisc() const
 
 void CDialogGameDiscManager::InitializeDialog()
 {
+  //
   // Initialize main menu
+  //
+
   CGUIBaseContainer* discMgrMenu =
       dynamic_cast<CGUIBaseContainer*>(GetControl(CONTROL_DISC_MANAGER_MENU));
   if (discMgrMenu != nullptr)
@@ -177,14 +186,25 @@ void CDialogGameDiscManager::InitializeDialog()
     discMgrMenu->SetListProvider(
         std::make_unique<CDiscManagerMenu>(m_gameClient, *this, CONTROL_DISC_MANAGER_MENU));
   }
+  else
+  {
+    CLog::Log(LOGERROR, "Missing main menu list with control ID {}", CONTROL_DISC_MANAGER_MENU);
+  }
 
+  //
   // Initialize disc selection list
+  //
+
   CGUIBaseContainer* discMgrDiscList =
       dynamic_cast<CGUIBaseContainer*>(GetControl(CONTROL_DISC_MANAGER_DISC_LIST));
   if (discMgrDiscList != nullptr)
   {
     discMgrDiscList->SetListProvider(std::make_unique<CDiscManagerDiscList>(
         m_gameClient, *this, CONTROL_DISC_MANAGER_DISC_LIST));
+  }
+  else
+  {
+    CLog::Log(LOGERROR, "Missing disc list with control ID {}", CONTROL_DISC_MANAGER_DISC_LIST);
   }
 }
 
