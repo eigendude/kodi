@@ -33,6 +33,9 @@ public:
 
   static std::string GetXMLPath(const std::string& gamePath);
 
+protected:
+  virtual bool SaveM3U(const std::string& gamePath, const CGameClientDiscModel& model) const;
+
 private:
   static std::vector<GameClientDiscEntry> ReadSlotsFromXML(const tinyxml2::XMLElement* rootElement);
   static void WriteSlotsToXML(CXBMCTinyXML2& xmlDoc,

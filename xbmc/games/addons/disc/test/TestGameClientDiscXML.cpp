@@ -8,8 +8,11 @@
 
 #include "filesystem/File.h"
 #include "games/addons/disc/GameClientDiscMergeUtils.h"
+#include "games/addons/disc/GameClientDiscM3U.h"
 #include "games/addons/disc/GameClientDiscModel.h"
 #include "games/addons/disc/GameClientDiscXML.h"
+
+#include "utils/URIUtils.h"
 
 #include <gtest/gtest.h>
 
@@ -23,6 +26,7 @@ constexpr auto GAME_PATH = "/roms/my_game.m3u";
 void CleanupStateFile()
 {
   XFILE::CFile::Delete(CGameClientDiscXML::GetXMLPath(GAME_PATH));
+  XFILE::CFile::Delete(CGameClientDiscM3U::GetM3UPath(GAME_PATH));
 }
 
 std::string ReadStateXml()
@@ -41,10 +45,38 @@ std::string ReadStateXml()
   file.Close();
   return xml;
 }
+
+std::string ReadStateM3U()
+{
+  const std::string m3uPath = CGameClientDiscM3U::GetM3UPath(GAME_PATH);
+
+  XFILE::CFile file;
+  if (!file.Open(m3uPath))
+    return "";
+
+  std::string m3u;
+  m3u.resize(static_cast<size_t>(file.GetLength()));
+  if (!m3u.empty())
+    file.Read(m3u.data(), m3u.size());
+
+  file.Close();
+  return m3u;
+}
+
+class CGameClientDiscXMLFailingM3U : public CGameClientDiscXML
+{
+protected:
+  bool SaveM3U(const std::string& /*gamePath*/,
+               const CGameClientDiscModel& /*model*/) const override
+  {
+    return false;
+  }
+};
 } // namespace
 
 TEST(TestGameClientDiscXML, SaveLoadRoundtripPreservesSlotTypes)
 {
+  // Verify roundtripping keeps real and removed slots in their original order.
   CleanupStateFile();
 
   CGameClientDiscModel savedModel;
@@ -75,6 +107,7 @@ TEST(TestGameClientDiscXML, SaveLoadRoundtripPreservesSlotTypes)
 
 TEST(TestGameClientDiscXML, SaveLoadSelectedNonePreserved)
 {
+  // Verify explicit "No disc" selection survives XML serialization and load.
   CleanupStateFile();
 
   CGameClientDiscModel savedModel;
@@ -95,6 +128,7 @@ TEST(TestGameClientDiscXML, SaveLoadSelectedNonePreserved)
 
 TEST(TestGameClientDiscXML, MissingXmlIsNonErrorAndLeavesEmptyModel)
 {
+  // Verify loading with no persisted XML is treated as success with an empty model.
   CleanupStateFile();
 
   CGameClientDiscXML discXml;
@@ -106,6 +140,7 @@ TEST(TestGameClientDiscXML, MissingXmlIsNonErrorAndLeavesEmptyModel)
 
 TEST(TestGameClientDiscXML, MalformedXmlFailsAndClearsModel)
 {
+  // Verify malformed XML is rejected and the output model is reset.
   CleanupStateFile();
 
   const std::string xmlPath = CGameClientDiscXML::GetXMLPath(GAME_PATH);
@@ -128,6 +163,7 @@ TEST(TestGameClientDiscXML, MalformedXmlFailsAndClearsModel)
 
 TEST(TestGameClientDiscXML, MergeAfterLoadPreservesRemovedTombstoneAgainstCoreRemoved)
 {
+  // Verify tombstone overlays preserve removed slot markers during merge.
   CGameClientDiscModel loadedModel;
   ASSERT_TRUE(loadedModel.AddRemovedSlot());
   ASSERT_TRUE(loadedModel.AddDisc("/roms/disc2.chd"));
@@ -146,6 +182,7 @@ TEST(TestGameClientDiscXML, MergeAfterLoadPreservesRemovedTombstoneAgainstCoreRe
 
 TEST(TestGameClientDiscXML, SaveWritesEjectedTrue)
 {
+  // Verify saving with an ejected tray writes the true tray flag.
   CleanupStateFile();
 
   CGameClientDiscModel savedModel;
@@ -163,6 +200,7 @@ TEST(TestGameClientDiscXML, SaveWritesEjectedTrue)
 
 TEST(TestGameClientDiscXML, SaveWritesEjectedFalse)
 {
+  // Verify saving with an inserted tray writes the false tray flag.
   CleanupStateFile();
 
   CGameClientDiscModel savedModel;
@@ -180,6 +218,7 @@ TEST(TestGameClientDiscXML, SaveWritesEjectedFalse)
 
 TEST(TestGameClientDiscXML, LoadRestoresEjectedState)
 {
+  // Verify loading restores a previously persisted ejected tray state.
   CleanupStateFile();
 
   CGameClientDiscModel savedModel;
@@ -198,6 +237,7 @@ TEST(TestGameClientDiscXML, LoadRestoresEjectedState)
 
 TEST(TestGameClientDiscXML, LoadRestoresEjectedFalseState)
 {
+  // Verify loading restores a previously persisted non-ejected tray state.
   CleanupStateFile();
 
   CGameClientDiscModel savedModel;
@@ -216,6 +256,7 @@ TEST(TestGameClientDiscXML, LoadRestoresEjectedFalseState)
 
 TEST(TestGameClientDiscXML, LoadMissingEjectedDefaultsToFalse)
 {
+  // Verify older XML without tray metadata defaults to non-ejected.
   CleanupStateFile();
 
   const std::string xmlPath = CGameClientDiscXML::GetXMLPath(GAME_PATH);
@@ -232,6 +273,89 @@ TEST(TestGameClientDiscXML, LoadMissingEjectedDefaultsToFalse)
   ASSERT_TRUE(discXml.Load(GAME_PATH, loadedModel));
 
   EXPECT_FALSE(loadedModel.IsEjected());
+
+  CleanupStateFile();
+}
+
+TEST(TestGameClientDiscXML, SaveWritesM3UWithTwoDiscs)
+{
+  // Verify save writes one M3U line per real disc in frontend model order.
+  CleanupStateFile();
+
+  CGameClientDiscModel savedModel;
+  ASSERT_TRUE(savedModel.AddDisc("/roms/disc1.chd"));
+  ASSERT_TRUE(savedModel.AddDisc("/roms/disc2.chd"));
+
+  CGameClientDiscXML discXml;
+  ASSERT_TRUE(discXml.Save(GAME_PATH, savedModel));
+
+  const std::string m3u = ReadStateM3U();
+  EXPECT_EQ(m3u, "/roms/disc1.chd\n/roms/disc2.chd\n");
+
+  CleanupStateFile();
+}
+
+TEST(TestGameClientDiscXML, SaveOmitsRemovedSlotsFromM3U)
+{
+  // Verify tombstoned slots are excluded from generated M3U output.
+  CleanupStateFile();
+
+  CGameClientDiscModel savedModel;
+  ASSERT_TRUE(savedModel.AddDisc("/roms/disc1.chd"));
+  ASSERT_TRUE(savedModel.AddRemovedSlot());
+  ASSERT_TRUE(savedModel.AddDisc("/roms/disc3.chd"));
+
+  CGameClientDiscXML discXml;
+  ASSERT_TRUE(discXml.Save(GAME_PATH, savedModel));
+
+  const std::string m3u = ReadStateM3U();
+  EXPECT_EQ(m3u, "/roms/disc1.chd\n/roms/disc3.chd\n");
+
+  CleanupStateFile();
+}
+
+TEST(TestGameClientDiscXML, SaveNormalizesBinToCueInM3UWhenCueExists)
+{
+  // Verify .bin entries prefer sibling .cue paths when the cue file exists.
+  CleanupStateFile();
+
+  const std::string m3uPath = CGameClientDiscM3U::GetM3UPath(GAME_PATH);
+  const std::string cuePath = URIUtils::ReplaceExtension(m3uPath, ".cue");
+  const std::string binPath = URIUtils::ReplaceExtension(m3uPath, ".bin");
+
+  XFILE::CFile cueFile;
+  ASSERT_TRUE(cueFile.OpenForWrite(cuePath, true));
+  cueFile.Close();
+
+  CGameClientDiscModel savedModel;
+  ASSERT_TRUE(savedModel.AddDisc(binPath));
+
+  CGameClientDiscXML discXml;
+  ASSERT_TRUE(discXml.Save(GAME_PATH, savedModel));
+
+  const std::string m3u = ReadStateM3U();
+  EXPECT_EQ(m3u, cuePath + "\n");
+
+  XFILE::CFile::Delete(cuePath);
+  CleanupStateFile();
+}
+
+TEST(TestGameClientDiscXML, SaveSucceedsWhenM3UWriteFails)
+{
+  // Verify M3U write failures are non-fatal and do not block XML persistence.
+  CleanupStateFile();
+
+  CGameClientDiscModel savedModel;
+  ASSERT_TRUE(savedModel.AddDisc("/roms/disc1.chd"));
+
+  CGameClientDiscXMLFailingM3U discXml;
+  ASSERT_TRUE(discXml.Save(GAME_PATH, savedModel));
+
+  const std::string xml = ReadStateXml();
+  EXPECT_FALSE(xml.empty());
+
+  const std::string m3u = ReadStateM3U();
+  EXPECT_TRUE(m3u.empty());
 
   CleanupStateFile();
 }
