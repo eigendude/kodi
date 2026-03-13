@@ -695,6 +695,11 @@
 								<property name="EnableOnEject">true</property>
 							</item>
 							<item>
+								<description>The "Apply disc change" button plays the game for a few seconds for the disc to take effect.</description>
+								<label>$LOCALIZE[35281]</label>
+								<icon>icons/infodialogs/launch.png</icon>
+							</item>
+							<item>
 								<description>"Resume game" item for resuming the game</description>
 								<label>$LOCALIZE[35277]</label>
 								<icon>osd/fullscreen/buttons/play.png</icon>
