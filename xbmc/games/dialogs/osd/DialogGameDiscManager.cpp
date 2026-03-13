@@ -42,12 +42,25 @@ CDialogGameDiscManager::CDialogGameDiscManager()
 {
 }
 
+bool CDialogGameDiscManager::OnMessage(CGUIMessage& message)
+{
+  if (message.GetMessage() == GUI_MSG_CLICKED)
+  {
+    const int actionId = message.GetParam1();
+    if (actionId == ACTION_SELECT_ITEM || actionId == ACTION_MOUSE_LEFT_CLICK)
+    {
+      if (m_menu && m_menu->OnClick(message.GetSenderId()))
+        return true;
+    }
+  }
+
+  return CGUIDialog::OnMessage(message);
+}
+
 void CDialogGameDiscManager::OnInitWindow()
 {
-  // Call ancestor
   CGUIDialog::OnInitWindow();
 
-  // Get active game add-on
   GameClientPtr gameClient;
   {
     auto gameSettingsHandle = CServiceBroker::GetGameRenderManager().RegisterGameSettingsDialog();
@@ -68,31 +81,27 @@ void CDialogGameDiscManager::OnInitWindow()
 
   if (m_gameClient)
   {
-    // Refresh discs from live core state
     if (m_gameClient->SupportsDiscControl())
       m_gameClient->Discs().RefreshDiscState();
     else
       CLog::Log(LOGERROR, "Game client does not support disc control. The Disc Manager dialog will "
                           "not function correctly.");
 
-    // Initialize dialog
     InitializeDialog();
+    RefreshMenuControls();
   }
 
-  // Show the main menu
   ShowControl(CONTROL_DISC_MANAGER_MENU);
 
-  // Select first "Insert disc" item
-  CGUIMessage msgSelectFirst(GUI_MSG_ITEM_SELECT, GetID(), CONTROL_DISC_MANAGER_MENU, 0);
-  OnMessage(msgSelectFirst);
+  CGUIMessage msgSetFocus(GUI_MSG_SETFOCUS, GetID(), CDiscManagerMenu::CONTROL_SELECT_DISC);
+  OnMessage(msgSetFocus);
 }
 
 void CDialogGameDiscManager::OnDeinitWindow(int nextWindowID)
 {
-  // Reset game add-on
+  m_menu.reset();
   m_gameClient.reset();
 
-  // Call ancestor
   CGUIDialog::OnDeinitWindow(nextWindowID);
 }
 
@@ -104,12 +113,9 @@ bool CDialogGameDiscManager::OnAction(const CAction& action)
     case ACTION_PREVIOUS_MENU:
     case ACTION_NAV_BACK:
     {
-      // Check if the disc list is visible
-      CGUIBaseContainer* discMgrDiscList =
-          dynamic_cast<CGUIBaseContainer*>(GetControl(CONTROL_DISC_MANAGER_DISC_LIST));
+      CGUIBaseContainer* discMgrDiscList = GetDiscList();
       if (discMgrDiscList != nullptr && discMgrDiscList->IsVisible())
       {
-        // Return to the main menu
         ShowControl(CONTROL_DISC_MANAGER_MENU);
         return true;
       }
@@ -125,34 +131,25 @@ void CDialogGameDiscManager::SelectDiscToInsert(std::optional<size_t> selectedIn
                                                 std::function<void(std::optional<size_t>)> callback)
 {
   m_insertCallback = callback;
-
-  // Reset the disc list
   ResetDiscList();
 
-  // Find the item index to focus/select
   const unsigned int selectedItemIndex = GetSelectedIndex(selectedIndex);
 
-  // Select the current disc
   CGUIMessage msgSelectDisc(GUI_MSG_ITEM_SELECT, GetID(), CONTROL_DISC_MANAGER_DISC_LIST,
                             static_cast<int64_t>(selectedItemIndex));
   OnMessage(msgSelectDisc);
 
-  // Show the disc list
   ShowControl(CONTROL_DISC_MANAGER_DISC_LIST);
 }
 
 void CDialogGameDiscManager::SelectDiscToRemove(std::function<void(size_t)> callback)
 {
   m_removeCallback = callback;
-
-  // Reset the disc list
   ResetDiscList();
 
-  // Select the first disc
   CGUIMessage msgSelectDisc(GUI_MSG_ITEM_SELECT, GetID(), CONTROL_DISC_MANAGER_DISC_LIST, 0);
   OnMessage(msgSelectDisc);
 
-  // Show the disc list
   ShowControl(CONTROL_DISC_MANAGER_DISC_LIST);
 }
 
@@ -163,7 +160,6 @@ void CDialogGameDiscManager::OnDiscSelect(size_t discIndex, bool isNoDisc)
   else if (m_removeCallback && !isNoDisc)
     m_removeCallback(discIndex);
 
-  // Return to the main menu
   ShowControl(CONTROL_DISC_MANAGER_MENU);
 }
 
@@ -175,30 +171,28 @@ bool CDialogGameDiscManager::AllowSelectNoDisc() const
   return false;
 }
 
+void CDialogGameDiscManager::RefreshMenuControls()
+{
+  if (!m_menu)
+    return;
+
+  m_menu->Update();
+
+  SetProperty("GameDiscManager.SelectedDisc", m_menu->GetSelectedDiscLabel());
+  SetProperty("GameDiscManager.EjectInsertLabel", m_menu->GetEjectInsertLabel());
+  SetProperty("GameDiscManager.EjectInsertStatus", m_menu->GetEjectInsertStatusLabel());
+
+  if (m_menu->IsEjected())
+    SetProperty("GameDiscManager.IsEjected", "true");
+  else
+    SetProperty("GameDiscManager.IsEjected", "false");
+}
+
 void CDialogGameDiscManager::InitializeDialog()
 {
-  //
-  // Initialize main menu
-  //
+  m_menu = std::make_unique<CDiscManagerMenu>(m_gameClient, *this);
 
-  CGUIBaseContainer* discMgrMenu =
-      dynamic_cast<CGUIBaseContainer*>(GetControl(CONTROL_DISC_MANAGER_MENU));
-  if (discMgrMenu != nullptr)
-  {
-    discMgrMenu->SetListProvider(
-        std::make_unique<CDiscManagerMenu>(m_gameClient, *this, CONTROL_DISC_MANAGER_MENU));
-  }
-  else
-  {
-    CLog::Log(LOGERROR, "Missing main menu list with control ID {}", CONTROL_DISC_MANAGER_MENU);
-  }
-
-  //
-  // Initialize disc selection list
-  //
-
-  CGUIBaseContainer* discMgrDiscList =
-      dynamic_cast<CGUIBaseContainer*>(GetControl(CONTROL_DISC_MANAGER_DISC_LIST));
+  CGUIBaseContainer* discMgrDiscList = GetDiscList();
   if (discMgrDiscList != nullptr)
   {
     discMgrDiscList->SetListProvider(std::make_unique<CDiscManagerDiscList>(
@@ -212,8 +206,7 @@ void CDialogGameDiscManager::InitializeDialog()
 
 void CDialogGameDiscManager::ResetDiscList()
 {
-  CGUIBaseContainer* discMgrDiscList =
-      dynamic_cast<CGUIBaseContainer*>(GetControl(CONTROL_DISC_MANAGER_DISC_LIST));
+  CGUIBaseContainer* discMgrDiscList = GetDiscList();
 
   if (discMgrDiscList != nullptr)
   {
@@ -233,7 +226,6 @@ unsigned int CDialogGameDiscManager::GetSelectedIndex(std::optional<size_t> sele
 
   for (size_t i = 0; i < discList.Size(); ++i)
   {
-    // Hidden from the visible list, so it does not consume a UI row.
     if (discList.IsRemovedSlotByIndex(i))
       continue;
 
@@ -243,11 +235,9 @@ unsigned int CDialogGameDiscManager::GetSelectedIndex(std::optional<size_t> sele
     ++itemIndex;
   }
 
-  // If no real slot matched, select the appended "No disc" row when present.
   if (AllowSelectNoDisc())
     return itemIndex;
 
-  // Fallback for remove flow or invalid selection.
   return 0;
 }
 
@@ -255,42 +245,38 @@ void CDialogGameDiscManager::ShowControl(int controlId)
 {
   if (controlId == CONTROL_DISC_MANAGER_MENU)
   {
-    // Hide disc list
     CGUIMessage msgHideDiscList(GUI_MSG_HIDDEN, GetID(), CONTROL_DISC_MANAGER_DISC_LIST);
     OnMessage(msgHideDiscList);
 
-    // Hide scroll bar
     CGUIMessage msgHideScrollBar(GUI_MSG_HIDDEN, GetID(), CONTROL_DISC_MANAGER_SCROLL_BAR);
     OnMessage(msgHideScrollBar);
 
-    // Show main menu
     CGUIMessage msgShowMenu(GUI_MSG_VISIBLE, GetID(), CONTROL_DISC_MANAGER_MENU);
     OnMessage(msgShowMenu);
 
-    // Give focus to main menu
-    CGUIMessage msgSetFocus(GUI_MSG_SETFOCUS, GetID(), CONTROL_DISC_MANAGER_MENU);
+    CGUIMessage msgSetFocus(GUI_MSG_SETFOCUS, GetID(), CDiscManagerMenu::CONTROL_SELECT_DISC);
     OnMessage(msgSetFocus);
 
-    // If we're leaving the disc list, reset the callbacks
     m_insertCallback = {};
     m_removeCallback = {};
   }
   else if (controlId == CONTROL_DISC_MANAGER_DISC_LIST)
   {
-    // Hide main menu
     CGUIMessage msgHideMenu(GUI_MSG_HIDDEN, GetID(), CONTROL_DISC_MANAGER_MENU);
     OnMessage(msgHideMenu);
 
-    // Show disc list
     CGUIMessage msgShowDiscList(GUI_MSG_VISIBLE, GetID(), CONTROL_DISC_MANAGER_DISC_LIST);
     OnMessage(msgShowDiscList);
 
-    // Show scroll bar
     CGUIMessage msgShowScrollBar(GUI_MSG_VISIBLE, GetID(), CONTROL_DISC_MANAGER_SCROLL_BAR);
     OnMessage(msgShowScrollBar);
 
-    // Give focus to disc list
     CGUIMessage msgSetFocus(GUI_MSG_SETFOCUS, GetID(), CONTROL_DISC_MANAGER_DISC_LIST);
     OnMessage(msgSetFocus);
   }
+}
+
+CGUIBaseContainer* CDialogGameDiscManager::GetDiscList()
+{
+  return dynamic_cast<CGUIBaseContainer*>(GetControl(CONTROL_DISC_MANAGER_DISC_LIST));
 }

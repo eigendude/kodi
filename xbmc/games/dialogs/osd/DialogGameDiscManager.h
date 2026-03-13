@@ -18,11 +18,14 @@
 #include <string>
 
 class CGUIBaseContainer;
+class CGUIMessage;
 
 namespace KODI
 {
 namespace GAME
 {
+class CDiscManagerMenu;
+
 /*!
  * \ingroup games
  */
@@ -31,6 +34,9 @@ class CDialogGameDiscManager : public CGUIDialog
 public:
   CDialogGameDiscManager();
   ~CDialogGameDiscManager() override = default;
+
+  // Implementation of CGUIWindow via CGUIDialog
+  bool OnMessage(CGUIMessage& message) override;
 
   // Implementation of CGUIControl via CGUIDialog
   bool OnAction(const CAction& action) override;
@@ -41,6 +47,7 @@ public:
   void SelectDiscToRemove(std::function<void(size_t)> callback);
   void OnDiscSelect(size_t discIndex, bool isNoDisc);
   bool AllowSelectNoDisc() const;
+  void RefreshMenuControls();
 
 protected:
   // Implementation of CGUIWindow via CGUIDialog
@@ -54,13 +61,13 @@ private:
   unsigned int GetSelectedIndex(std::optional<size_t> selectedIndex);
   void ShowControl(int controlId);
 
-  CGUIBaseContainer* GetMenu();
   CGUIBaseContainer* GetDiscList();
 
   // Game parameters
   GameClientPtr m_gameClient;
 
   // Dialog parameters
+  std::unique_ptr<CDiscManagerMenu> m_menu;
   std::function<void(std::optional<size_t>)> m_insertCallback;
   std::function<void(size_t)> m_removeCallback;
 };

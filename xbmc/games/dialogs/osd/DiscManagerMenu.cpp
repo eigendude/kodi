@@ -8,8 +8,6 @@
 
 #include "DiscManagerMenu.h"
 
-#include "FileItem.h"
-#include "FileItemList.h"
 #include "ServiceBroker.h"
 #include "dialogs/GUIDialogFileBrowser.h"
 #include "games/GameUtils.h"
@@ -17,149 +15,82 @@
 #include "games/addons/disc/GameClientDiscModel.h"
 #include "games/addons/disc/GameClientDiscs.h"
 #include "games/dialogs/osd/DialogGameDiscManager.h"
-#include "guilib/GUIListItem.h"
 #include "messaging/ApplicationMessenger.h"
 #include "messaging/helpers/DialogOKHelper.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
 #include "utils/StringUtils.h"
 #include "utils/Variant.h"
-#include "utils/log.h"
 
-#include <assert.h>
 #include <optional>
 
 using namespace KODI;
 using namespace GAME;
 
-namespace
+CDiscManagerMenu::CDiscManagerMenu(GameClientPtr gameClient, CDialogGameDiscManager& discManager)
+  : m_gameClient(std::move(gameClient)), m_discManager(discManager)
 {
-constexpr unsigned int INDEX_SELECT_DISC = 0;
-constexpr unsigned int INDEX_EJECT_INSERT = 1;
-constexpr unsigned int INDEX_ADD_DISC = 2;
-constexpr unsigned int INDEX_REMOVE_DISC = 3;
-constexpr unsigned int INDEX_APPLY_DISC_CHANGE = 4;
-constexpr unsigned int INDEX_RESUME_GAME = 5;
-
-constexpr unsigned int MENU_ITEM_COUNT = 6;
-} // namespace
-
-CDiscManagerMenu::CDiscManagerMenu(GameClientPtr gameClient,
-                                   CDialogGameDiscManager& discManager,
-                                   int parentID)
-  : IListProvider(parentID),
-    m_gameClient(std::move(gameClient)),
-    m_discManager(discManager)
-{
-  assert(m_gameClient.get() != nullptr);
+  m_ejected = m_gameClient->Discs().IsEjected();
+  UpdateItems();
 }
 
-std::unique_ptr<IListProvider> CDiscManagerMenu::Clone()
+bool CDiscManagerMenu::Update()
 {
-  return std::make_unique<CDiscManagerMenu>(*this);
-}
-
-bool CDiscManagerMenu::Update(bool forceRefresh)
-{
-  // Always update when eject state changes
   const bool isEjected = m_gameClient->Discs().IsEjected();
 
   if (isEjected != m_ejected)
   {
     m_ejected = isEjected;
+    UpdateItems();
     return true;
   }
 
   return false;
 }
 
-void CDiscManagerMenu::Fetch(std::vector<std::shared_ptr<CGUIListItem>>& items)
+bool CDiscManagerMenu::OnClick(int controlId)
 {
-  items = m_items;
-}
-
-bool CDiscManagerMenu::OnClick(const std::shared_ptr<CGUIListItem>& item)
-{
-  // Ensure we have a full menu
-  if (m_items.size() < MENU_ITEM_COUNT)
-    return false;
-
-  if (item == m_items[INDEX_SELECT_DISC])
+  switch (controlId)
   {
-    OnSelectDisc();
-    return true;
-  }
-  else if (item == m_items[INDEX_EJECT_INSERT])
-  {
-    OnEjectInsert();
-    return true;
-  }
-  else if (item == m_items[INDEX_ADD_DISC])
-  {
-    OnAdd();
-    return true;
-  }
-  else if (item == m_items[INDEX_REMOVE_DISC])
-  {
-    OnRemove();
-    return true;
-  }
-  else if (item == m_items[INDEX_APPLY_DISC_CHANGE])
-  {
-    OnApplyDiscChange();
-    return true;
-  }
-  else if (item == m_items[INDEX_RESUME_GAME])
-  {
-    OnResumeGame();
-    return true;
+    case CONTROL_SELECT_DISC:
+      OnSelectDisc();
+      return true;
+    case CONTROL_EJECT_INSERT:
+      OnEjectInsert();
+      return true;
+    case CONTROL_ADD_DISC:
+      OnAdd();
+      return true;
+    case CONTROL_REMOVE_DISC:
+      OnRemove();
+      return true;
+    case CONTROL_APPLY_DISC_CHANGE:
+      // Skin handles apply behavior.
+      return true;
+    case CONTROL_RESUME_GAME:
+      OnResumeGame();
+      return true;
+    default:
+      break;
   }
 
   return false;
-}
-
-void CDiscManagerMenu::OnReplace(IListProvider& previousProvider)
-{
-  m_items.clear();
-
-  previousProvider.Fetch(m_items);
-
-  // Inform the skin developer if we don't have a complete menu
-  if (m_items.size() < MENU_ITEM_COUNT)
-    CLog::Log(LOGERROR, "Disc Manager menu has only {} items. Expected {}.", m_items.size(),
-              MENU_ITEM_COUNT);
-  else if (m_items.size() > MENU_ITEM_COUNT)
-    CLog::Log(LOGERROR, "Disc Manager menu has {} items. Expected {}. Extra items will be ignored.",
-              m_items.size(), MENU_ITEM_COUNT);
-
-  UpdateItems();
 }
 
 void CDiscManagerMenu::UpdateItems()
 {
   auto& strings = CServiceBroker::GetResourcesComponent().GetLocalizeStrings();
 
-  while (m_items.size() < MENU_ITEM_COUNT)
-    m_items.emplace_back(std::make_shared<CFileItem>());
-  m_items.resize(MENU_ITEM_COUNT);
-
   const CGameClientDiscModel& discList = m_gameClient->Discs().GetDiscs();
 
-  // Set inserted disc label
-  std::string insertedDiscLabel;
-  if (discList.IsSelectedNoDisc())
-  {
-    insertedDiscLabel = strings.Get(35274); // "No disc"
-  }
-  else
+  m_selectedDiscLabel = strings.Get(35274); // "No disc"
+  if (!discList.IsSelectedNoDisc())
   {
     const auto selectedIndex = discList.GetSelectedDiscIndex();
     if (selectedIndex.has_value())
-      insertedDiscLabel = discList.GetLabelByIndex(*selectedIndex);
+      m_selectedDiscLabel = discList.GetLabelByIndex(*selectedIndex);
   }
-  m_items[INDEX_SELECT_DISC]->SetLabel2(insertedDiscLabel);
 
-  // Set eject/insert item labels
   UpdateEjectButton(m_gameClient->Discs().IsEjected());
 }
 
@@ -167,18 +98,15 @@ void CDiscManagerMenu::OnSelectDisc()
 {
   CGameClientDiscs& discs = m_gameClient->Discs();
 
-  // Do nothing if the disc isn't ejected
   if (!discs.IsEjected())
     return;
 
-  // Get currently-selected disc
   const CGameClientDiscModel& discList = discs.GetDiscs();
   const std::optional<size_t> selectedIndex = discList.GetSelectedDiscIndex();
 
   m_discManager.SelectDiscToInsert(selectedIndex,
                                    [this, selectedIndex](std::optional<size_t> discIndex)
                                    {
-                                     // Do nothing if the selection didn't change
                                      if (selectedIndex == discIndex)
                                        return;
 
@@ -193,6 +121,7 @@ void CDiscManagerMenu::OnSelectDisc()
                                      }
 
                                      UpdateItems();
+                                     m_discManager.RefreshMenuControls();
                                    });
 }
 
@@ -210,30 +139,24 @@ void CDiscManagerMenu::OnEjectInsert()
   {
     if (wasEjected)
     {
-      // "Disc menu"
-      // "The disc can't be inserted right now."
-      MESSAGING::HELPERS::ShowOKDialogText(CVariant{strings.Get(35272)},
-                                           CVariant{strings.Get(35279)});
+      MESSAGING::HELPERS::ShowOKDialogText(CVariant{strings.Get(35272)}, CVariant{strings.Get(35279)});
     }
     else
     {
-      // "Disc menu"
-      // "The disc can't be ejected right now."
-      MESSAGING::HELPERS::ShowOKDialogText(CVariant{strings.Get(35272)},
-                                           CVariant{strings.Get(35278)});
+      MESSAGING::HELPERS::ShowOKDialogText(CVariant{strings.Get(35272)}, CVariant{strings.Get(35278)});
     }
   }
 
   const bool isEjected = discs.IsEjected();
 
   UpdateEjectButton(isEjected);
+  m_discManager.RefreshMenuControls();
 }
 
 void CDiscManagerMenu::OnAdd()
 {
   CGameClientDiscs& discs = m_gameClient->Discs();
 
-  // Do nothing if the disc isn't ejected
   if (!discs.IsEjected())
     return;
 
@@ -241,7 +164,6 @@ void CDiscManagerMenu::OnAdd()
 
   std::string startingPath = discModel.GetSelectedDiscPath();
 
-  // Fall back to first valid disc
   if (startingPath.empty())
   {
     for (const GameClientDiscEntry& disc : discModel.GetDiscs())
@@ -254,7 +176,6 @@ void CDiscManagerMenu::OnAdd()
     }
   }
 
-  // Fall back to currently playing game
   if (startingPath.empty())
     startingPath = m_gameClient->GetGamePath();
 
@@ -266,13 +187,13 @@ void CDiscManagerMenu::OnAdd()
     ShowInternalError();
 
   UpdateItems();
+  m_discManager.RefreshMenuControls();
 }
 
 void CDiscManagerMenu::OnRemove()
 {
   CGameClientDiscs& discs = m_gameClient->Discs();
 
-  // Do nothing if the disc isn't ejected
   if (!discs.IsEjected())
     return;
 
@@ -283,13 +204,8 @@ void CDiscManagerMenu::OnRemove()
           ShowInternalError();
 
         UpdateItems();
+        m_discManager.RefreshMenuControls();
       });
-}
-
-void CDiscManagerMenu::OnApplyDiscChange()
-{
-  CServiceBroker::GetAppMessenger()->PostMsg(TMSG_EXECUTE_BUILT_IN, -1, -1, nullptr,
-                                             "PlayerControl(Play,3)");
 }
 
 void CDiscManagerMenu::OnResumeGame()
@@ -316,13 +232,13 @@ void CDiscManagerMenu::UpdateEjectButton(bool ejected)
 
   if (ejected)
   {
-    m_items[INDEX_EJECT_INSERT]->SetLabel(strings.Get(35276)); // "Insert"
-    m_items[INDEX_EJECT_INSERT]->SetLabel2(strings.Get(162)); // "Tray open"
+    m_ejectInsertLabel = strings.Get(35276); // "Insert"
+    m_ejectInsertStatusLabel = strings.Get(162); // "Tray open"
   }
   else
   {
-    m_items[INDEX_EJECT_INSERT]->SetLabel(strings.Get(35275)); // "Eject"
-    m_items[INDEX_EJECT_INSERT]->SetLabel2("");
+    m_ejectInsertLabel = strings.Get(35275); // "Eject"
+    m_ejectInsertStatusLabel.clear();
   }
 }
 
@@ -330,8 +246,6 @@ void CDiscManagerMenu::ShowInternalError()
 {
   auto& strings = CServiceBroker::GetResourcesComponent().GetLocalizeStrings();
 
-  // "Disc menu"
-  // "The emulator \"{0:s}\" had an internal error."
   MESSAGING::HELPERS::ShowOKDialogText(
       CVariant{strings.Get(35272)},
       CVariant{StringUtils::Format(strings.Get(35213), m_gameClient->Name())});
