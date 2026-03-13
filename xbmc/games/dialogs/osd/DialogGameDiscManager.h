@@ -23,6 +23,8 @@ namespace KODI
 {
 namespace GAME
 {
+class CGameClientDiscModel;
+
 /*!
  * \ingroup games
  */
@@ -41,6 +43,9 @@ public:
   void SelectDiscToRemove(std::function<void(size_t)> callback);
   void OnDiscSelect(size_t discIndex, bool isNoDisc);
   bool AllowSelectNoDisc() const;
+
+  // Game interface
+  const CGameClientDiscModel& GetDiscModel() const;
 
 protected:
   // Implementation of CGUIWindow via CGUIDialog

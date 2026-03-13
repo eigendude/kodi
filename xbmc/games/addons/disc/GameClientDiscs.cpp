@@ -16,7 +16,6 @@
 #include "games/addons/disc/GameClientDiscXML.h"
 
 #include <algorithm>
-#include <optional>
 #include <vector>
 
 using namespace KODI;

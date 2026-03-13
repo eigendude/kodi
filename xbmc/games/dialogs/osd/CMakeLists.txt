@@ -1,4 +1,5 @@
 set(SOURCES DialogGameAdvancedSettings.cpp
+            DialogGameDiscChanger.cpp
             DialogGameDiscManager.cpp
             DialogGameOSD.cpp
             DialogGameOSDHelp.cpp
@@ -14,6 +15,7 @@ set(SOURCES DialogGameAdvancedSettings.cpp
 )
 
 set(HEADERS DialogGameAdvancedSettings.h
+            DialogGameDiscChanger.h
             DialogGameDiscManager.h
             DialogGameOSD.h
             DialogGameOSDHelp.h
