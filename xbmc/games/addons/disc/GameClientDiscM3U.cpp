@@ -40,8 +40,27 @@ bool CGameClientDiscM3U::Save(const std::string& gamePath, const CGameClientDisc
     return true;
 
   const std::string m3uPath = GetM3UPath(gamePath);
+  const std::string m3u = BuildM3U(model);
 
+  XFILE::CFile file;
+  if (!file.OpenForWrite(m3uPath, true))
+    return false;
+
+  const ssize_t bytesWritten = file.Write(m3u.data(), m3u.size());
+  file.Close();
+
+  return bytesWritten == static_cast<ssize_t>(m3u.size());
+}
+
+std::string CGameClientDiscM3U::BuildM3U(const CGameClientDiscModel& model)
+{
   std::string m3u;
+  AppendDiscsToM3U(m3u, model);
+  return m3u;
+}
+
+void CGameClientDiscM3U::AppendDiscsToM3U(std::string& m3u, const CGameClientDiscModel& model)
+{
   for (const GameClientDiscEntry& disc : model.GetDiscs())
   {
     if (disc.slotType != GameClientDiscEntry::DiscSlotType::Disc)
@@ -53,15 +72,6 @@ bool CGameClientDiscM3U::Save(const std::string& gamePath, const CGameClientDisc
     m3u += NormalizeDiscPath(disc.path);
     m3u += '\n';
   }
-
-  XFILE::CFile file;
-  if (!file.OpenForWrite(m3uPath, true))
-    return false;
-
-  const ssize_t bytesWritten = file.Write(m3u.data(), m3u.size());
-  file.Close();
-
-  return bytesWritten == static_cast<ssize_t>(m3u.size());
 }
 
 std::string CGameClientDiscM3U::NormalizeDiscPath(const std::string& discPath)

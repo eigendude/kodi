@@ -24,6 +24,8 @@ public:
   static bool Save(const std::string& gamePath, const CGameClientDiscModel& model);
 
 private:
+  static std::string BuildM3U(const CGameClientDiscModel& model);
+  static void AppendDiscsToM3U(std::string& m3u, const CGameClientDiscModel& model);
   static std::string NormalizeDiscPath(const std::string& discPath);
 };
 
