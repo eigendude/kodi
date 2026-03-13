@@ -13,7 +13,6 @@
 
 #include <cstddef>
 #include <functional>
-#include <memory>
 #include <optional>
 #include <string>
 
@@ -67,7 +66,7 @@ private:
   GameClientPtr m_gameClient;
 
   // Dialog parameters
-  std::unique_ptr<CDiscManagerMenu> m_menu;
+  CDiscManagerMenu* m_menu{nullptr};
   std::function<void(std::optional<size_t>)> m_insertCallback;
   std::function<void(size_t)> m_removeCallback;
 };

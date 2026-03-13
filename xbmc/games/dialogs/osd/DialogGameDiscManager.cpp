@@ -44,16 +44,6 @@ CDialogGameDiscManager::CDialogGameDiscManager()
 
 bool CDialogGameDiscManager::OnMessage(CGUIMessage& message)
 {
-  if (message.GetMessage() == GUI_MSG_CLICKED)
-  {
-    const int actionId = message.GetParam1();
-    if (actionId == ACTION_SELECT_ITEM || actionId == ACTION_MOUSE_LEFT_CLICK)
-    {
-      if (m_menu && m_menu->OnClick(message.GetSenderId()))
-        return true;
-    }
-  }
-
   return CGUIDialog::OnMessage(message);
 }
 
@@ -93,13 +83,13 @@ void CDialogGameDiscManager::OnInitWindow()
 
   ShowControl(CONTROL_DISC_MANAGER_MENU);
 
-  CGUIMessage msgSetFocus(GUI_MSG_SETFOCUS, GetID(), CDiscManagerMenu::CONTROL_SELECT_DISC);
-  OnMessage(msgSetFocus);
+  CGUIMessage msgSelectFirst(GUI_MSG_ITEM_SELECT, GetID(), CONTROL_DISC_MANAGER_MENU, 0);
+  OnMessage(msgSelectFirst);
 }
 
 void CDialogGameDiscManager::OnDeinitWindow(int nextWindowID)
 {
-  m_menu.reset();
+  m_menu = nullptr;
   m_gameClient.reset();
 
   CGUIDialog::OnDeinitWindow(nextWindowID);
@@ -190,7 +180,19 @@ void CDialogGameDiscManager::RefreshMenuControls()
 
 void CDialogGameDiscManager::InitializeDialog()
 {
-  m_menu = std::make_unique<CDiscManagerMenu>(m_gameClient, *this);
+  CGUIBaseContainer* discMgrMenu =
+      dynamic_cast<CGUIBaseContainer*>(GetControl(CONTROL_DISC_MANAGER_MENU));
+  if (discMgrMenu != nullptr)
+  {
+    auto menuProvider = std::make_unique<CDiscManagerMenu>(m_gameClient, *this,
+                                                           CONTROL_DISC_MANAGER_MENU);
+    m_menu = menuProvider.get();
+    discMgrMenu->SetListProvider(std::move(menuProvider));
+  }
+  else
+  {
+    CLog::Log(LOGERROR, "Missing main menu list with control ID {}", CONTROL_DISC_MANAGER_MENU);
+  }
 
   CGUIBaseContainer* discMgrDiscList = GetDiscList();
   if (discMgrDiscList != nullptr)
@@ -254,7 +256,7 @@ void CDialogGameDiscManager::ShowControl(int controlId)
     CGUIMessage msgShowMenu(GUI_MSG_VISIBLE, GetID(), CONTROL_DISC_MANAGER_MENU);
     OnMessage(msgShowMenu);
 
-    CGUIMessage msgSetFocus(GUI_MSG_SETFOCUS, GetID(), CDiscManagerMenu::CONTROL_SELECT_DISC);
+    CGUIMessage msgSetFocus(GUI_MSG_SETFOCUS, GetID(), CONTROL_DISC_MANAGER_MENU);
     OnMessage(msgSetFocus);
 
     m_insertCallback = {};

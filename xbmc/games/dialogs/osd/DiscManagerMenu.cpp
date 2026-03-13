@@ -15,30 +15,48 @@
 #include "games/addons/disc/GameClientDiscModel.h"
 #include "games/addons/disc/GameClientDiscs.h"
 #include "games/dialogs/osd/DialogGameDiscManager.h"
+#include "guilib/GUIListItem.h"
 #include "messaging/ApplicationMessenger.h"
 #include "messaging/helpers/DialogOKHelper.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
 #include "utils/StringUtils.h"
 #include "utils/Variant.h"
+#include "utils/log.h"
 
+#include <assert.h>
 #include <optional>
+#include <string_view>
 
 using namespace KODI;
 using namespace GAME;
 
-CDiscManagerMenu::CDiscManagerMenu(GameClientPtr gameClient, CDialogGameDiscManager& discManager)
-  : m_gameClient(std::move(gameClient)), m_discManager(discManager)
+namespace
 {
+constexpr unsigned int MENU_ITEM_COUNT = 6;
+constexpr std::string_view ACTION_ID_PROPERTY = "GameDiscManager.ActionId";
+} // namespace
+
+CDiscManagerMenu::CDiscManagerMenu(GameClientPtr gameClient,
+                                   CDialogGameDiscManager& discManager,
+                                   int parentID)
+  : IListProvider(parentID), m_gameClient(std::move(gameClient)), m_discManager(discManager)
+{
+  assert(m_gameClient.get() != nullptr);
+
   m_ejected = m_gameClient->Discs().IsEjected();
-  UpdateItems();
 }
 
-bool CDiscManagerMenu::Update()
+std::unique_ptr<IListProvider> CDiscManagerMenu::Clone()
+{
+  return std::make_unique<CDiscManagerMenu>(*this);
+}
+
+bool CDiscManagerMenu::Update(bool forceRefresh)
 {
   const bool isEjected = m_gameClient->Discs().IsEjected();
 
-  if (isEjected != m_ejected)
+  if (forceRefresh || isEjected != m_ejected)
   {
     m_ejected = isEjected;
     UpdateItems();
@@ -48,33 +66,55 @@ bool CDiscManagerMenu::Update()
   return false;
 }
 
-bool CDiscManagerMenu::OnClick(int controlId)
+void CDiscManagerMenu::Fetch(std::vector<std::shared_ptr<CGUIListItem>>& items)
 {
-  switch (controlId)
+  items = m_items;
+}
+
+bool CDiscManagerMenu::OnClick(const std::shared_ptr<CGUIListItem>& item)
+{
+  if (!item)
+    return false;
+
+  const int actionId = static_cast<int>(item->GetProperty(ACTION_ID_PROPERTY).asInteger());
+
+  switch (actionId)
   {
-    case CONTROL_SELECT_DISC:
+    case ACTION_SELECT_DISC:
       OnSelectDisc();
       return true;
-    case CONTROL_EJECT_INSERT:
+    case ACTION_EJECT_INSERT:
       OnEjectInsert();
       return true;
-    case CONTROL_ADD_DISC:
+    case ACTION_ADD_DISC:
       OnAdd();
       return true;
-    case CONTROL_REMOVE_DISC:
+    case ACTION_REMOVE_DISC:
       OnRemove();
       return true;
-    case CONTROL_APPLY_DISC_CHANGE:
-      // Skin handles apply behavior.
-      return true;
-    case CONTROL_RESUME_GAME:
+    case ACTION_RESUME_GAME:
       OnResumeGame();
+      return true;
+    case ACTION_APPLY_DISC_CHANGE:
+      // Skin handles apply behavior.
       return true;
     default:
       break;
   }
 
   return false;
+}
+
+void CDiscManagerMenu::OnReplace(IListProvider& previousProvider)
+{
+  m_items.clear();
+  previousProvider.Fetch(m_items);
+
+  if (m_items.size() != MENU_ITEM_COUNT)
+    CLog::Log(LOGERROR, "Disc Manager menu has {} items. Expected {}.", m_items.size(),
+              MENU_ITEM_COUNT);
+
+  UpdateItems();
 }
 
 void CDiscManagerMenu::UpdateItems()

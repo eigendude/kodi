@@ -643,52 +643,71 @@
 						<right>-20</right>
 						<texture border="40">buttons/dialogbutton-nofo.png</texture>
 					</control>
-					<control type="grouplist" id="3">
+					<control type="list" id="3">
 						<description>Disc manager menu</description>
 						<animation effect="fade" time="1500">VisibleChange</animation>
 						<onup>3</onup>
 						<ondown>3</ondown>
-						<itemgap>0</itemgap>
+						<scrolltime tween="sine">200</scrolltime>
 						<orientation>vertical</orientation>
-						<include content="GameDiscManagerActionButton">
-							<param name="id" value="108323" />
-							<param name="label" value="$LOCALIZE[35273]" />
-							<param name="label2" value="$INFO[Window.Property(GameDiscManager.SelectedDisc)]" />
-							<param name="icon" value="DefaultSets.png" />
-							<param name="sensitive_on_eject" value="true" />
-						</include>
-						<include content="GameDiscManagerActionButton">
-							<param name="id" value="108324" />
-							<!-- Note: This is set to $INFO[Window.Property(GameDiscManager.EjectInsertLabel)] by core -->
-							<param name="label" value="$INFO[Window.Property(GameDiscManager.EjectInsertLabel)]" />
-							<param name="label2" value="$INFO[Window.Property(GameDiscManager.EjectInsertStatus)]" />
-							<param name="icon" value="DefaultAddonsUpdates.png" />
-						</include>
-						<include content="GameDiscManagerActionButton">
-							<param name="id" value="108325" />
-							<param name="label" value="$LOCALIZE[15019]" />
-							<param name="icon" value="DefaultAddSource.png" />
-							<param name="sensitive_on_eject" value="true" />
-						</include>
-						<include content="GameDiscManagerActionButton">
-							<param name="id" value="108326" />
-							<param name="label" value="$LOCALIZE[1210]" />
-							<param name="icon" value="DefaultAddonNone.png" />
-							<param name="sensitive_on_eject" value="true" />
-						</include>
-						<include content="GameDiscManagerActionButton">
-							<param name="id" value="108327" />
-							<param name="label" value="$LOCALIZE[35281]" />
-							<param name="icon" value="icons/infodialogs/launch.png" />
-							<param name="onclick" value="PlayerControl(Play)" />
-							<param name="onclick2" value="AlarmClock(GameDiscApplyPause,PlayerControl(Play),00:03,silent)" />
-						</include>
-						<include content="GameDiscManagerActionButton">
-							<param name="id" value="108328" />
-							<param name="label" value="$LOCALIZE[35277]" />
-							<param name="icon" value="osd/fullscreen/buttons/play.png" />
-							<param name="onclick" value="PlayerControl(Play)" />
-						</include>
+						<itemlayout width="1440" height="100">
+							<control type="group">
+								<include content="GameDiscManagerActionListItem" />
+							</control>
+						</itemlayout>
+						<focusedlayout width="1440" height="100">
+							<control type="group">
+								<control type="image">
+									<top>-20</top>
+									<bottom>-20</bottom>
+									<left>-20</left>
+									<right>-20</right>
+									<texture border="40" colordiffuse="button_focus">buttons/dialogbutton-fo.png</texture>
+									<visible>Control.HasFocus(3)</visible>
+								</control>
+								<include content="GameDiscManagerActionListItem" />
+							</control>
+						</focusedlayout>
+						<content>
+							<include content="GameDiscManagerActionItem">
+								<param name="id" value="108323" />
+								<param name="label" value="$LOCALIZE[35273]" />
+								<param name="label2" value="$INFO[Window.Property(GameDiscManager.SelectedDisc)]" />
+								<param name="icon" value="DefaultSets.png" />
+								<param name="sensitive_on_eject" value="true" />
+							</include>
+							<include content="GameDiscManagerActionItem">
+								<param name="id" value="108324" />
+								<param name="label" value="$INFO[Window.Property(GameDiscManager.EjectInsertLabel)]" />
+								<param name="label2" value="$INFO[Window.Property(GameDiscManager.EjectInsertStatus)]" />
+								<param name="icon" value="DefaultAddonsUpdates.png" />
+							</include>
+							<include content="GameDiscManagerActionItem">
+								<param name="id" value="108325" />
+								<param name="label" value="$LOCALIZE[15019]" />
+								<param name="icon" value="DefaultAddSource.png" />
+								<param name="sensitive_on_eject" value="true" />
+							</include>
+							<include content="GameDiscManagerActionItem">
+								<param name="id" value="108326" />
+								<param name="label" value="$LOCALIZE[1210]" />
+								<param name="icon" value="DefaultAddonNone.png" />
+								<param name="sensitive_on_eject" value="true" />
+							</include>
+							<include content="GameDiscManagerActionItem">
+								<param name="id" value="108327" />
+								<param name="label" value="$LOCALIZE[35277]" />
+								<param name="icon" value="osd/fullscreen/buttons/play.png" />
+								<param name="onclick" value="PlayerControl(Play)" />
+							</include>
+							<include content="GameDiscManagerActionItem">
+								<param name="id" value="108328" />
+								<param name="label" value="$LOCALIZE[35281]" />
+								<param name="icon" value="icons/infodialogs/launch.png" />
+								<param name="onclick" value="PlayerControl(Play)" />
+								<param name="onclick2" value="AlarmClock(GameDiscApplyPause,PlayerControl(Play),00:03,silent)" />
+							</include>
+						</content>
 					</control>
 					<control type="list" id="108321">
 						<description>Disc menu</description>
@@ -728,7 +747,7 @@
 			</control>
 		</control>
 	</include>
-	<include name="GameDiscManagerActionButton">
+	<include name="GameDiscManagerActionItem">
 		<param name="id" default="0" />
 		<param name="label" default="" />
 		<param name="label2" default="" />
@@ -737,83 +756,79 @@
 		<param name="onclick2" default="" />
 		<param name="sensitive_on_eject" default="false" />
 		<definition>
+			<item id="$PARAM[id]">
+				<label>$PARAM[label]</label>
+				<label2>$PARAM[label2]</label2>
+				<icon>$PARAM[icon]</icon>
+				<onclick>$PARAM[onclick]</onclick>
+				<onclick>$PARAM[onclick2]</onclick>
+				<property name="GameDiscManager.ActionId">$PARAM[id]</property>
+				<property name="GameDiscManager.SensitiveOnEject">$PARAM[sensitive_on_eject]</property>
+			</item>
+		</definition>
+	</include>
+	<include name="GameDiscManagerActionListItem">
+		<definition>
 			<control type="group">
-				<width>1440</width>
-				<height>100</height>
-				<control type="button" id="$PARAM[id]">
-					<width>1440</width>
+				<visible>!String.IsEqual(ListItem.Property(GameDiscManager.SensitiveOnEject),true)</visible>
+				<control type="image">
+					<width>100</width>
 					<height>100</height>
+					<texture>$INFO[ListItem.Icon]</texture>
+				</control>
+				<control type="label">
+					<top>20</top>
+					<left>105</left>
+					<width>260</width>
+					<height>60</height>
+					<label>$INFO[ListItem.Label]</label>
+					<font>font37</font>
 					<align>left</align>
-					<texturefocus colordiffuse="button_focus">buttons/dialogbutton-fo.png</texturefocus>
-					<texturenofocus />
-					<onclick>$PARAM[onclick]</onclick>
-					<onclick>$PARAM[onclick2]</onclick>
+					<aligny>center</aligny>
+					<shadowcolor>text_shadow</shadowcolor>
 				</control>
-				<control type="group">
-					<width>1440</width>
-					<height>100</height>
-					<visible>!String.IsEqual($PARAM[sensitive_on_eject],true)</visible>
-					<control type="image">
-						<width>100</width>
-						<height>100</height>
-						<texture>$PARAM[icon]</texture>
-					</control>
-					<control type="label">
-						<top>20</top>
-						<left>105</left>
-						<width>260</width>
-						<height>60</height>
-						<label>$PARAM[label]</label>
-						<font>font37</font>
-						<align>left</align>
-						<aligny>center</aligny>
-						<shadowcolor>text_shadow</shadowcolor>
-					</control>
-					<control type="label">
-						<top>20</top>
-						<left>400</left>
-						<width>1000</width>
-						<height>60</height>
-						<label>$PARAM[label2]</label>
-						<font>font37</font>
-						<align>right</align>
-						<aligny>center</aligny>
-						<shadowcolor>text_shadow</shadowcolor>
-					</control>
+				<control type="label">
+					<top>20</top>
+					<left>400</left>
+					<width>1000</width>
+					<height>60</height>
+					<label>$INFO[ListItem.Label2]</label>
+					<font>font37</font>
+					<align>right</align>
+					<aligny>center</aligny>
+					<shadowcolor>text_shadow</shadowcolor>
 				</control>
-				<control type="group">
-					<width>1440</width>
+			</control>
+			<control type="group">
+				<visible>String.IsEqual(ListItem.Property(GameDiscManager.SensitiveOnEject),true)</visible>
+				<control type="image">
+					<width>100</width>
 					<height>100</height>
-					<visible>String.IsEqual($PARAM[sensitive_on_eject],true)</visible>
-					<control type="image">
-						<width>100</width>
-						<height>100</height>
-						<texture colordiffuse="$VAR[GameDiscEjectedTransparencyVar]">$PARAM[icon]</texture>
-					</control>
-					<control type="label">
-						<top>20</top>
-						<left>105</left>
-						<width>260</width>
-						<height>60</height>
-						<label>$PARAM[label]</label>
-						<font>font37</font>
-						<align>left</align>
-						<aligny>center</aligny>
-						<textcolor>$VAR[GameDiscEjectedTransparencyVar]</textcolor>
-						<shadowcolor>text_shadow</shadowcolor>
-					</control>
-					<control type="label">
-						<top>20</top>
-						<left>400</left>
-						<width>1000</width>
-						<height>60</height>
-						<label>$PARAM[label2]</label>
-						<font>font37</font>
-						<align>right</align>
-						<aligny>center</aligny>
-						<textcolor>$VAR[GameDiscEjectedTransparencyVar]</textcolor>
-						<shadowcolor>text_shadow</shadowcolor>
-					</control>
+					<texture colordiffuse="$VAR[GameDiscEjectedTransparencyVar]">$INFO[ListItem.Icon]</texture>
+				</control>
+				<control type="label">
+					<top>20</top>
+					<left>105</left>
+					<width>260</width>
+					<height>60</height>
+					<label>$INFO[ListItem.Label]</label>
+					<font>font37</font>
+					<align>left</align>
+					<aligny>center</aligny>
+					<textcolor>$VAR[GameDiscEjectedTransparencyVar]</textcolor>
+					<shadowcolor>text_shadow</shadowcolor>
+				</control>
+				<control type="label">
+					<top>20</top>
+					<left>400</left>
+					<width>1000</width>
+					<height>60</height>
+					<label>$INFO[ListItem.Label2]</label>
+					<font>font37</font>
+					<align>right</align>
+					<aligny>center</aligny>
+					<textcolor>$VAR[GameDiscEjectedTransparencyVar]</textcolor>
+					<shadowcolor>text_shadow</shadowcolor>
 				</control>
 			</control>
 		</definition>
