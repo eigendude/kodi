@@ -40,6 +40,8 @@ constexpr int CONTROL_DISC_MANAGER_SCROLL_BAR = 108322;
 CDialogGameDiscManager::CDialogGameDiscManager()
   : CGUIDialog(WINDOW_DIALOG_GAME_DISC_MANAGER, "DialogGameControllers.xml")
 {
+  // Initialize CGUIWindow
+  m_loadType = KEEP_IN_MEMORY;
 }
 
 void CDialogGameDiscManager::OnInitWindow()

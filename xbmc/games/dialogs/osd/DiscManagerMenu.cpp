@@ -17,7 +17,9 @@
 #include "games/addons/disc/GameClientDiscModel.h"
 #include "games/addons/disc/GameClientDiscs.h"
 #include "games/dialogs/osd/DialogGameDiscManager.h"
+#include "guilib/GUIComponent.h"
 #include "guilib/GUIListItem.h"
+#include "guilib/GUIWindowManager.h"
 #include "messaging/ApplicationMessenger.h"
 #include "messaging/helpers/DialogOKHelper.h"
 #include "resources/LocalizeStrings.h"
@@ -38,9 +40,10 @@ constexpr unsigned int INDEX_SELECT_DISC = 0;
 constexpr unsigned int INDEX_EJECT_INSERT = 1;
 constexpr unsigned int INDEX_ADD_DISC = 2;
 constexpr unsigned int INDEX_REMOVE_DISC = 3;
-constexpr unsigned int INDEX_RESUME_GAME = 4;
+constexpr unsigned int INDEX_APPLY_DISC_CHANGE = 4;
+constexpr unsigned int INDEX_RESUME_GAME = 5;
 
-constexpr unsigned int MENU_ITEM_COUNT = 5;
+constexpr unsigned int MENU_ITEM_COUNT = 6;
 } // namespace
 
 CDiscManagerMenu::CDiscManagerMenu(GameClientPtr gameClient,
@@ -101,6 +104,11 @@ bool CDiscManagerMenu::OnClick(const std::shared_ptr<CGUIListItem>& item)
   else if (item == m_items[INDEX_REMOVE_DISC])
   {
     OnRemove();
+    return true;
+  }
+  else if (item == m_items[INDEX_APPLY_DISC_CHANGE])
+  {
+    OnApplyDiscChange();
     return true;
   }
   else if (item == m_items[INDEX_RESUME_GAME])
@@ -278,6 +286,11 @@ void CDiscManagerMenu::OnRemove()
 
         UpdateItems();
       });
+}
+
+void CDiscManagerMenu::OnApplyDiscChange()
+{
+  CServiceBroker::GetGUI()->GetWindowManager().ActivateWindow(WINDOW_DIALOG_GAME_DISC_CHANGER);
 }
 
 void CDiscManagerMenu::OnResumeGame()

@@ -19263,7 +19263,7 @@ msgstr ""
 #. Label for showing the disc that is inserted in the game's virtual CD drive
 #: addons/skin.estuary/xml/Includes_Games.xml
 msgctxt "#35273"
-msgid "Inserted disc"
+msgid "Selected disc"
 msgstr ""
 
 #. Text shown when a disc is removed from the game's virtual CD drive
@@ -19310,7 +19310,13 @@ msgctxt "#35280"
 msgid "Select disc"
 msgstr ""
 
-#empty strings from id 35281 to 35504
+#. The "Apply disc change" button is shown in the Disc Manager. It plays the game for a few seconds for the disc to take effect.
+#: addons/skin.estuary/xml/Includes_Games.xml
+msgctxt "#35281"
+msgid "Apply disc change"
+msgstr ""
+
+#empty strings from id 35282 to 35504
 
 #. connection state "host unreachable"
 #: xbmc/pvr/addons/PVRClients.cpp
