@@ -1,11 +1,13 @@
-set(SOURCES GameClientDiscModel.cpp
+set(SOURCES GameClientDiscM3U.cpp
+            GameClientDiscModel.cpp
             GameClientDiscMergeUtils.cpp
             GameClientDiscs.cpp
             GameClientDiscTransport.cpp
             GameClientDiscXML.cpp
 )
 
-set(HEADERS GameClientDiscModel.h
+set(HEADERS GameClientDiscM3U.h
+            GameClientDiscModel.h
             GameClientDiscMergeUtils.h
             GameClientDiscs.h
             GameClientDiscTransport.h
