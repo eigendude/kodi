@@ -12,6 +12,7 @@
 #include "guilib/listproviders/IListProvider.h"
 
 #include <memory>
+#include <string>
 #include <vector>
 
 class CGUIListItem;
@@ -43,6 +44,10 @@ public:
 
 private:
   void UpdateItems();
+  void InitializeDefaultItemProperties();
+
+  static bool IsEjectSensitive(const std::shared_ptr<CGUIListItem>& item);
+  static std::string GetAction(const std::shared_ptr<CGUIListItem>& item);
 
   // Commands
   void OnSelectDisc();

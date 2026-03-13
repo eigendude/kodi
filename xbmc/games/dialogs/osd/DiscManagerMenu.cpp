@@ -27,6 +27,9 @@
 #include "utils/log.h"
 
 #include <assert.h>
+
+#include <algorithm>
+#include <array>
 #include <optional>
 
 using namespace KODI;
@@ -42,6 +45,16 @@ constexpr unsigned int INDEX_APPLY_DISC_CHANGE = 4;
 constexpr unsigned int INDEX_RESUME_GAME = 5;
 
 constexpr unsigned int MENU_ITEM_COUNT = 6;
+
+constexpr auto PROPERTY_ACTION = "GameDiscManager.Action";
+constexpr auto PROPERTY_SENSITIVE_ON_EJECT = "GameDiscManager.SensitiveOnEject";
+
+constexpr auto ACTION_SELECT_DISC = "select_disc";
+constexpr auto ACTION_EJECT_INSERT = "eject_insert";
+constexpr auto ACTION_ADD_DISC = "add_disc";
+constexpr auto ACTION_REMOVE_DISC = "remove_disc";
+constexpr auto ACTION_APPLY_DISC_CHANGE = "apply_disc_change";
+constexpr auto ACTION_RESUME_GAME = "resume_game";
 } // namespace
 
 CDiscManagerMenu::CDiscManagerMenu(GameClientPtr gameClient,
@@ -80,36 +93,42 @@ void CDiscManagerMenu::Fetch(std::vector<std::shared_ptr<CGUIListItem>>& items)
 
 bool CDiscManagerMenu::OnClick(const std::shared_ptr<CGUIListItem>& item)
 {
-  // Ensure we have a full menu
-  if (m_items.size() < MENU_ITEM_COUNT)
+  if (!item)
     return false;
 
-  if (item == m_items[INDEX_SELECT_DISC])
+  const std::string action = GetAction(item);
+
+  if (action == ACTION_SELECT_DISC)
   {
     OnSelectDisc();
     return true;
   }
-  else if (item == m_items[INDEX_EJECT_INSERT])
+
+  if (action == ACTION_EJECT_INSERT)
   {
     OnEjectInsert();
     return true;
   }
-  else if (item == m_items[INDEX_ADD_DISC])
+
+  if (action == ACTION_ADD_DISC)
   {
     OnAdd();
     return true;
   }
-  else if (item == m_items[INDEX_REMOVE_DISC])
+
+  if (action == ACTION_REMOVE_DISC)
   {
     OnRemove();
     return true;
   }
-  else if (item == m_items[INDEX_APPLY_DISC_CHANGE])
+
+  if (action == ACTION_APPLY_DISC_CHANGE)
   {
     OnApplyDiscChange();
     return true;
   }
-  else if (item == m_items[INDEX_RESUME_GAME])
+
+  if (action == ACTION_RESUME_GAME)
   {
     OnResumeGame();
     return true;
@@ -132,6 +151,7 @@ void CDiscManagerMenu::OnReplace(IListProvider& previousProvider)
     CLog::Log(LOGERROR, "Disc Manager menu has {} items. Expected {}. Extra items will be ignored.",
               m_items.size(), MENU_ITEM_COUNT);
 
+  InitializeDefaultItemProperties();
   UpdateItems();
 }
 
@@ -142,6 +162,8 @@ void CDiscManagerMenu::UpdateItems()
   while (m_items.size() < MENU_ITEM_COUNT)
     m_items.emplace_back(std::make_shared<CFileItem>());
   m_items.resize(MENU_ITEM_COUNT);
+
+  InitializeDefaultItemProperties();
 
   const CGameClientDiscModel& discList = m_gameClient->Discs().GetDiscs();
 
@@ -163,12 +185,58 @@ void CDiscManagerMenu::UpdateItems()
   UpdateEjectButton(m_gameClient->Discs().IsEjected());
 }
 
+void CDiscManagerMenu::InitializeDefaultItemProperties()
+{
+  static constexpr std::array<const char*, MENU_ITEM_COUNT> defaultActions = {
+      ACTION_SELECT_DISC, ACTION_EJECT_INSERT, ACTION_ADD_DISC,
+      ACTION_REMOVE_DISC, ACTION_APPLY_DISC_CHANGE, ACTION_RESUME_GAME};
+
+  static constexpr std::array<bool, MENU_ITEM_COUNT> defaultSensitiveOnEject = {
+      true, false, true, true, false, false};
+
+  const size_t itemCount = std::min(m_items.size(), static_cast<size_t>(MENU_ITEM_COUNT));
+  for (size_t i = 0; i < itemCount; ++i)
+  {
+    const auto& item = m_items[i];
+    if (!item)
+      continue;
+
+    if (item->GetProperty(PROPERTY_ACTION).empty())
+      item->SetProperty(PROPERTY_ACTION, CVariant{defaultActions[i]});
+
+    if (item->GetProperty(PROPERTY_SENSITIVE_ON_EJECT).empty())
+      item->SetProperty(PROPERTY_SENSITIVE_ON_EJECT, CVariant{defaultSensitiveOnEject[i]});
+  }
+}
+
+bool CDiscManagerMenu::IsEjectSensitive(const std::shared_ptr<CGUIListItem>& item)
+{
+  if (!item)
+    return false;
+
+  return item->GetProperty(PROPERTY_SENSITIVE_ON_EJECT).asBoolean();
+}
+
+std::string CDiscManagerMenu::GetAction(const std::shared_ptr<CGUIListItem>& item)
+{
+  if (!item)
+    return {};
+
+  std::string action = item->GetProperty(PROPERTY_ACTION).asString();
+
+  if (!action.empty())
+    return action;
+
+  return {};
+}
+
 void CDiscManagerMenu::OnSelectDisc()
 {
   CGameClientDiscs& discs = m_gameClient->Discs();
 
   // Do nothing if the disc isn't ejected
-  if (!discs.IsEjected())
+  if (!discs.IsEjected() &&
+      m_items.size() > INDEX_SELECT_DISC && IsEjectSensitive(m_items[INDEX_SELECT_DISC]))
     return;
 
   // Get currently-selected disc
@@ -234,7 +302,8 @@ void CDiscManagerMenu::OnAdd()
   CGameClientDiscs& discs = m_gameClient->Discs();
 
   // Do nothing if the disc isn't ejected
-  if (!discs.IsEjected())
+  if (!discs.IsEjected() &&
+      m_items.size() > INDEX_ADD_DISC && IsEjectSensitive(m_items[INDEX_ADD_DISC]))
     return;
 
   const CGameClientDiscModel& discModel = discs.GetDiscs();
@@ -273,7 +342,8 @@ void CDiscManagerMenu::OnRemove()
   CGameClientDiscs& discs = m_gameClient->Discs();
 
   // Do nothing if the disc isn't ejected
-  if (!discs.IsEjected())
+  if (!discs.IsEjected() &&
+      m_items.size() > INDEX_REMOVE_DISC && IsEjectSensitive(m_items[INDEX_REMOVE_DISC]))
     return;
 
   m_discManager.SelectDiscToRemove(
