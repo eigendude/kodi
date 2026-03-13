@@ -10,6 +10,7 @@
 
 #include "URL.h"
 #include "filesystem/Directory.h"
+#include "games/addons/disc/GameClientDiscM3U.h"
 #include "utils/Crc32.h"
 #include "utils/FileUtils.h"
 #include "utils/StringUtils.h"
@@ -119,6 +120,12 @@ bool CGameClientDiscXML::Save(const std::string& gamePath, const CGameClientDisc
   {
     CLog::Log(LOGWARNING, "Failed to save disc state XML {}", CURL::GetRedacted(xmlPath));
     return false;
+  }
+
+  if (!CGameClientDiscM3U::Save(gamePath, model))
+  {
+    CLog::Log(LOGWARNING, "Failed to save disc state M3U {}",
+              CURL::GetRedacted(CGameClientDiscM3U::GetM3UPath(gamePath)));
   }
 
   return true;
