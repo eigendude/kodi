@@ -15,6 +15,7 @@
 #include "games/addons/disc/GameClientDiscTransport.h"
 #include "games/addons/disc/GameClientDiscXML.h"
 
+#include <algorithm>
 #include <optional>
 #include <vector>
 
@@ -78,19 +79,33 @@ void CGameClientDiscs::RestoreDiscList()
 
   unsigned int imageCount = m_transport->GetImageCount();
 
+  std::vector<size_t> removedIndices;
+  removedIndices.reserve(m_discModel->Size());
+  for (size_t i = 0; i < m_discModel->Size(); ++i)
+  {
+    if (m_discModel->IsRemovedSlotByIndex(i))
+      removedIndices.emplace_back(i);
+  }
+
+  // Core indices compact after every removal, so remove high-to-low to keep
+  // the remaining target indices stable and avoid shifting into wrong slots.
+  std::sort(removedIndices.rbegin(), removedIndices.rend());
+  for (const size_t removedIndex : removedIndices)
+  {
+    if (removedIndex >= imageCount)
+      continue;
+
+    if (!m_transport->RemoveImageIndex(static_cast<unsigned int>(removedIndex)))
+      return;
+
+    imageCount = m_transport->GetImageCount();
+  }
+
   // Restore disc list
   for (size_t i = 0; i < m_discModel->Size(); ++i)
   {
     if (m_discModel->IsRemovedSlotByIndex(i))
-    {
-      if (i < imageCount)
-      {
-        m_transport->RemoveImageIndex(static_cast<unsigned int>(i));
-        imageCount = m_transport->GetImageCount();
-      }
-
       continue;
-    }
 
     if (!m_discModel->IsRealDiscByIndex(i))
       continue;

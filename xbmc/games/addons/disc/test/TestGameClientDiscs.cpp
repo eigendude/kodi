@@ -11,6 +11,10 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
+#include <cstddef>
+#include <vector>
+
 using namespace KODI;
 using namespace GAME;
 
@@ -92,4 +96,24 @@ TEST(TestGameClientDiscs, OverlayAppendsTrailingCoreSlots)
   ASSERT_EQ(merged.size(), 2U);
   EXPECT_EQ(merged[1].slotType, GameClientDiscEntry::DiscSlotType::Disc);
   EXPECT_EQ(merged[1].path, "/roms/disc2.chd");
+}
+
+TEST(TestGameClientDiscs, RemovedIndicesMustBeAppliedDescendingToPreserveOriginalSlots)
+{
+  const std::vector<int> coreSlots{0, 1, 2, 3, 4};
+  std::vector<size_t> removedIndices{1, 3};
+
+  auto removeByIndices = [](std::vector<int> slots, const std::vector<size_t>& indices) {
+    for (const size_t index : indices)
+      slots.erase(slots.begin() + static_cast<std::ptrdiff_t>(index));
+
+    return slots;
+  };
+
+  const std::vector<int> ascendingResult = removeByIndices(coreSlots, removedIndices);
+  EXPECT_EQ(ascendingResult, (std::vector<int>{0, 2, 3}));
+
+  std::sort(removedIndices.rbegin(), removedIndices.rend());
+  const std::vector<int> descendingResult = removeByIndices(coreSlots, removedIndices);
+  EXPECT_EQ(descendingResult, (std::vector<int>{0, 2, 4}));
 }
