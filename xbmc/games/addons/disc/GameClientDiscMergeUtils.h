@@ -18,6 +18,18 @@ class CGameClientDiscModel;
 class CGameClientDiscMergeUtils
 {
 public:
+  // Reconcile frontend-persisted disc metadata with the current core snapshot.
+  //
+  // Why this exists:
+  // - The frontend model carries user intent (removed-slot tombstones and prior selection)
+  //   across refreshes.
+  // - The core model carries live emulator truth (real discs, tray state, and current
+  //   core-selected disc).
+  //
+  // Index-only replacement is insufficient because some cores compact indices after removal
+  // while others keep "zombie" non-disc slots. Reconciliation preserves frontend tombstones
+  // where the core has no real disc, but allows real core discs to override tombstones.
+  // Selection is preserved by disc path when possible, and tray state always follows the core.
   static void ReconcileModels(CGameClientDiscModel& frontendDiscs,
                               const CGameClientDiscModel& coreDiscs);
 };
