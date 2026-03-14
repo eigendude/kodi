@@ -142,6 +142,8 @@ void CGameClientDiscs::RestoreDiscList()
 
 void CGameClientDiscs::RefreshDiscState()
 {
+  const std::string previouslySelectedPath = m_discModel->GetSelectedDiscPath();
+
   CGameClientDiscModel coreModel;
   LoadModelFromCore(coreModel);
 
@@ -151,11 +153,19 @@ void CGameClientDiscs::RefreshDiscState()
   m_discModel->SetDiscs(overlaidDiscs);
 
   // Refresh selected index
+  bool selectedDiscSet = false;
   const std::optional<size_t> selectedIndex = coreModel.GetSelectedDiscIndex();
   if (selectedIndex.has_value())
-    m_discModel->SetSelectedDiscByIndex(static_cast<unsigned int>(*selectedIndex));
-  else
-    m_discModel->SetSelectedNoDisc();
+    selectedDiscSet = m_discModel->SetSelectedDiscByIndex(static_cast<unsigned int>(*selectedIndex));
+
+  if (!selectedDiscSet)
+  {
+    if (!previouslySelectedPath.empty())
+      selectedDiscSet = m_discModel->SetSelectedDiscByPath(previouslySelectedPath);
+
+    if (!selectedDiscSet)
+      m_discModel->SetSelectedNoDisc();
+  }
 
   // Refresh ejected state
   m_isEjected = coreModel.IsEjected();

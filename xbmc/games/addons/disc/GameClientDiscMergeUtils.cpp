@@ -9,6 +9,7 @@
 #include "GameClientDiscMergeUtils.h"
 
 #include <algorithm>
+#include <cstddef>
 
 using namespace KODI;
 using namespace GAME;
@@ -18,39 +19,38 @@ std::vector<GameClientDiscEntry> KODI::GAME::OverlayRemovedTombstonesByIndex(
     const std::vector<GameClientDiscEntry>& coreDiscs)
 {
   std::vector<GameClientDiscEntry> discs;
-  discs.reserve(std::max(coreDiscs.size(), previousDiscs.size()));
+  discs.reserve(std::max(coreDiscs.size(), previousDiscs.size()) + coreDiscs.size());
 
-  const size_t overlapCount = std::min(previousDiscs.size(), coreDiscs.size());
-  for (size_t i = 0; i < overlapCount; ++i)
+  size_t coreIndex = 0;
+  for (const GameClientDiscEntry& previousDisc : previousDiscs)
   {
-    // Never replace a real core disc with a frontend tombstone. This keeps
-    // compacting cores from losing meaningful live state during overlay.
-    const bool coreHasRealDisc = coreDiscs[i].slotType == GameClientDiscEntry::DiscSlotType::Disc;
+    if (previousDisc.slotType == GameClientDiscEntry::DiscSlotType::RemovedSlot)
+    {
+      discs.push_back(previousDisc);
+      continue;
+    }
 
-    // Preserve a previous tombstone only when the corresponding core slot is
-    // not a real disc. This lets frontend tombstones survive over removed or
-    // placeholder-like core slots.
-    const bool preserveRemoved =
-        previousDiscs[i].slotType == GameClientDiscEntry::DiscSlotType::RemovedSlot &&
-        !coreHasRealDisc;
+    const auto matchIt = std::find_if(coreDiscs.begin() + static_cast<std::ptrdiff_t>(coreIndex),
+                                      coreDiscs.end(),
+                                      [&previousDisc](const GameClientDiscEntry& coreDisc) {
+                                        return coreDisc.slotType ==
+                                                   GameClientDiscEntry::DiscSlotType::Disc &&
+                                               coreDisc.path == previousDisc.path;
+                                      });
 
-    if (preserveRemoved)
-      discs.push_back(previousDiscs[i]);
-    else
-      discs.push_back(coreDiscs[i]);
+    if (matchIt == coreDiscs.end())
+      continue;
+
+    const size_t matchIndex = static_cast<size_t>(matchIt - coreDiscs.begin());
+    for (; coreIndex < matchIndex; ++coreIndex)
+      discs.push_back(coreDiscs[coreIndex]);
+
+    discs.push_back(*matchIt);
+    coreIndex = matchIndex + 1;
   }
 
-  // If the core shrank, preserve any trailing frontend tombstones so removed
-  // slot history is not lost.
-  for (size_t i = overlapCount; i < previousDiscs.size(); ++i)
-  {
-    if (previousDiscs[i].slotType == GameClientDiscEntry::DiscSlotType::RemovedSlot)
-      discs.push_back(previousDiscs[i]);
-  }
-
-  // If the core grew, append its trailing slots unchanged.
-  for (size_t i = overlapCount; i < coreDiscs.size(); ++i)
-    discs.push_back(coreDiscs[i]);
+  for (; coreIndex < coreDiscs.size(); ++coreIndex)
+    discs.push_back(coreDiscs[coreIndex]);
 
   return discs;
 }
