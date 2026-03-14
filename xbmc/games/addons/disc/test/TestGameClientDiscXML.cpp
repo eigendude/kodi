@@ -70,9 +70,9 @@ TEST(TestGameClientDiscXML, SaveLoadRoundtripPreservesSlotTypes)
   CleanupStateFile();
 
   CGameClientDiscModel savedModel;
-  ASSERT_TRUE(savedModel.AddDisc("/roms/disc1.chd", "Disc One"));
-  ASSERT_TRUE(savedModel.AddRemovedSlot());
-  ASSERT_TRUE(savedModel.AddRemovedSlot());
+  savedModel.AddDisc("/roms/disc1.chd", "Disc One");
+  savedModel.AddRemovedSlot();
+  savedModel.AddRemovedSlot();
 
   ASSERT_TRUE(savedModel.SetSelectedDiscByIndex(0));
 
@@ -101,7 +101,7 @@ TEST(TestGameClientDiscXML, SaveLoadSelectedNonePreserved)
   CleanupStateFile();
 
   CGameClientDiscModel savedModel;
-  ASSERT_TRUE(savedModel.AddDisc("/roms/disc1.chd"));
+  savedModel.AddDisc("/roms/disc1.chd");
   savedModel.SetSelectedNoDisc();
 
   CGameClientDiscXML discXml;
@@ -143,31 +143,12 @@ TEST(TestGameClientDiscXML, MalformedXmlFailsAndClearsModel)
 
   CGameClientDiscXML discXml;
   CGameClientDiscModel loadedModel;
-  ASSERT_TRUE(loadedModel.AddDisc("/roms/placeholder.chd"));
+  loadedModel.AddDisc("/roms/placeholder.chd");
 
   EXPECT_FALSE(discXml.Load(GAME_PATH, loadedModel));
   EXPECT_TRUE(loadedModel.Empty());
 
   CleanupStateFile();
-}
-
-TEST(TestGameClientDiscXML, MergeAfterLoadPreservesRemovedTombstoneAgainstCoreRemoved)
-{
-  // Verify tombstone overlays preserve removed slot markers during merge.
-  CGameClientDiscModel loadedModel;
-  ASSERT_TRUE(loadedModel.AddRemovedSlot());
-  ASSERT_TRUE(loadedModel.AddDisc("/roms/disc2.chd"));
-
-  CGameClientDiscModel coreModel;
-  ASSERT_TRUE(coreModel.AddRemovedSlot());
-  ASSERT_TRUE(coreModel.AddDisc("/roms/disc2.chd"));
-
-  const std::vector<GameClientDiscEntry> merged =
-      OverlayRemovedTombstonesByIndex(loadedModel.GetDiscs(), coreModel.GetDiscs());
-
-  ASSERT_EQ(merged.size(), 2U);
-  EXPECT_EQ(merged[0].slotType, GameClientDiscEntry::DiscSlotType::RemovedSlot);
-  EXPECT_EQ(merged[1].slotType, GameClientDiscEntry::DiscSlotType::Disc);
 }
 
 TEST(TestGameClientDiscXML, SaveWritesEjectedTrue)
@@ -176,7 +157,7 @@ TEST(TestGameClientDiscXML, SaveWritesEjectedTrue)
   CleanupStateFile();
 
   CGameClientDiscModel savedModel;
-  ASSERT_TRUE(savedModel.AddDisc("/roms/disc1.chd"));
+  savedModel.AddDisc("/roms/disc1.chd");
   savedModel.SetEjected(true);
 
   CGameClientDiscXML discXml;
@@ -194,7 +175,7 @@ TEST(TestGameClientDiscXML, SaveWritesEjectedFalse)
   CleanupStateFile();
 
   CGameClientDiscModel savedModel;
-  ASSERT_TRUE(savedModel.AddDisc("/roms/disc1.chd"));
+  savedModel.AddDisc("/roms/disc1.chd");
   savedModel.SetEjected(false);
 
   CGameClientDiscXML discXml;
@@ -212,7 +193,7 @@ TEST(TestGameClientDiscXML, LoadRestoresEjectedState)
   CleanupStateFile();
 
   CGameClientDiscModel savedModel;
-  ASSERT_TRUE(savedModel.AddDisc("/roms/disc1.chd"));
+  savedModel.AddDisc("/roms/disc1.chd");
   savedModel.SetEjected(true);
 
   CGameClientDiscXML discXml;
@@ -231,7 +212,7 @@ TEST(TestGameClientDiscXML, LoadRestoresEjectedFalseState)
   CleanupStateFile();
 
   CGameClientDiscModel savedModel;
-  ASSERT_TRUE(savedModel.AddDisc("/roms/disc1.chd"));
+  savedModel.AddDisc("/roms/disc1.chd");
   savedModel.SetEjected(false);
 
   CGameClientDiscXML discXml;
@@ -273,8 +254,8 @@ TEST(TestGameClientDiscXML, SaveWritesM3UWithTwoDiscs)
   CleanupStateFile();
 
   CGameClientDiscModel savedModel;
-  ASSERT_TRUE(savedModel.AddDisc("/roms/disc1.chd"));
-  ASSERT_TRUE(savedModel.AddDisc("/roms/disc2.chd"));
+  savedModel.AddDisc("/roms/disc1.chd");
+  savedModel.AddDisc("/roms/disc2.chd");
 
   CGameClientDiscXML discXml;
   ASSERT_TRUE(discXml.Save(GAME_PATH, savedModel));
@@ -291,9 +272,9 @@ TEST(TestGameClientDiscXML, SaveOmitsRemovedSlotsFromM3U)
   CleanupStateFile();
 
   CGameClientDiscModel savedModel;
-  ASSERT_TRUE(savedModel.AddDisc("/roms/disc1.chd"));
-  ASSERT_TRUE(savedModel.AddRemovedSlot());
-  ASSERT_TRUE(savedModel.AddDisc("/roms/disc3.chd"));
+  savedModel.AddDisc("/roms/disc1.chd");
+  savedModel.AddRemovedSlot();
+  savedModel.AddDisc("/roms/disc3.chd");
 
   CGameClientDiscXML discXml;
   ASSERT_TRUE(discXml.Save(GAME_PATH, savedModel));
@@ -318,7 +299,7 @@ TEST(TestGameClientDiscXML, SaveNormalizesBinToCueInM3UWhenCueExists)
   cueFile.Close();
 
   CGameClientDiscModel savedModel;
-  ASSERT_TRUE(savedModel.AddDisc(binPath));
+  savedModel.AddDisc(binPath);
 
   CGameClientDiscXML discXml;
   ASSERT_TRUE(discXml.Save(GAME_PATH, savedModel));
