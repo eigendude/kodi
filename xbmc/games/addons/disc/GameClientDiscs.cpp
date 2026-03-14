@@ -142,18 +142,24 @@ void CGameClientDiscs::RestoreDiscList()
 
 void CGameClientDiscs::RefreshDiscState()
 {
+  // Snapshot the frontend view first so tombstones survive reloading from cores
+  // that either compact removed slots or leave zombie empty slots behind.
+  const std::vector<GameClientDiscEntry> previousFrontendDiscs = m_discModel->GetDiscs();
+
   CGameClientDiscModel coreModel;
   LoadModelFromCore(coreModel);
 
-  // Refresh disk list
-  const std::vector<GameClientDiscEntry> overlaidDiscs =
-      OverlayRemovedTombstonesByIndex(m_discModel->GetDiscs(), coreModel.GetDiscs());
-  m_discModel->SetDiscs(overlaidDiscs);
+  // Reconcile frontend tombstones with the fresh core model.
+  const std::vector<GameClientDiscEntry> mergedDiscs =
+      ReconcileFrontendDiscSlots(previousFrontendDiscs, coreModel.GetDiscs());
+  m_discModel->SetDiscs(mergedDiscs);
 
-  // Refresh selected index
-  const std::optional<size_t> selectedIndex = coreModel.GetSelectedDiscIndex();
+  // Refresh selected index by logical disc identity (when possible), not by raw
+  // compacted core index.
+  const std::optional<size_t> selectedIndex = MapCoreSelectedDiscToFrontendIndex(
+      coreModel.GetDiscs(), mergedDiscs, coreModel.GetSelectedDiscIndex());
   if (selectedIndex.has_value())
-    m_discModel->SetSelectedDiscByIndex(static_cast<unsigned int>(*selectedIndex));
+    m_discModel->SetSelectedDiscByIndex(*selectedIndex);
   else
     m_discModel->SetSelectedNoDisc();
 

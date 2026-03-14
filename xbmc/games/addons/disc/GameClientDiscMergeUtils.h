@@ -10,6 +10,7 @@
 
 #include "games/addons/disc/GameClientDiscModel.h"
 
+#include <optional>
 #include <vector>
 
 namespace KODI
@@ -17,9 +18,14 @@ namespace KODI
 namespace GAME
 {
 
-std::vector<GameClientDiscEntry> OverlayRemovedTombstonesByIndex(
+std::vector<GameClientDiscEntry> ReconcileFrontendDiscSlots(
     const std::vector<GameClientDiscEntry>& previousDiscs,
     const std::vector<GameClientDiscEntry>& coreDiscs);
+
+std::optional<size_t> MapCoreSelectedDiscToFrontendIndex(
+    const std::vector<GameClientDiscEntry>& coreDiscs,
+    const std::vector<GameClientDiscEntry>& frontendDiscs,
+    std::optional<size_t> coreSelectedIndex);
 
 } // namespace GAME
 } // namespace KODI
