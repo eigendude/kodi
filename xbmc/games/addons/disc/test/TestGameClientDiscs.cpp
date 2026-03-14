@@ -20,6 +20,7 @@ using namespace GAME;
 
 TEST(TestGameClientDiscs, OverlayPreservesRemovedTombstoneOverCoreZombie)
 {
+  // Case A: preserve frontend tombstone when the core slot is also non-disc.
   CGameClientDiscModel previous;
   ASSERT_TRUE(previous.AddRemovedSlot());
 
@@ -35,6 +36,7 @@ TEST(TestGameClientDiscs, OverlayPreservesRemovedTombstoneOverCoreZombie)
 
 TEST(TestGameClientDiscs, OverlayDropsRemovedTombstoneWhenCoreHasRealDisc)
 {
+  // Case B: never replace a real core disc with a previous removed tombstone.
   CGameClientDiscModel previous;
   ASSERT_TRUE(previous.AddRemovedSlot());
 
@@ -66,6 +68,7 @@ TEST(TestGameClientDiscs, OverlayUsesCoreZombieWhenPreviousHadRealDisc)
 
 TEST(TestGameClientDiscs, OverlayPreservesTrailingRemovedTombstones)
 {
+  // Case C: preserve trailing previous tombstones when the core shrinks.
   CGameClientDiscModel previous;
   ASSERT_TRUE(previous.AddDisc("/roms/disc1.chd"));
   ASSERT_TRUE(previous.AddRemovedSlot());
@@ -83,6 +86,7 @@ TEST(TestGameClientDiscs, OverlayPreservesTrailingRemovedTombstones)
 
 TEST(TestGameClientDiscs, OverlayAppendsTrailingCoreSlots)
 {
+  // Case D: append newly reported trailing core discs when the core grows.
   CGameClientDiscModel previous;
   ASSERT_TRUE(previous.AddDisc("/roms/disc1.chd"));
 
@@ -96,6 +100,25 @@ TEST(TestGameClientDiscs, OverlayAppendsTrailingCoreSlots)
   ASSERT_EQ(merged.size(), 2U);
   EXPECT_EQ(merged[1].slotType, GameClientDiscEntry::DiscSlotType::Disc);
   EXPECT_EQ(merged[1].path, "/roms/disc2.chd");
+}
+
+TEST(TestGameClientDiscs, OverlayMixedOverlapPreservesTombstonesOnlyForNonDiscCoreSlots)
+{
+  // Case E: real core discs survive, but non-disc overlap slots can preserve tombstones.
+  std::vector<GameClientDiscEntry> previousDiscs{
+      {GameClientDiscEntry::DiscSlotType::RemovedSlot, "", "", ""},
+      {GameClientDiscEntry::DiscSlotType::RemovedSlot, "", "", ""}};
+  std::vector<GameClientDiscEntry> coreDiscs{
+      {GameClientDiscEntry::DiscSlotType::Disc, "/roms/disc1.chd", "disc1.chd", ""},
+      {GameClientDiscEntry::DiscSlotType::RemovedSlot, "", "", ""}};
+
+  const std::vector<GameClientDiscEntry> merged =
+      OverlayRemovedTombstonesByIndex(previousDiscs, coreDiscs);
+
+  ASSERT_EQ(merged.size(), 2U);
+  EXPECT_EQ(merged[0].slotType, GameClientDiscEntry::DiscSlotType::Disc);
+  EXPECT_EQ(merged[0].path, "/roms/disc1.chd");
+  EXPECT_EQ(merged[1].slotType, GameClientDiscEntry::DiscSlotType::RemovedSlot);
 }
 
 TEST(TestGameClientDiscs, RemovedIndicesMustBeAppliedDescendingToPreserveOriginalSlots)
