@@ -6,11 +6,14 @@
  *  See LICENSES/README.md for more information.
  */
 
+#include "filesystem/Directory.h"
 #include "filesystem/File.h"
 #include "games/addons/disc/GameClientDiscM3U.h"
 #include "games/addons/disc/GameClientDiscMergeUtils.h"
 #include "games/addons/disc/GameClientDiscModel.h"
 #include "games/addons/disc/GameClientDiscXML.h"
+#include "utils/FileUtils.h"
+#include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
 
 #include <gtest/gtest.h>
@@ -24,8 +27,25 @@ constexpr auto GAME_PATH = "/roms/my_game.m3u";
 
 void CleanupStateFile()
 {
-  XFILE::CFile::Delete(CGameClientDiscXML::GetXMLPath(GAME_PATH));
-  XFILE::CFile::Delete(CGameClientDiscM3U::GetM3UPath(GAME_PATH));
+  const std::string xmlPath = CGameClientDiscXML::GetXMLPath(GAME_PATH);
+  const std::string m3uPath = CGameClientDiscM3U::GetM3UPath(GAME_PATH);
+
+  XFILE::CFile::Delete(xmlPath);
+  XFILE::CFile::Delete(m3uPath);
+
+  // State files now live in a per-game subdirectory. Remove the empty subdirectory
+  // so each test starts from the same clean slate regardless of save order.
+  std::string stateSubdirectory = URIUtils::GetDirectory(xmlPath);
+  URIUtils::RemoveSlashAtEnd(stateSubdirectory);
+  if (!stateSubdirectory.empty() && XFILE::CDirectory::Exists(stateSubdirectory))
+    XFILE::CDirectory::Remove(stateSubdirectory);
+}
+
+
+void EnsureStateSubdirectory()
+{
+  const std::string xmlDirectory = URIUtils::GetDirectory(CGameClientDiscXML::GetXMLPath(GAME_PATH));
+  ASSERT_TRUE(XFILE::CDirectory::Create(xmlDirectory));
 }
 
 std::string ReadStateXml()
@@ -134,6 +154,7 @@ TEST(TestGameClientDiscXML, MalformedXmlFailsAndClearsModel)
   CleanupStateFile();
 
   const std::string xmlPath = CGameClientDiscXML::GetXMLPath(GAME_PATH);
+  EnsureStateSubdirectory();
 
   XFILE::CFile file;
   ASSERT_TRUE(file.OpenForWrite(xmlPath, true));
@@ -231,6 +252,7 @@ TEST(TestGameClientDiscXML, LoadMissingEjectedDefaultsToFalse)
   CleanupStateFile();
 
   const std::string xmlPath = CGameClientDiscXML::GetXMLPath(GAME_PATH);
+  EnsureStateSubdirectory();
 
   XFILE::CFile file;
   ASSERT_TRUE(file.OpenForWrite(xmlPath, true));
@@ -257,8 +279,8 @@ TEST(TestGameClientDiscXML, SaveWritesM3UWithTwoDiscs)
   savedModel.AddDisc("/roms/disc1.chd");
   savedModel.AddDisc("/roms/disc2.chd");
 
-  CGameClientDiscXML discXml;
-  ASSERT_TRUE(discXml.Save(GAME_PATH, savedModel));
+  CGameClientDiscM3U discM3U;
+  ASSERT_TRUE(discM3U.Save(GAME_PATH, savedModel));
 
   const std::string m3u = ReadStateM3U();
   EXPECT_EQ(m3u, "/roms/disc1.chd\n/roms/disc2.chd\n");
@@ -276,8 +298,8 @@ TEST(TestGameClientDiscXML, SaveOmitsRemovedSlotsFromM3U)
   savedModel.AddRemovedSlot();
   savedModel.AddDisc("/roms/disc3.chd");
 
-  CGameClientDiscXML discXml;
-  ASSERT_TRUE(discXml.Save(GAME_PATH, savedModel));
+  CGameClientDiscM3U discM3U;
+  ASSERT_TRUE(discM3U.Save(GAME_PATH, savedModel));
 
   const std::string m3u = ReadStateM3U();
   EXPECT_EQ(m3u, "/roms/disc1.chd\n/roms/disc3.chd\n");
@@ -287,12 +309,14 @@ TEST(TestGameClientDiscXML, SaveOmitsRemovedSlotsFromM3U)
 
 TEST(TestGameClientDiscXML, SaveNormalizesBinToCueInM3UWhenCueExists)
 {
-  // Verify .bin entries prefer sibling .cue paths when the cue file exists.
+  // The .cue/.bin relationship describes frontend disc inputs, not where state is persisted.
+  // Build sibling source paths and verify Save normalizes the emitted M3U entry to .cue.
   CleanupStateFile();
 
-  const std::string m3uPath = CGameClientDiscM3U::GetM3UPath(GAME_PATH);
-  const std::string cuePath = URIUtils::ReplaceExtension(m3uPath, ".cue");
-  const std::string binPath = URIUtils::ReplaceExtension(m3uPath, ".bin");
+  const std::string tempDiscDirectory = "special://temp/test-disc-inputs";
+  ASSERT_TRUE(XFILE::CDirectory::Create(tempDiscDirectory));
+  const std::string binPath = URIUtils::AddFileToFolder(tempDiscDirectory, "disc1.bin");
+  const std::string cuePath = URIUtils::ReplaceExtension(binPath, ".cue");
 
   XFILE::CFile cueFile;
   ASSERT_TRUE(cueFile.OpenForWrite(cuePath, true));
@@ -301,12 +325,64 @@ TEST(TestGameClientDiscXML, SaveNormalizesBinToCueInM3UWhenCueExists)
   CGameClientDiscModel savedModel;
   savedModel.AddDisc(binPath);
 
-  CGameClientDiscXML discXml;
-  ASSERT_TRUE(discXml.Save(GAME_PATH, savedModel));
+  CGameClientDiscM3U discM3U;
+  ASSERT_TRUE(discM3U.Save(GAME_PATH, savedModel));
 
   const std::string m3u = ReadStateM3U();
   EXPECT_EQ(m3u, cuePath + "\n");
 
   XFILE::CFile::Delete(cuePath);
+  XFILE::CDirectory::Remove(tempDiscDirectory);
+  CleanupStateFile();
+}
+
+TEST(TestGameClientDiscXML, GetXMLPathUsesPerGameDirectoryAndExtensionlessBaseName)
+{
+  // Verify XML save path uses "<base>_<crc>/<base>.xml" and does not keep source extensions.
+  const std::string xmlPath = CGameClientDiscXML::GetXMLPath(GAME_PATH);
+
+  EXPECT_EQ(URIUtils::GetFileName(xmlPath), "my_game.xml");
+  EXPECT_EQ(URIUtils::GetExtension(xmlPath), ".xml");
+  EXPECT_EQ(xmlPath.find("my_game.m3u.xml"), std::string::npos);
+
+  std::string xmlDirectoryName = URIUtils::GetDirectory(xmlPath);
+  URIUtils::RemoveSlashAtEnd(xmlDirectoryName);
+  xmlDirectoryName = URIUtils::GetFileName(xmlDirectoryName);
+
+  EXPECT_TRUE(StringUtils::StartsWith(xmlDirectoryName, "my_game_"));
+}
+
+TEST(TestGameClientDiscXML, GetM3UPathUsesPerGameDirectoryAndExtensionlessBaseName)
+{
+  // Verify M3U save path uses "<base>_<crc>/<base>.m3u" and avoids duplicating source extensions.
+  const std::string m3uPath = CGameClientDiscM3U::GetM3UPath(GAME_PATH);
+
+  EXPECT_EQ(URIUtils::GetFileName(m3uPath), "my_game.m3u");
+  EXPECT_EQ(URIUtils::GetExtension(m3uPath), ".m3u");
+  EXPECT_EQ(m3uPath.find("my_game.m3u.m3u"), std::string::npos);
+
+  std::string m3uDirectoryName = URIUtils::GetDirectory(m3uPath);
+  URIUtils::RemoveSlashAtEnd(m3uDirectoryName);
+  m3uDirectoryName = URIUtils::GetFileName(m3uDirectoryName);
+
+  EXPECT_TRUE(StringUtils::StartsWith(m3uDirectoryName, "my_game_"));
+}
+
+TEST(TestGameClientDiscXML, SaveCreatesPerGameStateFiles)
+{
+  // Save should create any missing state directories before writing XML and M3U files.
+  CleanupStateFile();
+
+  CGameClientDiscModel savedModel;
+  savedModel.AddDisc("/roms/disc1.chd");
+
+  CGameClientDiscXML discXml;
+  CGameClientDiscM3U discM3U;
+  ASSERT_TRUE(discXml.Save(GAME_PATH, savedModel));
+  ASSERT_TRUE(discM3U.Save(GAME_PATH, savedModel));
+
+  EXPECT_TRUE(CFileUtils::Exists(CGameClientDiscXML::GetXMLPath(GAME_PATH)));
+  EXPECT_TRUE(CFileUtils::Exists(CGameClientDiscM3U::GetM3UPath(GAME_PATH)));
+
   CleanupStateFile();
 }
