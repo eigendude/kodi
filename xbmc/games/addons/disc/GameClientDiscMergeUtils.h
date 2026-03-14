@@ -17,15 +17,6 @@ namespace KODI
 namespace GAME
 {
 
-/*!
- * \brief Merge frontend removed-slot tombstones onto the current core-reported disc
- * list using index-based overlay semantics.
- *
- * Real discs reported by the core always take precedence over previous
- * tombstones. Previous removed-slot tombstones are preserved only when the
- * corresponding core slot is not a real disc, and trailing previous tombstones
- * are kept when the core shrinks.
- */
 std::vector<GameClientDiscEntry> OverlayRemovedTombstonesByIndex(
     const std::vector<GameClientDiscEntry>& previousDiscs,
     const std::vector<GameClientDiscEntry>& coreDiscs);
