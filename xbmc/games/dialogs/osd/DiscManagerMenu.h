@@ -12,6 +12,7 @@
 #include "guilib/listproviders/IListProvider.h"
 
 #include <memory>
+#include <string>
 #include <vector>
 
 class CGUIListItem;
@@ -28,6 +29,25 @@ class CDialogGameDiscManager;
 class CDiscManagerMenu : public IListProvider
 {
 public:
+  enum class Action
+  {
+    SelectDisc,
+    EjectInsert,
+    Add,
+    Remove,
+    ApplyDiscChange,
+    ResumeGame,
+  };
+
+  struct State
+  {
+    std::string selectedDiscLabel;
+    std::string ejectInsertLabel;
+    std::string ejectInsertStatus;
+    bool isEjected{false};
+    bool ejectSensitiveEnabled{false};
+  };
+
   explicit CDiscManagerMenu(GameClientPtr gameClient,
                             CDialogGameDiscManager& discManager,
                             int parentID);
@@ -40,6 +60,9 @@ public:
   void Fetch(std::vector<std::shared_ptr<CGUIListItem>>& items) override;
   bool OnClick(const std::shared_ptr<CGUIListItem>& item) override;
   void OnReplace(IListProvider& previousProvider) override;
+
+  bool Execute(Action action);
+  State GetState() const;
 
 private:
   void UpdateItems();
@@ -54,7 +77,6 @@ private:
 
   // Helper functions
   bool BrowseForDiscImage(const std::string& startingPath, std::string& filePath);
-  void UpdateEjectButton(bool ejected);
   void ShowInternalError();
 
   // Construction parameters

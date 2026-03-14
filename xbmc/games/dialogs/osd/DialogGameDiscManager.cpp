@@ -18,8 +18,8 @@
 #include "games/addons/disc/GameClientDiscModel.h"
 #include "games/addons/disc/GameClientDiscs.h"
 #include "games/dialogs/osd/DiscManagerDiscList.h"
-#include "games/dialogs/osd/DiscManagerMenu.h"
 #include "guilib/GUIBaseContainer.h"
+#include "guilib/GUIControl.h"
 #include "guilib/GUIMessage.h"
 #include "guilib/GUIMessageIDs.h"
 #include "guilib/WindowIDs.h"
@@ -35,8 +35,21 @@ namespace
 constexpr int CONTROL_DISC_MANAGER_MENU = 3;
 constexpr int CONTROL_DISC_MANAGER_DISC_LIST = 108321;
 
+constexpr int CONTROL_BUTTON_SELECT_DISC = 108323;
+constexpr int CONTROL_BUTTON_EJECT_INSERT = 108324;
+constexpr int CONTROL_BUTTON_ADD = 108325;
+constexpr int CONTROL_BUTTON_REMOVE = 108326;
+constexpr int CONTROL_BUTTON_APPLY_DISC_CHANGE = 108327;
+constexpr int CONTROL_BUTTON_RESUME_GAME = 108328;
+
 constexpr auto PROPERTY_SHOW_MENU = "GameDiscManager.ShowMenu";
 constexpr auto PROPERTY_SHOW_DISC_LIST = "GameDiscManager.ShowDiscList";
+
+constexpr auto PROPERTY_SELECTED_DISC_LABEL = "GameDiscManager.Menu.SelectedDiscLabel";
+constexpr auto PROPERTY_EJECT_INSERT_LABEL = "GameDiscManager.Menu.EjectInsertLabel";
+constexpr auto PROPERTY_EJECT_INSERT_STATUS = "GameDiscManager.Menu.EjectInsertStatus";
+constexpr auto PROPERTY_IS_EJECTED = "GameDiscManager.Menu.IsEjected";
+constexpr auto PROPERTY_EJECT_SENSITIVE_ENABLED = "GameDiscManager.Menu.EjectSensitiveEnabled";
 } // namespace
 
 CDialogGameDiscManager::CDialogGameDiscManager()
@@ -78,15 +91,19 @@ void CDialogGameDiscManager::OnInitWindow()
   // Show the main menu
   ShowControl(CONTROL_DISC_MANAGER_MENU);
 
-  // Focus first "Select disc" item
-  CGUIMessage msgSelectFirst(GUI_MSG_ITEM_SELECT, GetID(), CONTROL_DISC_MANAGER_MENU, 0);
-  OnMessage(msgSelectFirst);
+  // Focus first "Select disc" item for the list menu mode
+  if (m_menuMode == MenuMode::List)
+  {
+    CGUIMessage msgSelectFirst(GUI_MSG_ITEM_SELECT, GetID(), CONTROL_DISC_MANAGER_MENU, 0);
+    OnMessage(msgSelectFirst);
+  }
 }
 
 void CDialogGameDiscManager::OnDeinitWindow(int nextWindowID)
 {
-  // Reset game add-on
+  // Reset game add-on and menu adapters
   m_gameClient.reset();
+  m_explicitButtonMenu.reset();
 
   // Call ancestor
   CGUIDialog::OnDeinitWindow(nextWindowID);
@@ -101,7 +118,7 @@ bool CDialogGameDiscManager::OnAction(const CAction& action)
     case ACTION_NAV_BACK:
     {
       // Check if the disc list is visible
-      if (GetProperty("GameDiscManager.ShowDiscList").asBoolean() && GetDiscList() != nullptr)
+      if (GetProperty(PROPERTY_SHOW_DISC_LIST).asBoolean() && GetDiscList() != nullptr)
       {
         // Return to the main menu
         ShowControl(CONTROL_DISC_MANAGER_MENU);
@@ -115,6 +132,17 @@ bool CDialogGameDiscManager::OnAction(const CAction& action)
 
   // Call ancestor
   return CGUIDialog::OnAction(action);
+}
+
+bool CDialogGameDiscManager::OnMessage(CGUIMessage& message)
+{
+  if (message.GetMessage() == GUI_MSG_CLICKED && m_menuMode == MenuMode::ExplicitButtons &&
+      HandleExplicitButtonClick(message.GetSenderId()))
+  {
+    return true;
+  }
+
+  return CGUIDialog::OnMessage(message);
 }
 
 void CDialogGameDiscManager::SelectDiscToInsert(std::optional<size_t> selectedIndex,
@@ -161,6 +189,8 @@ void CDialogGameDiscManager::OnDiscSelect(size_t discIndex, bool isNoDisc)
 
   // Return to the main menu
   ShowControl(CONTROL_DISC_MANAGER_MENU);
+
+  UpdateExplicitButtonProperties();
 }
 
 bool CDialogGameDiscManager::AllowSelectNoDisc() const
@@ -185,17 +215,23 @@ void CDialogGameDiscManager::InitializeDialog()
   if (!m_gameClient)
     return;
 
-  //
-  // Initialize main menu
-  //
-  if (CGUIBaseContainer* discMgrMenu = GetMainMenu())
+  m_menuMode = ResolveMenuMode();
+
+  // Main menu supports two skin-defined modes:
+  // 1) Legacy list control (id=3) with IListProvider
+  // 2) Explicit buttons (ids 108323..108328) routed through dialog message handling
+  if (m_menuMode == MenuMode::List)
   {
-    discMgrMenu->SetListProvider(
-        std::make_unique<CDiscManagerMenu>(m_gameClient, *this, CONTROL_DISC_MANAGER_MENU));
+    if (CGUIBaseContainer* discMgrMenu = GetMainMenu())
+    {
+      discMgrMenu->SetListProvider(
+          std::make_unique<CDiscManagerMenu>(m_gameClient, *this, CONTROL_DISC_MANAGER_MENU));
+    }
   }
   else
   {
-    CLog::Log(LOGERROR, "Missing main menu list with control ID {}", CONTROL_DISC_MANAGER_MENU);
+    m_explicitButtonMenu = std::make_unique<CDiscManagerMenu>(m_gameClient, *this, GetID());
+    UpdateExplicitButtonProperties();
   }
 
   //
@@ -210,6 +246,64 @@ void CDialogGameDiscManager::InitializeDialog()
   {
     CLog::Log(LOGERROR, "Missing disc list with control ID {}", CONTROL_DISC_MANAGER_DISC_LIST);
   }
+}
+
+void CDialogGameDiscManager::UpdateExplicitButtonProperties()
+{
+  if (!m_explicitButtonMenu)
+    return;
+
+  const CDiscManagerMenu::State state = m_explicitButtonMenu->GetState();
+
+  SetProperty(PROPERTY_SELECTED_DISC_LABEL, state.selectedDiscLabel);
+  SetProperty(PROPERTY_EJECT_INSERT_LABEL, state.ejectInsertLabel);
+  SetProperty(PROPERTY_EJECT_INSERT_STATUS, state.ejectInsertStatus);
+  SetProperty(PROPERTY_IS_EJECTED, state.isEjected);
+  SetProperty(PROPERTY_EJECT_SENSITIVE_ENABLED, state.ejectSensitiveEnabled);
+}
+
+bool CDialogGameDiscManager::HandleExplicitButtonClick(int controlId)
+{
+  const std::optional<CDiscManagerMenu::Action> action = GetActionForControl(controlId);
+  if (!action.has_value() || !m_explicitButtonMenu)
+    return false;
+
+  if (!m_explicitButtonMenu->Execute(*action))
+    return false;
+
+  UpdateExplicitButtonProperties();
+  return true;
+}
+
+bool CDialogGameDiscManager::HasListMenu() const
+{
+  return GetMainMenu() != nullptr;
+}
+
+bool CDialogGameDiscManager::HasExplicitButtonMenu() const
+{
+  return GetControl(CONTROL_BUTTON_SELECT_DISC) != nullptr &&
+         GetControl(CONTROL_BUTTON_EJECT_INSERT) != nullptr &&
+         GetControl(CONTROL_BUTTON_ADD) != nullptr &&
+         GetControl(CONTROL_BUTTON_REMOVE) != nullptr &&
+         GetControl(CONTROL_BUTTON_APPLY_DISC_CHANGE) != nullptr &&
+         GetControl(CONTROL_BUTTON_RESUME_GAME) != nullptr;
+}
+
+CDialogGameDiscManager::MenuMode CDialogGameDiscManager::ResolveMenuMode() const
+{
+  if (HasListMenu())
+    return MenuMode::List;
+
+  if (HasExplicitButtonMenu())
+    return MenuMode::ExplicitButtons;
+
+  CLog::Log(LOGERROR,
+            "Missing Disc Manager menu controls: expected list control ID {} or explicit button "
+            "controls {}..{}",
+            CONTROL_DISC_MANAGER_MENU, CONTROL_BUTTON_SELECT_DISC, CONTROL_BUTTON_RESUME_GAME);
+
+  return MenuMode::List;
 }
 
 void CDialogGameDiscManager::ResetDiscList()
@@ -258,9 +352,14 @@ void CDialogGameDiscManager::ShowControl(int controlId)
     SetProperty(PROPERTY_SHOW_MENU, true);
     SetProperty(PROPERTY_SHOW_DISC_LIST, false);
 
-    // Give focus to main menu
-    CGUIMessage msgSetFocus(GUI_MSG_SETFOCUS, GetID(), CONTROL_DISC_MANAGER_MENU);
-    OnMessage(msgSetFocus);
+    // Give focus to main menu if the list-style menu is active
+    if (m_menuMode == MenuMode::List)
+    {
+      CGUIMessage msgSetFocus(GUI_MSG_SETFOCUS, GetID(), CONTROL_DISC_MANAGER_MENU);
+      OnMessage(msgSetFocus);
+    }
+
+    UpdateExplicitButtonProperties();
 
     // If we're leaving the disc list, reset the callbacks
     m_insertCallback = {};
@@ -275,6 +374,29 @@ void CDialogGameDiscManager::ShowControl(int controlId)
     CGUIMessage msgSetFocus(GUI_MSG_SETFOCUS, GetID(), CONTROL_DISC_MANAGER_DISC_LIST);
     OnMessage(msgSetFocus);
   }
+}
+
+std::optional<CDiscManagerMenu::Action> CDialogGameDiscManager::GetActionForControl(int controlId)
+{
+  switch (controlId)
+  {
+    case CONTROL_BUTTON_SELECT_DISC:
+      return CDiscManagerMenu::Action::SelectDisc;
+    case CONTROL_BUTTON_EJECT_INSERT:
+      return CDiscManagerMenu::Action::EjectInsert;
+    case CONTROL_BUTTON_ADD:
+      return CDiscManagerMenu::Action::Add;
+    case CONTROL_BUTTON_REMOVE:
+      return CDiscManagerMenu::Action::Remove;
+    case CONTROL_BUTTON_APPLY_DISC_CHANGE:
+      return CDiscManagerMenu::Action::ApplyDiscChange;
+    case CONTROL_BUTTON_RESUME_GAME:
+      return CDiscManagerMenu::Action::ResumeGame;
+    default:
+      break;
+  }
+
+  return std::nullopt;
 }
 
 GameClientPtr CDialogGameDiscManager::GetGameClient()
@@ -294,12 +416,12 @@ GameClientPtr CDialogGameDiscManager::GetGameClient()
   return {};
 }
 
-CGUIBaseContainer* CDialogGameDiscManager::GetMainMenu()
+CGUIBaseContainer* CDialogGameDiscManager::GetMainMenu() const
 {
   return dynamic_cast<CGUIBaseContainer*>(GetControl(CONTROL_DISC_MANAGER_MENU));
 }
 
-CGUIBaseContainer* CDialogGameDiscManager::GetDiscList()
+CGUIBaseContainer* CDialogGameDiscManager::GetDiscList() const
 {
   return dynamic_cast<CGUIBaseContainer*>(GetControl(CONTROL_DISC_MANAGER_DISC_LIST));
 }

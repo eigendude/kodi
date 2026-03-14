@@ -9,6 +9,7 @@
 #pragma once
 
 #include "games/GameTypes.h"
+#include "games/dialogs/osd/DiscManagerMenu.h"
 #include "guilib/GUIDialog.h"
 
 #include <cstddef>
@@ -47,6 +48,7 @@ public:
 
   // Implementation of CGUIControl via CGUIDialog
   bool OnAction(const CAction& action) override;
+  bool OnMessage(CGUIMessage& message) override;
 
   // Disc menu interface
   void SelectDiscToInsert(std::optional<size_t> selectedIndex,
@@ -64,16 +66,29 @@ protected:
   void OnDeinitWindow(int nextWindowID) override;
 
 private:
+  enum class MenuMode
+  {
+    List,
+    ExplicitButtons,
+  };
+
   // Helper functions
   void InitializeDialog();
+  void UpdateExplicitButtonProperties();
+  bool HandleExplicitButtonClick(int controlId);
+  bool HasListMenu() const;
+  bool HasExplicitButtonMenu() const;
+  MenuMode ResolveMenuMode() const;
   void ResetDiscList();
   unsigned int GetSelectedIndex(std::optional<size_t> selectedIndex);
   void ShowControl(int controlId);
 
   GameClientPtr GetGameClient();
 
-  CGUIBaseContainer* GetMainMenu();
-  CGUIBaseContainer* GetDiscList();
+  CGUIBaseContainer* GetMainMenu() const;
+  CGUIBaseContainer* GetDiscList() const;
+
+  static std::optional<CDiscManagerMenu::Action> GetActionForControl(int controlId);
 
   // Game parameters
   GameClientPtr m_gameClient;
@@ -81,6 +96,9 @@ private:
   // Dialog parameters
   std::function<void(std::optional<size_t>)> m_insertCallback;
   std::function<void(size_t)> m_removeCallback;
+
+  MenuMode m_menuMode{MenuMode::List};
+  std::unique_ptr<CDiscManagerMenu> m_explicitButtonMenu;
 };
 } // namespace GAME
 } // namespace KODI
