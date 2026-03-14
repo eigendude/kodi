@@ -11,6 +11,7 @@
 using namespace KODI;
 using namespace GAME;
 
-void CGameClientDiscMergeUtils::ReconcileModels(CGameClientDiscModel& frontendDiscs, const CGameClientDiscModel& coreDiscs)
+void CGameClientDiscMergeUtils::ReconcileModels(CGameClientDiscModel& frontendDiscs,
+                                                const CGameClientDiscModel& coreDiscs)
 {
 }

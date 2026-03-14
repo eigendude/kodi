@@ -18,7 +18,8 @@ class CGameClientDiscModel;
 class CGameClientDiscMergeUtils
 {
 public:
-  static void ReconcileModels(CGameClientDiscModel& frontendDiscs, const CGameClientDiscModel& coreDiscs);
+  static void ReconcileModels(CGameClientDiscModel& frontendDiscs,
+                              const CGameClientDiscModel& coreDiscs);
 };
 
 } // namespace GAME
