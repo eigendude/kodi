@@ -18,14 +18,15 @@ std::vector<GameClientDiscEntry> KODI::GAME::OverlayRemovedTombstonesByIndex(
     const std::vector<GameClientDiscEntry>& coreDiscs)
 {
   std::vector<GameClientDiscEntry> discs;
-  discs.reserve(coreDiscs.size() > previousDiscs.size() ? coreDiscs.size() : previousDiscs.size());
+  discs.reserve(std::max(coreDiscs.size(), previousDiscs.size()));
 
   const size_t overlapCount = std::min(previousDiscs.size(), coreDiscs.size());
   for (size_t i = 0; i < overlapCount; ++i)
   {
+    const bool coreHasRealDisc = coreDiscs[i].slotType == GameClientDiscEntry::DiscSlotType::Disc;
     const bool preserveRemoved =
         previousDiscs[i].slotType == GameClientDiscEntry::DiscSlotType::RemovedSlot &&
-        coreDiscs[i].slotType == GameClientDiscEntry::DiscSlotType::RemovedSlot;
+        !coreHasRealDisc;
 
     if (preserveRemoved)
       discs.push_back(previousDiscs[i]);
