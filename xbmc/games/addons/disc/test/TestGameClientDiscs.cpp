@@ -149,3 +149,56 @@ TEST(TestGameClientDiscs, ReconcileUsesCoreTrayState)
 
   EXPECT_TRUE(frontend.IsEjected());
 }
+
+TEST(TestGameClientDiscs, PreservesPreviousSelectedDiscByPathWhenIndexChanges)
+{
+  CGameClientDiscModel frontend;
+  ASSERT_TRUE(frontend.AddDisc("/roms/disc1.chd"));
+  ASSERT_TRUE(frontend.AddDisc("/roms/disc2.chd"));
+  ASSERT_TRUE(frontend.SetSelectedDiscByPath("/roms/disc2.chd"));
+
+  CGameClientDiscModel core;
+  ASSERT_TRUE(core.AddDisc("/roms/disc2.chd"));
+
+  CGameClientDiscMergeUtils::ReconcileModels(frontend, core);
+
+  ASSERT_TRUE(frontend.GetSelectedDiscIndex().has_value());
+  EXPECT_EQ(frontend.GetSelectedDiscPath(), "/roms/disc2.chd");
+}
+
+TEST(TestGameClientDiscs, MixedOverlapHandlesTombstonesCoreDiscsAndGrowthWithoutDuplication)
+{
+  CGameClientDiscModel frontend;
+  ASSERT_TRUE(frontend.AddDisc("/roms/discA.chd"));
+  ASSERT_TRUE(frontend.AddRemovedSlot());
+  ASSERT_TRUE(frontend.AddRemovedSlot());
+  ASSERT_TRUE(frontend.AddDisc("/roms/discLegacy.chd"));
+
+  CGameClientDiscModel core;
+  ASSERT_TRUE(core.AddDisc("/roms/discA.chd"));
+  ASSERT_TRUE(core.AddDisc("/roms/discB.chd"));
+  ASSERT_TRUE(core.AddRemovedSlot());
+  ASSERT_TRUE(core.AddDisc("/roms/discC.chd"));
+  ASSERT_TRUE(core.AddDisc("/roms/discD.chd"));
+
+  CGameClientDiscMergeUtils::ReconcileModels(frontend, core);
+
+  ASSERT_EQ(frontend.Size(), 5U);
+  EXPECT_TRUE(frontend.IsRealDiscByIndex(0));
+  EXPECT_EQ(frontend.GetPathByIndex(0), "/roms/discA.chd");
+
+  // Frontend tombstone at overlap index 1 is replaced by the real core disc.
+  EXPECT_TRUE(frontend.IsRealDiscByIndex(1));
+  EXPECT_EQ(frontend.GetPathByIndex(1), "/roms/discB.chd");
+
+  // Frontend tombstone at overlap index 2 survives because core slot is non-disc.
+  EXPECT_TRUE(frontend.IsRemovedSlotByIndex(2));
+
+  // Overlap real disc is replaced by core's live disc, and trailing core growth is appended.
+  EXPECT_TRUE(frontend.IsRealDiscByIndex(3));
+  EXPECT_EQ(frontend.GetPathByIndex(3), "/roms/discC.chd");
+  EXPECT_TRUE(frontend.IsRealDiscByIndex(4));
+  EXPECT_EQ(frontend.GetPathByIndex(4), "/roms/discD.chd");
+
+  EXPECT_FALSE(frontend.GetDiscIndexByPath("/roms/discLegacy.chd").has_value());
+}
