@@ -76,8 +76,7 @@ bool CGameClientDiscXML::Load(const std::string& gamePath, CGameClientDiscModel&
 
   if (!CFileUtils::Exists(xmlPath))
   {
-    CLog::LOGDEBUG("Disc state XML {} does not exist, proceeding with empty disc model",
-                   CURL::GetRedacted(xmlPath));
+    CLog::Log(LOGDEBUG,"Disc state XML {} does not exist, proceeding with empty disc model",                   CURL::GetRedacted(xmlPath));
     return true;
   }
 
