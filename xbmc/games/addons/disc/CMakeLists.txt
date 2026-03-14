@@ -1,4 +1,5 @@
 set(SOURCES GameClientDiscM3U.cpp
+            GameClientDiscPlaylist.cpp
             GameClientDiscModel.cpp
             GameClientDiscMergeUtils.cpp
             GameClientDiscs.cpp
@@ -7,6 +8,7 @@ set(SOURCES GameClientDiscM3U.cpp
 )
 
 set(HEADERS GameClientDiscM3U.h
+            GameClientDiscPlaylist.h
             GameClientDiscModel.h
             GameClientDiscMergeUtils.h
             GameClientDiscs.h

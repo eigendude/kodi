@@ -9,40 +9,19 @@
 #include "GameClientDiscM3U.h"
 
 #include "URL.h"
-#include "Util.h"
 #include "filesystem/Directory.h"
 #include "filesystem/File.h"
 #include "games/addons/disc/GameClientDiscModel.h"
-#include "utils/Crc32.h"
 #include "utils/FileUtils.h"
-#include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
 #include "utils/log.h"
 
 using namespace KODI;
 using namespace GAME;
 
-namespace
-{
-constexpr auto PROFILE_ROOT = "special://masterprofile";
-constexpr auto DISC_STATE_DIRECTORY = "games/discstate";
-
-std::string GetDiscStateDirectory()
-{
-  return URIUtils::AddFileToFolder(PROFILE_ROOT, DISC_STATE_DIRECTORY);
-}
-} // namespace
-
 std::string CGameClientDiscM3U::GetM3UPath(const std::string& gamePath)
 {
-  std::string safeBaseName = CUtil::MakeLegalFileName(URIUtils::GetFileName(gamePath));
-  const std::string safeDirectory =
-      StringUtils::Format("{}_{:08x}", safeBaseName, Crc32::Compute(gamePath));
-
-  URIUtils::RemoveExtension(safeBaseName);
-  const std::string safeFileName = StringUtils::Format("{}.m3u", safeBaseName);
-
-  return URIUtils::AddFileToFolder(GetDiscStateDirectory(), safeDirectory, safeFileName);
+  return GetStateFilePath(gamePath, "m3u");
 }
 
 bool CGameClientDiscM3U::Save(const std::string& gamePath, const CGameClientDiscModel& model)

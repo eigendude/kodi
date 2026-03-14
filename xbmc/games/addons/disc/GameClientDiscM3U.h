@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "games/addons/disc/GameClientDiscPlaylist.h"
+
 #include <string>
 
 namespace KODI
@@ -18,7 +20,7 @@ namespace GAME
 class CGameClientDiscModel;
 struct GameClientDiscEntry;
 
-class CGameClientDiscM3U
+class CGameClientDiscM3U : protected CGameClientDiscPlaylist
 {
 public:
   static std::string GetM3UPath(const std::string& gamePath);

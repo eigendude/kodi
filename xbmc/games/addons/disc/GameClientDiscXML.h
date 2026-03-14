@@ -9,6 +9,7 @@
 #pragma once
 
 #include "games/addons/disc/GameClientDiscModel.h"
+#include "games/addons/disc/GameClientDiscPlaylist.h"
 
 #include <string>
 #include <vector>
@@ -25,7 +26,7 @@ namespace KODI
 namespace GAME
 {
 
-class CGameClientDiscXML
+class CGameClientDiscXML : protected CGameClientDiscPlaylist
 {
 public:
   bool Load(const std::string& gamePath, CGameClientDiscModel& model) const;

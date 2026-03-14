@@ -9,12 +9,9 @@
 #include "GameClientDiscXML.h"
 
 #include "URL.h"
-#include "Util.h"
 #include "filesystem/Directory.h"
 #include "games/addons/disc/GameClientDiscM3U.h"
-#include "utils/Crc32.h"
 #include "utils/FileUtils.h"
-#include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
 #include "utils/XBMCTinyXML2.h"
 #include "utils/log.h"
@@ -29,9 +26,6 @@ using namespace GAME;
 
 namespace
 {
-constexpr auto PROFILE_ROOT = "special://masterprofile";
-constexpr auto DISC_STATE_DIRECTORY = "games/discstate";
-
 constexpr auto XML_ROOT = "discstate";
 constexpr auto XML_SLOTS = "slots";
 constexpr auto XML_SLOT = "slot";
@@ -47,22 +41,11 @@ constexpr auto TYPE_DISC = "disc";
 constexpr auto TYPE_REMOVED = "removed";
 constexpr auto TYPE_NONE = "none";
 
-std::string GetDiscStateDirectory()
-{
-  return URIUtils::AddFileToFolder(PROFILE_ROOT, DISC_STATE_DIRECTORY);
-}
 } // namespace
 
 std::string CGameClientDiscXML::GetXMLPath(const std::string& gamePath)
 {
-  std::string safeBaseName = CUtil::MakeLegalFileName(URIUtils::GetFileName(gamePath));
-  const std::string safeDirectory =
-      StringUtils::Format("{}_{:08x}", safeBaseName, Crc32::Compute(gamePath));
-
-  URIUtils::RemoveExtension(safeBaseName);
-  const std::string safeFileName = StringUtils::Format("{}.xml", safeBaseName);
-
-  return URIUtils::AddFileToFolder(GetDiscStateDirectory(), safeDirectory, safeFileName);
+  return GetStateFilePath(gamePath, "xml");
 }
 
 bool CGameClientDiscXML::Load(const std::string& gamePath, CGameClientDiscModel& model) const
