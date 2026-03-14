@@ -153,7 +153,6 @@ TEST(TestGameClientDiscXML, MalformedXmlFailsAndClearsModel)
 
 TEST(TestGameClientDiscXML, MergeAfterLoadPreservesRemovedTombstoneAgainstCoreRemoved)
 {
-  // Verify tombstone overlays preserve removed slot markers during merge.
   CGameClientDiscModel loadedModel;
   ASSERT_TRUE(loadedModel.AddRemovedSlot());
   ASSERT_TRUE(loadedModel.AddDisc("/roms/disc2.chd"));
@@ -162,12 +161,11 @@ TEST(TestGameClientDiscXML, MergeAfterLoadPreservesRemovedTombstoneAgainstCoreRe
   ASSERT_TRUE(coreModel.AddRemovedSlot());
   ASSERT_TRUE(coreModel.AddDisc("/roms/disc2.chd"));
 
-  const std::vector<GameClientDiscEntry> merged =
-      ReconcileFrontendDiscSlots(loadedModel.GetDiscs(), coreModel.GetDiscs());
+  CGameClientDiscMergeUtils::ReconcileModels(loadedModel, coreModel);
 
-  ASSERT_EQ(merged.size(), 2U);
-  EXPECT_EQ(merged[0].slotType, GameClientDiscEntry::DiscSlotType::RemovedSlot);
-  EXPECT_EQ(merged[1].slotType, GameClientDiscEntry::DiscSlotType::Disc);
+  ASSERT_EQ(loadedModel.Size(), 2U);
+  EXPECT_TRUE(loadedModel.IsRemovedSlotByIndex(0));
+  EXPECT_TRUE(loadedModel.IsRealDiscByIndex(1));
 }
 
 TEST(TestGameClientDiscXML, SaveWritesEjectedTrue)
