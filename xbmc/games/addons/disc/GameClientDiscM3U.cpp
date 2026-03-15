@@ -12,6 +12,7 @@
 #include "filesystem/Directory.h"
 #include "filesystem/File.h"
 #include "games/addons/disc/GameClientDiscModel.h"
+#include "utils/StringUtils.h"
 #include "utils/FileUtils.h"
 #include "utils/URIUtils.h"
 #include "utils/log.h"
@@ -22,6 +23,45 @@ using namespace GAME;
 std::string CGameClientDiscM3U::GetM3UPath(const std::string& gamePath)
 {
   return GetStateFilePath(gamePath, ".m3u");
+}
+
+bool CGameClientDiscM3U::Load(const std::string& gamePath, CGameClientDiscModel& model) const
+{
+  model.Clear();
+
+  if (gamePath.empty())
+    return true;
+
+  const std::string m3uPath = GetM3UPath(gamePath);
+
+  if (!CFileUtils::Exists(m3uPath))
+  {
+    CLog::Log(LOGDEBUG, "Disc state M3U {} does not exist, proceeding with empty disc model",
+              CURL::GetRedacted(m3uPath));
+    return true;
+  }
+
+  CLog::Log(LOGDEBUG, "Loading disc state M3U {}", CURL::GetRedacted(m3uPath));
+
+  std::string m3u;
+  if (!CFileUtils::LoadFile(m3uPath, m3u))
+  {
+    CLog::Log(LOGERROR, "Failed to read disc state M3U {}", CURL::GetRedacted(m3uPath));
+    return false;
+  }
+
+  std::vector<std::string> lines = StringUtils::Split(m3u, '\n');
+  for (std::string& line : lines)
+  {
+    StringUtils::Trim(line);
+
+    if (line.empty() || StringUtils::StartsWith(line, "#"))
+      continue;
+
+    model.AddDisc(line);
+  }
+
+  return true;
 }
 
 bool CGameClientDiscM3U::Save(const std::string& gamePath, const CGameClientDiscModel& model)

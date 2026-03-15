@@ -23,6 +23,7 @@ struct GameClientDiscEntry;
 class CGameClientDiscM3U : protected CGameClientDiscPlaylist
 {
 public:
+  bool Load(const std::string& gamePath, CGameClientDiscModel& model) const;
   static std::string GetM3UPath(const std::string& gamePath);
   static bool Save(const std::string& gamePath, const CGameClientDiscModel& model);
 
