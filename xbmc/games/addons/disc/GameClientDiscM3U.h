@@ -20,10 +20,12 @@ namespace GAME
 class CGameClientDiscModel;
 struct GameClientDiscEntry;
 
-class CGameClientDiscM3U : protected CGameClientDiscPlaylist
+class CGameClientDiscM3U : public CGameClientDiscPlaylist
 {
 public:
   static std::string GetM3UPath(const std::string& gamePath);
+
+  static bool Load(const std::string& gamePath, CGameClientDiscModel& model);
   static bool Save(const std::string& gamePath, const CGameClientDiscModel& model);
 
 private:

@@ -1,4 +1,5 @@
 set(SOURCES TestGameClientDiscModel.cpp
+            TestGameClientDiscM3U.cpp
             TestGameClientDiscXML.cpp
             TestGameClientDiscs.cpp
 )
