@@ -25,37 +25,35 @@ std::string CGameClientDiscM3U::GetM3UPath(const std::string& gamePath)
   return GetStateFilePath(gamePath, ".m3u");
 }
 
-bool CGameClientDiscM3U::Load(const std::string& gamePath, CGameClientDiscModel& model)
+bool CGameClientDiscM3U::Load(const std::string& m3uPath, CGameClientDiscModel& model)
 {
   model.Clear();
 
-  if (gamePath.empty())
+  if (m3uPath.empty())
     return true;
-
-  const std::string m3uPath = GetM3UPath(gamePath);
 
   if (!CFileUtils::Exists(m3uPath))
   {
-    CLog::Log(LOGDEBUG, "Disc state M3U {} does not exist, proceeding with empty disc model",
+    CLog::Log(LOGDEBUG, "Playlist M3U {} does not exist, proceeding with empty disc model",
               CURL::GetRedacted(m3uPath));
     return true;
   }
 
-  CLog::Log(LOGDEBUG, "Loading disc state M3U {}", CURL::GetRedacted(m3uPath));
+  CLog::Log(LOGDEBUG, "Loading playlist M3U {}", CURL::GetRedacted(m3uPath));
 
   std::string m3u;
   {
     XFILE::CFile file;
     if (!file.Open(m3uPath))
     {
-      CLog::Log(LOGERROR, "Failed to open disc state M3U {}", CURL::GetRedacted(m3uPath));
+      CLog::Log(LOGERROR, "Failed to open playlist M3U {}", CURL::GetRedacted(m3uPath));
       return false;
     }
 
     const int64_t size = file.GetLength();
     if (size < 0)
     {
-      CLog::Log(LOGERROR, "Failed to get size of disc state M3U {}", CURL::GetRedacted(m3uPath));
+      CLog::Log(LOGERROR, "Failed to get size of playlist M3U {}", CURL::GetRedacted(m3uPath));
       file.Close();
       return false;
     }
@@ -66,7 +64,7 @@ bool CGameClientDiscM3U::Load(const std::string& gamePath, CGameClientDiscModel&
 
     if (read != static_cast<ssize_t>(m3u.size()))
     {
-      CLog::Log(LOGERROR, "Failed to read disc state M3U {}, only {} of {} bytes read",
+      CLog::Log(LOGERROR, "Failed to read playlist M3U {}, only {} of {} bytes read",
                 CURL::GetRedacted(m3uPath), read, m3u.size());
       return false;
     }

@@ -25,7 +25,14 @@ class CGameClientDiscM3U : public CGameClientDiscPlaylist
 public:
   static std::string GetM3UPath(const std::string& gamePath);
 
-  static bool Load(const std::string& gamePath, CGameClientDiscModel& model);
+  /*!
+   * \brief Load disc entries from an existing playlist file path
+   */
+  static bool Load(const std::string& m3uPath, CGameClientDiscModel& model);
+
+  /*!
+   * \brief Save the model to Kodi's persisted disc-state playlist path for a game
+   */
   static bool Save(const std::string& gamePath, const CGameClientDiscModel& model);
 
 private:
