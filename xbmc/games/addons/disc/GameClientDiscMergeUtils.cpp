@@ -67,12 +67,24 @@ CGameClientDiscModel CGameClientDiscMergeUtils::ReconcileModels(
       }
     }
 
+    if (!mergedPath.empty() && mergedLabel.empty())
+    {
+      // If we have a path but no label, try to preserve any frontend label to
+      // avoid UI problems. This can happen during startup when the core reports
+      // paths before it can report labels, or if the core simply doesn't
+      // support disc labels.
+      mergedLabel = frontendDiscs.GetLabelByPath(mergedPath);
+
+      // If we still don't have a label, derive one from the path if possible to
+      // at least have some kind of identity for the disc in the UI.
+      mergedLabel = CGameClientDiscModel::DeriveBasename(mergedPath);
+    }
+
     if (mergedLabel.empty())
     {
-      // If the core can report a path but not a label, preserve any frontend
-      // label to avoid UI flicker. This can happen during startup when the
-      // core reports paths before it can report labels, or if the core simply
-      // doesn't support disc labels.
+      // As a last resort, if we have no path or label from the core, but we
+      // do have a selectable slot in the frontend, keep the frontend label to
+      // at least have some kind of identity for the slot in the UI.
       mergedLabel = frontendDiscs.GetLabelByIndex(discIndex);
     }
 
