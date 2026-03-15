@@ -22,14 +22,15 @@ using namespace GAME;
 namespace
 {
 constexpr auto GAME_PATH = "/roms/my_game.m3u";
+constexpr auto TEMP_PLAYLIST_DIRECTORY = "special://temp/test-disc-playlists";
 
 void CleanupStateFile()
 {
-  const std::string m3uPath = CGameClientDiscM3U::GetM3UPath(GAME_PATH);
+  const std::string stateM3uPath = CGameClientDiscM3U::GetM3UPath(GAME_PATH);
 
-  XFILE::CFile::Delete(m3uPath);
+  XFILE::CFile::Delete(stateM3uPath);
 
-  std::string stateSubdirectory = URIUtils::GetDirectory(m3uPath);
+  std::string stateSubdirectory = URIUtils::GetDirectory(stateM3uPath);
   URIUtils::RemoveSlashAtEnd(stateSubdirectory);
   if (!stateSubdirectory.empty() && XFILE::CDirectory::Exists(stateSubdirectory))
     XFILE::CDirectory::Remove(stateSubdirectory);
@@ -37,17 +38,17 @@ void CleanupStateFile()
 
 void EnsureStateSubdirectory()
 {
-  const std::string m3uDirectory =
+  const std::string stateDirectory =
       URIUtils::GetDirectory(CGameClientDiscM3U::GetM3UPath(GAME_PATH));
-  ASSERT_TRUE(XFILE::CDirectory::Create(m3uDirectory));
+  ASSERT_TRUE(XFILE::CDirectory::Create(stateDirectory));
 }
 
 std::string ReadStateM3U()
 {
-  const std::string m3uPath = CGameClientDiscM3U::GetM3UPath(GAME_PATH);
+  const std::string stateM3uPath = CGameClientDiscM3U::GetM3UPath(GAME_PATH);
 
   XFILE::CFile file;
-  if (!file.Open(m3uPath))
+  if (!file.Open(stateM3uPath))
     return "";
 
   std::string m3u;
@@ -57,6 +58,32 @@ std::string ReadStateM3U()
 
   file.Close();
   return m3u;
+}
+
+std::string CreatePlaylistFile(const std::string& fileName, const std::string& m3uBody)
+{
+  EXPECT_TRUE(XFILE::CDirectory::Create(TEMP_PLAYLIST_DIRECTORY));
+
+  const std::string playlistPath = URIUtils::AddFileToFolder(TEMP_PLAYLIST_DIRECTORY, fileName);
+  XFILE::CFile file;
+  if (!file.OpenForWrite(playlistPath, true))
+    return playlistPath;
+
+  EXPECT_EQ(file.Write(m3uBody.data(), m3uBody.size()), static_cast<ssize_t>(m3uBody.size()));
+  file.Close();
+
+  return playlistPath;
+}
+
+void DeletePlaylistFile(const std::string& playlistPath)
+{
+  XFILE::CFile::Delete(playlistPath);
+}
+
+void CleanupPlaylistDirectory()
+{
+  if (XFILE::CDirectory::Exists(TEMP_PLAYLIST_DIRECTORY))
+    XFILE::CDirectory::Remove(TEMP_PLAYLIST_DIRECTORY);
 }
 
 } // namespace
@@ -123,62 +150,82 @@ TEST(TestGameClientDiscM3U, SaveNormalizesBinToCueInM3UWhenCueExists)
   CleanupStateFile();
 }
 
-TEST(TestGameClientDiscM3U, LoadRestoresDiscs)
+TEST(TestGameClientDiscM3U, LoadReadsDiscsFromSuppliedPlaylistPath)
 {
   CleanupStateFile();
 
-  EnsureStateSubdirectory();
-
-  const std::string m3uPath = CGameClientDiscM3U::GetM3UPath(GAME_PATH);
-  XFILE::CFile file;
-  ASSERT_TRUE(file.OpenForWrite(m3uPath, true));
-  static constexpr char m3u[] = "/roms/disc1.chd\n/roms/disc2.chd\n";
-  ASSERT_EQ(file.Write(m3u, sizeof(m3u) - 1), sizeof(m3u) - 1);
-  file.Close();
+  const std::string playlistPath =
+      CreatePlaylistFile("load-read-supplied-path.m3u", "/roms/disc1.chd\n/roms/disc2.chd\n");
 
   CGameClientDiscM3U discM3U;
   CGameClientDiscModel loadedModel;
-  ASSERT_TRUE(discM3U.Load(GAME_PATH, loadedModel));
+  ASSERT_TRUE(discM3U.Load(playlistPath, loadedModel));
 
   ASSERT_EQ(loadedModel.Size(), 2U);
   EXPECT_EQ(loadedModel.GetPathByIndex(0), "/roms/disc1.chd");
   EXPECT_EQ(loadedModel.GetPathByIndex(1), "/roms/disc2.chd");
 
-  CleanupStateFile();
+  DeletePlaylistFile(playlistPath);
+  CleanupPlaylistDirectory();
 }
 
-TEST(TestGameClientDiscM3U, LoadIgnoresEmptyAndCommentLines)
+TEST(TestGameClientDiscM3U, LoadIgnoresEmptyAndCommentLinesInSuppliedPlaylist)
 {
   CleanupStateFile();
 
-  EnsureStateSubdirectory();
-
-  const std::string m3uPath = CGameClientDiscM3U::GetM3UPath(GAME_PATH);
-  XFILE::CFile file;
-  ASSERT_TRUE(file.OpenForWrite(m3uPath, true));
-  static constexpr char m3u[] = "\n#EXTM3U\n/roms/disc1.chd\n   \n# comment\n/roms/disc2.chd\n";
-  ASSERT_EQ(file.Write(m3u, sizeof(m3u) - 1), sizeof(m3u) - 1);
-  file.Close();
+  const std::string playlistPath = CreatePlaylistFile(
+      "load-ignores-comments.m3u", "\n#EXTM3U\n/roms/disc1.chd\n   \n# comment\n/roms/disc2.chd\n");
 
   CGameClientDiscM3U discM3U;
   CGameClientDiscModel loadedModel;
-  ASSERT_TRUE(discM3U.Load(GAME_PATH, loadedModel));
+  ASSERT_TRUE(discM3U.Load(playlistPath, loadedModel));
 
   ASSERT_EQ(loadedModel.Size(), 2U);
   EXPECT_EQ(loadedModel.GetPathByIndex(0), "/roms/disc1.chd");
   EXPECT_EQ(loadedModel.GetPathByIndex(1), "/roms/disc2.chd");
 
+  DeletePlaylistFile(playlistPath);
+  CleanupPlaylistDirectory();
+}
+
+TEST(TestGameClientDiscM3U, LoadStartupSeedingUsesRealPlaylistPathNotPersistedStatePath)
+{
+  CleanupStateFile();
+  EnsureStateSubdirectory();
+
+  const std::string persistedM3uPath = CGameClientDiscM3U::GetM3UPath(GAME_PATH);
+  XFILE::CFile persistedFile;
+  ASSERT_TRUE(persistedFile.OpenForWrite(persistedM3uPath, true));
+  static constexpr char persistedM3u[] = "/persisted/disc-do-not-read.chd\n";
+  ASSERT_EQ(persistedFile.Write(persistedM3u, sizeof(persistedM3u) - 1), sizeof(persistedM3u) - 1);
+  persistedFile.Close();
+
+  const std::string playlistPath =
+      CreatePlaylistFile("startup-seeding-playlist.m3u", "/roms/disc-from-launch-playlist.chd\n");
+
+  CGameClientDiscM3U discM3U;
+  CGameClientDiscModel loadedModel;
+  ASSERT_TRUE(discM3U.Load(playlistPath, loadedModel));
+
+  ASSERT_EQ(loadedModel.Size(), 1U);
+  EXPECT_EQ(loadedModel.GetPathByIndex(0), "/roms/disc-from-launch-playlist.chd");
+
+  DeletePlaylistFile(playlistPath);
+  CleanupPlaylistDirectory();
   CleanupStateFile();
 }
 
-TEST(TestGameClientDiscM3U, LoadMissingM3UIsNonErrorAndLeavesEmptyModel)
+TEST(TestGameClientDiscM3U, LoadMissingPlaylistIsNonErrorAndLeavesEmptyModel)
 {
   CleanupStateFile();
+
+  const std::string missingPlaylistPath =
+      URIUtils::AddFileToFolder(TEMP_PLAYLIST_DIRECTORY, "missing-playlist.m3u");
 
   CGameClientDiscM3U discM3U;
   CGameClientDiscModel loadedModel;
 
-  ASSERT_TRUE(discM3U.Load(GAME_PATH, loadedModel));
+  ASSERT_TRUE(discM3U.Load(missingPlaylistPath, loadedModel));
   EXPECT_TRUE(loadedModel.Empty());
 }
 

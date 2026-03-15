@@ -67,7 +67,7 @@ void CGameClientDiscs::Initialize(const std::string& gamePath)
     }
   }
 
-  // Avoid launching with an empty disc list
+  // If launching a playlist directly, seed the disc model from that playlist file path.
   if (m_discModel->Empty() && URIUtils::HasExtension(gamePath, ".m3u"))
     m_discM3u->Load(gamePath, *m_discModel);
 
