@@ -70,6 +70,8 @@ bool CGameClientDiscM3U::Load(const std::string& m3uPath, CGameClientDiscModel& 
     }
   }
 
+  const std::string playlistDirectory = URIUtils::GetDirectory(m3uPath);
+
   std::vector<std::string> lines = StringUtils::Split(m3u, '\n');
   for (std::string& line : lines)
   {
@@ -77,6 +79,11 @@ bool CGameClientDiscM3U::Load(const std::string& m3uPath, CGameClientDiscModel& 
 
     if (line.empty() || StringUtils::StartsWith(line, "#"))
       continue;
+
+    // M3U entries are relative to the playlist path; normalize for stable restore.
+    if (!URIUtils::IsURL(line) && !URIUtils::IsDOSPath(line) &&
+        !URIUtils::IsAbsolutePOSIXPath(line))
+      line = URIUtils::AddFileToFolder(playlistDirectory, line);
 
     model.AddDisc(line);
   }

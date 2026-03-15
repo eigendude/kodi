@@ -169,6 +169,79 @@ TEST(TestGameClientDiscM3U, LoadReadsDiscsFromSuppliedPlaylistPath)
   CleanupPlaylistDirectory();
 }
 
+TEST(TestGameClientDiscM3U, LoadResolvesRelativeEntriesAgainstPlaylistDirectory)
+{
+  CleanupStateFile();
+
+  const std::string playlistPath = CreatePlaylistFile(
+      "load-relative-entries.m3u",
+      "Disc 1/Metal Gear Solid (Disc 1).cue\nDisc 2/Metal Gear Solid (Disc 2).cue\n");
+  const std::string playlistDirectory = URIUtils::GetDirectory(playlistPath);
+
+  CGameClientDiscM3U discM3U;
+  CGameClientDiscModel loadedModel;
+  ASSERT_TRUE(discM3U.Load(playlistPath, loadedModel));
+
+  ASSERT_EQ(loadedModel.Size(), 2U);
+  EXPECT_EQ(loadedModel.GetPathByIndex(0),
+            URIUtils::AddFileToFolder(playlistDirectory, "Disc 1/Metal Gear Solid (Disc 1).cue"));
+  EXPECT_EQ(loadedModel.GetPathByIndex(1),
+            URIUtils::AddFileToFolder(playlistDirectory, "Disc 2/Metal Gear Solid (Disc 2).cue"));
+
+  DeletePlaylistFile(playlistPath);
+  CleanupPlaylistDirectory();
+}
+
+TEST(TestGameClientDiscM3U, LoadPreservesAbsoluteEntries)
+{
+  CleanupStateFile();
+
+  const std::string playlistPath = CreatePlaylistFile(
+      "load-absolute-entries.m3u", "/roms/disc1.chd\nsmb://server/psx/disc2.chd\n");
+
+  CGameClientDiscM3U discM3U;
+  CGameClientDiscModel loadedModel;
+  ASSERT_TRUE(discM3U.Load(playlistPath, loadedModel));
+
+  ASSERT_EQ(loadedModel.Size(), 2U);
+  EXPECT_EQ(loadedModel.GetPathByIndex(0), "/roms/disc1.chd");
+  EXPECT_EQ(loadedModel.GetPathByIndex(1), "smb://server/psx/disc2.chd");
+
+  DeletePlaylistFile(playlistPath);
+  CleanupPlaylistDirectory();
+}
+
+TEST(TestGameClientDiscM3U, LoadProducesStableAbsolutePathsForRestore)
+{
+  CleanupStateFile();
+
+  const std::string playlistPath = CreatePlaylistFile(
+      "load-stable-restore-paths.m3u",
+      "Disc 1/Metal Gear Solid (Disc 1).cue\nDisc 2/Metal Gear Solid (Disc 2).cue\n");
+  const std::string playlistDirectory = URIUtils::GetDirectory(playlistPath);
+
+  CGameClientDiscM3U discM3U;
+  CGameClientDiscModel loadedModel;
+  ASSERT_TRUE(discM3U.Load(playlistPath, loadedModel));
+
+  ASSERT_EQ(loadedModel.Size(), 2U);
+  EXPECT_TRUE(URIUtils::IsAbsolutePOSIXPath(loadedModel.GetPathByIndex(0)));
+  EXPECT_TRUE(URIUtils::IsAbsolutePOSIXPath(loadedModel.GetPathByIndex(1)));
+
+  ASSERT_TRUE(discM3U.Save(GAME_PATH, loadedModel));
+  const std::string persistedM3U = ReadStateM3U();
+
+  EXPECT_EQ(
+      persistedM3U,
+      URIUtils::AddFileToFolder(playlistDirectory, "Disc 1/Metal Gear Solid (Disc 1).cue") + "\n" +
+          URIUtils::AddFileToFolder(playlistDirectory, "Disc 2/Metal Gear Solid (Disc 2).cue") +
+          "\n");
+
+  DeletePlaylistFile(playlistPath);
+  CleanupPlaylistDirectory();
+  CleanupStateFile();
+}
+
 TEST(TestGameClientDiscM3U, LoadIgnoresEmptyAndCommentLinesInSuppliedPlaylist)
 {
   CleanupStateFile();
