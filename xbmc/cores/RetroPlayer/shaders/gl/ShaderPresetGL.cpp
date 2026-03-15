@@ -73,8 +73,6 @@ bool CShaderPresetGL::CreateShaderTextures()
 {
   DisposeShaderTextures();
 
-  m_bTexturesNeedSizeUpdate = false;
-
   unsigned int major{0};
   unsigned int minor{0};
   CServiceBroker::GetRenderSystem()->GetRenderVersion(major, minor);
@@ -118,38 +116,10 @@ bool CShaderPresetGL::CreateShaderTextures()
     }
     else
     {
-      // Determine the framebuffer data format
-      GLuint pixelType;
-      GLint internalFormat;
-      GLenum pixelFormat;
-      if (pass.fbo.floatFramebuffer && major >= 3)
-      {
-        // Give priority to float framebuffer parameter (we can't use both float and sRGB)
-        pixelType = GL_FLOAT;
-        internalFormat = GL_RGBA32F;
-        pixelFormat = GL_RGBA;
-      }
-      else
-      {
-        if (pass.fbo.sRgbFramebuffer && major >= 3)
-        {
-          pixelType = GL_UNSIGNED_BYTE;
-          internalFormat = GL_SRGB8_ALPHA8;
-          pixelFormat = GL_RGBA;
-        }
-        else
-        {
-          pixelType = GL_UNSIGNED_BYTE;
-          internalFormat = GL_RGBA8;
-          pixelFormat = GL_BGRA;
-        }
-      }
-
       auto shaderTextureGL = std::make_unique<CShaderTextureGL>(
-          static_cast<unsigned int>(textureSize.x), static_cast<unsigned int>(textureSize.y),
-          pixelType, internalFormat, pixelFormat, true);
+          static_cast<unsigned int>(textureSize.x), static_cast<unsigned int>(textureSize.y));
 
-      shaderTextureGL->CreateTexture(); // Create new internal texture
+      shaderTextureGL->CreateTextureObject(); // Create new internal texture
 
       const ShaderPass& nextPass = m_passes[shaderIdx + 1];
 
@@ -160,28 +130,56 @@ bool CShaderPresetGL::CreateShaderTextures()
         shaderTextureGL->SetMipmapping();
 
       const GLint wrapType = CShaderUtilsGL::TranslateWrapType(nextPass.wrapType);
+
       const GLuint magFilterType =
           (nextPass.filterType == FilterType::LINEAR ? GL_LINEAR : GL_NEAREST);
+
       const GLuint minFilterType =
           (nextPass.mipmap ? (nextPass.filterType == FilterType::LINEAR ? GL_LINEAR_MIPMAP_LINEAR
                                                                         : GL_NEAREST_MIPMAP_NEAREST)
                            : magFilterType);
-      const GLfloat blackBorder[4] = {0.0f, 0.0f, 0.0f, 0.0f};
 
       glBindTexture(GL_TEXTURE_2D, shaderTextureGL->GetTextureID());
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilterType);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilterType);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapType);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapType);
-      glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, blackBorder);
 
-      glBindTexture(GL_TEXTURE_2D, 0);
+      // Determine the framebuffer data format
+      GLint internalFormat;
+      GLenum pixelFormat;
+      if (pass.fbo.floatFramebuffer && major >= 3)
+      {
+        // Give priority to float framebuffer parameter (we can't use both float and sRGB)
+        internalFormat = GL_RGBA32F;
+        pixelFormat = GL_RGBA;
+      }
+      else
+      {
+        if (pass.fbo.sRgbFramebuffer && major >= 3)
+        {
+          internalFormat = GL_SRGB8_ALPHA8;
+          pixelFormat = GL_RGBA;
+        }
+        else
+        {
+          internalFormat = GL_RGBA8;
+          pixelFormat = GL_BGRA;
+        }
+      }
+
+      glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, textureSize.x, textureSize.y, 0, pixelFormat,
+                   internalFormat == GL_RGBA32F ? GL_FLOAT : GL_UNSIGNED_BYTE, nullptr);
+
+      const GLfloat blackBorder[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+
+      glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, blackBorder);
 
       m_pShaderTextures.emplace_back(std::move(shaderTextureGL));
     }
 
-    // Notify shader of its target and source sizes
-    m_pShaders[shaderIdx]->SetSizes(scaledSize, prevSize, prevTextureSize);
+    // Notify shader of its source and dest size
+    m_pShaders[shaderIdx]->SetSizes(prevSize, prevTextureSize, scaledSize);
 
     prevSize = scaledSize;
     prevTextureSize = textureSize;
@@ -196,17 +194,11 @@ void CShaderPresetGL::RenderShader(IShader& shader, IShaderTexture& source, ISha
   if (static_cast<CShaderTextureGL&>(target).BindFBO())
   {
     const CRect newViewPort(0.f, 0.f, target.GetWidth(), target.GetHeight());
-
     glViewport((GLsizei)newViewPort.x1, (GLsizei)newViewPort.y1, (GLsizei)newViewPort.x2,
                (GLsizei)newViewPort.y2);
     glScissor((GLsizei)newViewPort.x1, (GLsizei)newViewPort.y1, (GLsizei)newViewPort.x2,
               (GLsizei)newViewPort.y2);
-
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-
     shader.Render(source, target);
-
     static_cast<CShaderTextureGL&>(target).UnbindFBO();
   }
 }

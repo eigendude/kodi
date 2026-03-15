@@ -44,8 +44,9 @@ using namespace std::chrono_literals;
 
 namespace
 {
+
 constexpr const char* PRESETS_ADDON_NAME = "game.shader.presets";
-constexpr const char* ICON_VIDEO = "";
+constexpr const char* ICON_VIDEO = "DefaultVideo.png";
 constexpr const char* ICON_GET_MORE = "DefaultAddSource.png";
 
 struct ScalingMethodProperties
@@ -65,6 +66,7 @@ void GetProperties(const CFileItem& item, std::string& videoFilter)
 {
   videoFilter = item.GetProperty("game.videofilter").asString();
 }
+
 } // namespace
 
 CDialogGameVideoFilter::CDialogGameVideoFilter()

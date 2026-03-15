@@ -26,22 +26,21 @@ public:
   CRenderBufferPoolOpenGLES(CRenderContext& context);
   ~CRenderBufferPoolOpenGLES() override = default;
 
-  // Implementation of IRenderBufferPool via CBaseRenderBufferPool
+  // implementation of IRenderBufferPool via CBaseRenderBufferPool
   bool IsCompatible(const CRenderVideoSettings& renderSettings) const override;
 
-protected:
-  // Implementation of CBaseRenderBufferPool
+private:
+  // implementation of CBaseRenderBufferPool
   IRenderBuffer* CreateRenderBuffer(void* header = nullptr) override;
   bool ConfigureInternal() override;
 
-private:
   // Construction parameters
   CRenderContext& m_context;
 
   // Configuration parameters
-  GLuint m_pixelType = 0;
-  GLuint m_internalFormat = 0;
-  GLuint m_pixelFormat = 0;
+  GLuint m_pixeltype = 0;
+  GLuint m_internalformat = 0;
+  GLuint m_pixelformat = 0;
   GLuint m_bpp = 0;
 };
 } // namespace RETRO

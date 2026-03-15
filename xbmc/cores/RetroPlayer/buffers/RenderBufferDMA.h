@@ -36,13 +36,13 @@ public:
   CRenderBufferDMA(CRenderContext& context, int fourcc);
   ~CRenderBufferDMA() override;
 
-  // Implementation of IRenderBuffer via CRenderBufferSysMem
+  // implementation of IRenderBuffer via CRenderBufferSysMem
   bool Allocate(AVPixelFormat format, unsigned int width, unsigned int height) override;
   size_t GetFrameSize() const override;
   uint8_t* GetMemory() override;
   void ReleaseMemory() override;
 
-  // Implementation of IRenderBuffer
+  // implementation of IRenderBuffer
   bool UploadTexture() override;
 
   GLuint TextureID() const { return m_textureId; }

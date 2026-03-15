@@ -21,11 +21,6 @@
 using namespace KODI;
 using namespace GAME;
 
-namespace
-{
-constexpr const char* ICON_VIDEO = "";
-} // namespace
-
 CDialogGameVideoRotation::CDialogGameVideoRotation()
   : CDialogGameVideoSelect(WINDOW_DIALOG_GAME_VIDEO_ROTATION)
 {
@@ -53,7 +48,6 @@ void CDialogGameVideoRotation::GetItems(CFileItemList& items)
   {
     CFileItemPtr item = std::make_shared<CFileItem>(GetRotationLabel(rotation));
     item->SetProperty("game.videorotation", CVariant{rotation});
-    item->SetArt("icon", ICON_VIDEO);
     items.Add(std::move(item));
   }
 }

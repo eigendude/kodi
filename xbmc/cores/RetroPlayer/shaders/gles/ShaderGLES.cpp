@@ -9,7 +9,6 @@
 #include "ShaderGLES.h"
 
 #include "ShaderTextureGLES.h"
-#include "ShaderTextureGLESRef.h"
 #include "ShaderUtilsGLES.h"
 #include "application/Application.h"
 #include "cores/RetroPlayer/rendering/RenderContext.h"
@@ -25,7 +24,7 @@ CShaderGLES::CShaderGLES() = default;
 
 CShaderGLES::~CShaderGLES()
 {
-  Delete();
+  Destroy();
 }
 
 bool CShaderGLES::Create(unsigned int passIdx,
@@ -143,11 +142,11 @@ bool CShaderGLES::Create(unsigned int passIdx,
 
 void CShaderGLES::Render(IShaderTexture& source, IShaderTexture& target)
 {
-  glDisable(GL_BLEND);
+  auto& sourceGL = static_cast<CShaderTextureGLES&>(source);
 
   glUseProgram(m_shaderProgram);
 
-  SetShaderParameters(source);
+  SetShaderParameters(sourceGL);
 
   glBindBuffer(GL_ARRAY_BUFFER, m_shaderVertexVBO[0]);
   glBufferData(GL_ARRAY_BUFFER, sizeof(m_VertexCoords), m_VertexCoords.data(), GL_DYNAMIC_DRAW);
@@ -181,40 +180,59 @@ void CShaderGLES::Render(IShaderTexture& source, IShaderTexture& target)
   glUseProgram(0);
 }
 
-void CShaderGLES::SetSizes(const float2& nextSize,
-                           const float2& prevSize,
-                           const float2& prevTextureSize)
+void CShaderGLES::SetSizes(const float2& prevSize,
+                           const float2& prevTextureSize,
+                           const float2& nextSize)
 {
+  m_inputSize = prevSize;
+  m_inputTextureSize = prevTextureSize;
   m_outputSize = nextSize;
-
-  if (prevSize.x > 0 && prevSize.y > 0)
-    m_inputSize = prevSize;
-
-  if (prevTextureSize.x > 0 && prevTextureSize.y > 0)
-    m_inputTextureSize = prevTextureSize;
 }
 
 void CShaderGLES::PrepareParameters(
-    IShaderTexture& source,
+    const RETRO::ViewportCoordinates& dest,
+    const float2 fullDestSize,
+    IShaderTexture& sourceTexture,
     const std::vector<std::unique_ptr<IShaderTexture>>& pShaderTextures,
     const std::vector<std::unique_ptr<IShader>>& pShaders,
     uint64_t frameCount)
 {
-  // Set destination rectangle size
-  m_destSize = m_outputSize;
+  if (m_passIdx + 1 != pShaders.size()) // Not last pass
+  {
+    // bottom left x,y
+    m_VertexCoords[0][0] = -m_outputSize.x / 2;
+    m_VertexCoords[0][1] = -m_outputSize.y / 2;
+    // bottom right x,y
+    m_VertexCoords[1][0] = m_outputSize.x / 2;
+    m_VertexCoords[1][1] = -m_outputSize.y / 2;
+    // top right x,y
+    m_VertexCoords[2][0] = m_outputSize.x / 2;
+    m_VertexCoords[2][1] = m_outputSize.y / 2;
+    // top left x,y
+    m_VertexCoords[3][0] = -m_outputSize.x / 2;
+    m_VertexCoords[3][1] = m_outputSize.y / 2;
 
-  // bottom left x,y
-  m_VertexCoords[0][0] = -m_outputSize.x / 2;
-  m_VertexCoords[0][1] = -m_outputSize.y / 2;
-  // bottom right x,y
-  m_VertexCoords[1][0] = m_outputSize.x / 2;
-  m_VertexCoords[1][1] = -m_outputSize.y / 2;
-  // top right x,y
-  m_VertexCoords[2][0] = m_outputSize.x / 2;
-  m_VertexCoords[2][1] = m_outputSize.y / 2;
-  // top left x,y
-  m_VertexCoords[3][0] = -m_outputSize.x / 2;
-  m_VertexCoords[3][1] = m_outputSize.y / 2;
+    // Set destination rectangle size
+    m_destSize = m_outputSize;
+  }
+  else // Last pass
+  {
+    // bottom left x,y
+    m_VertexCoords[0][0] = dest[3].x - m_outputSize.x / 2;
+    m_VertexCoords[0][1] = dest[3].y - m_outputSize.y / 2;
+    // bottom right x,y
+    m_VertexCoords[1][0] = dest[2].x - m_outputSize.x / 2;
+    m_VertexCoords[1][1] = dest[2].y - m_outputSize.y / 2;
+    // top right x,y
+    m_VertexCoords[2][0] = dest[1].x - m_outputSize.x / 2;
+    m_VertexCoords[2][1] = dest[1].y - m_outputSize.y / 2;
+    // top left x,y
+    m_VertexCoords[3][0] = dest[0].x - m_outputSize.x / 2;
+    m_VertexCoords[3][1] = dest[0].y - m_outputSize.y / 2;
+
+    // Set destination rectangle size for the last pass
+    m_destSize = fullDestSize;
+  }
 
   // bottom left z, tu, tv, r, g, b
   m_VertexCoords[0][2] = 0;
@@ -245,7 +263,7 @@ void CShaderGLES::PrepareParameters(
   m_TexCoords[3][0] = 0.0f;
   m_TexCoords[3][1] = 0.0f;
 
-  UpdateUniformInputs(source, pShaderTextures, pShaders, frameCount);
+  UpdateUniformInputs(sourceTexture, pShaderTextures, pShaders, frameCount);
 }
 
 void CShaderGLES::UpdateMVP()
@@ -257,7 +275,7 @@ void CShaderGLES::UpdateMVP()
   m_MVP = {{{xScale, 0, 0, 0}, {0, yScale, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}}};
 }
 
-void CShaderGLES::Delete()
+void CShaderGLES::Destroy()
 {
   glDeleteProgram(m_shaderProgram);
   m_shaderProgram = 0;
@@ -269,7 +287,7 @@ void CShaderGLES::Delete()
 }
 
 void CShaderGLES::UpdateUniformInputs(
-    IShaderTexture& source,
+    IShaderTexture& sourceTexture,
     const std::vector<std::unique_ptr<IShaderTexture>>& pShaderTextures,
     const std::vector<std::unique_ptr<IShader>>& pShaders,
     uint64_t frameCount)
@@ -278,13 +296,13 @@ void CShaderGLES::UpdateUniformInputs(
 
   if (m_passIdx > 0) // Not first pass
   {
-    auto& sourceGL = static_cast<CShaderTextureGLES&>(*pShaderTextures[m_passIdx - 1]);
-    m_uniformFrameInputs = GetFrameInputData(sourceGL.GetTextureID());
+    auto& shaderTextureGL = static_cast<CShaderTextureGLES&>(*pShaderTextures[m_passIdx - 1]);
+    m_uniformFrameInputs = GetFrameInputData(shaderTextureGL.GetTextureID());
   }
   else // First pass
   {
-    auto& sourceGLRef = static_cast<CShaderTextureGLESRef&>(source);
-    m_uniformFrameInputs = GetFrameInputData(sourceGLRef.GetTextureID());
+    auto& sourceTextureGL = static_cast<CShaderTextureGLES&>(sourceTexture);
+    m_uniformFrameInputs = GetFrameInputData(sourceTextureGL.GetTextureID());
   }
 
   // Set frame uniforms of previous passes
@@ -312,7 +330,6 @@ CShaderGLES::UniformInputs CShaderGLES::GetInputData(uint64_t frameCount) const
       // Time always flows forward
       1 // frame_direction
   };
-
   return input;
 }
 
@@ -324,7 +341,6 @@ CShaderGLES::UniformFrameInputs CShaderGLES::GetFrameInputData(GLuint texture) c
       texture, // texture
       m_passAlias // alias
   };
-
   return frameInput;
 }
 
@@ -338,7 +354,7 @@ void CShaderGLES::GetUniformLocs()
   m_MVPMatrixLoc = glGetUniformLocation(m_shaderProgram, "MVPMatrix");
 }
 
-void CShaderGLES::SetShaderParameters(IShaderTexture& source)
+void CShaderGLES::SetShaderParameters(CShaderTextureGLES& sourceTexture)
 {
   // Set shader uniforms
   glUniform1i(m_FrameDirectionLoc, m_uniformInputs.frame_direction);
@@ -357,25 +373,12 @@ void CShaderGLES::SetShaderParameters(IShaderTexture& source)
 
   // Set source texture
   unsigned int textureUnit = 0;
+  sourceTexture.BindToUnit(textureUnit);
+  textureUnit++;
 
-  //! @todo Handle ref textures better
-  auto* sourceGL = dynamic_cast<CShaderTextureGLES*>(&source);
-  auto* sourceGLRef = dynamic_cast<CShaderTextureGLESRef*>(&source);
-
-  if (sourceGL != nullptr)
-  {
-    sourceGL->BindToUnit(textureUnit);
-    textureUnit++;
-
-    // Regenerate source texture mipmaps
-    if (sourceGL->IsMipmapped())
-      glGenerateMipmap(GL_TEXTURE_2D);
-  }
-  else if (sourceGLRef != nullptr)
-  {
-    sourceGLRef->BindToUnit(textureUnit);
-    textureUnit++;
-  }
+  // Regenerate source texture mipmaps
+  if (sourceTexture.IsMipmapped())
+    glGenerateMipmap(GL_TEXTURE_2D);
 
   // Set lookup textures
   for (const std::shared_ptr<IShaderLut>& lut : m_luts)
@@ -394,6 +397,7 @@ void CShaderGLES::SetShaderParameters(IShaderTexture& source)
   for (unsigned int i = 0; i < m_passIdx + 1; ++i)
   {
     GLint paramLoc;
+
     std::string paramPass = i ? "Pass" + std::to_string(i) : "Orig";
     paramLoc = glGetUniformLocation(m_shaderProgram, (paramPass + "InputSize").c_str());
     glUniform2f(paramLoc, m_passesUniformFrameInputs[i].input_size.x,

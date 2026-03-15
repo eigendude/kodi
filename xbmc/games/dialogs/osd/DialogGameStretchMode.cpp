@@ -23,11 +23,6 @@
 using namespace KODI;
 using namespace GAME;
 
-namespace
-{
-constexpr const char* ICON_VIDEO = "";
-} // namespace
-
 const std::vector<CDialogGameStretchMode::StretchModeProperties>
     CDialogGameStretchMode::m_allStretchModes = {
         {630, RETRO::STRETCHMODE::Normal},
@@ -99,11 +94,8 @@ void CDialogGameStretchMode::GetItems(CFileItemList& items)
     const std::string stretchModeId =
         RETRO::CRetroPlayerUtils::StretchModeToIdentifier(stretchMode.stretchMode);
     if (!stretchModeId.empty())
-    {
       item->SetProperty("game.stretchmode", CVariant{stretchModeId});
-      item->SetArt("icon", ICON_VIDEO);
-      items.Add(std::move(item));
-    }
+    items.Add(std::move(item));
   }
 }
 

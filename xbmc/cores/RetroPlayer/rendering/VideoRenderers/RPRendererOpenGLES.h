@@ -21,7 +21,6 @@ namespace KODI
 {
 namespace SHADER
 {
-class CShaderTextureGLES;
 class CShaderTextureGLESRef;
 } // namespace SHADER
 
@@ -34,7 +33,7 @@ class CRendererFactoryOpenGLES : public IRendererFactory
 public:
   ~CRendererFactoryOpenGLES() override = default;
 
-  // Implementation of IRendererFactory
+  // implementation of IRendererFactory
   std::string RenderSystemName() const override;
   CRPBaseRenderer* CreateRenderer(const CRenderSettings& settings,
                                   CRenderContext& context,
@@ -50,7 +49,7 @@ public:
                       std::shared_ptr<IRenderBufferPool> bufferPool);
   ~CRPRendererOpenGLES() override;
 
-  // Implementation of CRPBaseRenderer
+  // implementation of CRPBaseRenderer
   bool Supports(RENDERFEATURE feature) const override;
   SCALINGMETHOD GetDefaultScalingMethod() const override { return SCALINGMETHOD::NEAREST; }
 
@@ -73,10 +72,10 @@ protected:
   struct RenderBufferTextures
   {
     std::shared_ptr<SHADER::CShaderTextureGLESRef> source;
-    std::shared_ptr<SHADER::CShaderTextureGLES> target;
+    std::shared_ptr<SHADER::CShaderTextureGLESRef> target;
   };
 
-  // Implementation of CRPBaseRenderer
+  // implementation of CRPBaseRenderer
   void RenderInternal(bool clear, uint8_t alpha) override;
   void FlushInternal() override;
 
@@ -102,7 +101,7 @@ protected:
 
   GLuint m_blackbarsVertexVBO;
 
-  const GLenum m_textureTarget = GL_TEXTURE_2D;
+  GLenum m_textureTarget = GL_TEXTURE_2D;
   float m_clearColor = 0.0f;
 };
 } // namespace RETRO

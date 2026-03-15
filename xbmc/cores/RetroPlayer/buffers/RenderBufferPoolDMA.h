@@ -27,15 +27,14 @@ public:
   CRenderBufferPoolDMA(CRenderContext& context);
   ~CRenderBufferPoolDMA() override = default;
 
-  // Implementation of IRenderBufferPool via CBaseRenderBufferPool
+  // implementation of IRenderBufferPool via CBaseRenderBufferPool
   bool IsCompatible(const CRenderVideoSettings& renderSettings) const override;
 
 protected:
-  // Implementation of CBaseRenderBufferPool
+  // implementation of CBaseRenderBufferPool
   IRenderBuffer* CreateRenderBuffer(void* header = nullptr) override;
   bool ConfigureInternal() override;
 
-private:
   // Construction parameters
   CRenderContext& m_context;
 
