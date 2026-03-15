@@ -26,6 +26,7 @@ CGameClientDiscModel CGameClientDiscMergeUtils::ReconcileModels(
   {
     const GameClientDiscEntry& coreDisc = coreDiscs.GetDiscs().at(discIndex);
 
+    // Use core metadata as source of truth, unless empty
     std::string mergedPath = coreDisc.path;
     std::string mergedLabel = coreDisc.cachedLabel;
 
@@ -64,6 +65,15 @@ CGameClientDiscModel CGameClientDiscMergeUtils::ReconcileModels(
         if (mergedLabel.empty())
           mergedLabel = frontendDiscs.GetLabelByIndex(discIndex);
       }
+    }
+
+    if (mergedLabel.empty())
+    {
+      // If the core can report a path but not a label, preserve any frontend
+      // label to avoid UI flicker. This can happen during startup when the
+      // core reports paths before it can report labels, or if the core simply
+      // doesn't support disc labels.
+      mergedLabel = frontendDiscs.GetLabelByIndex(discIndex);
     }
 
     mergedDiscs.AddDisc(mergedPath, mergedLabel);
