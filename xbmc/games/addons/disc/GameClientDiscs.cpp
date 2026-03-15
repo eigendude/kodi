@@ -15,6 +15,7 @@
 #include "games/addons/disc/GameClientDiscModel.h"
 #include "games/addons/disc/GameClientDiscTransport.h"
 #include "games/addons/disc/GameClientDiscXML.h"
+#include "utils/URIUtils.h"
 
 #include <algorithm>
 #include <vector>
@@ -67,15 +68,11 @@ void CGameClientDiscs::Initialize(const std::string& gamePath)
   }
 
   // Avoid launching with an empty disc list
-  if (m_discModel->Empty())
-  {
-    m_discModel->AddDisc(gamePath);
+  if (m_discModel->Empty() && URIUtils::HasExtension(gamePath, ".m3u"))
+    m_discM3u->Load(gamePath, *m_discModel);
 
-    // Startup ownership: when no persisted state exists, the launch image is
-    // the frontend's authoritative initial selection until the core can
-    // report a concrete selected index/path.
-    m_transport->SetInitialImage(0, gamePath);
-  }
+  if (m_discModel->Empty())
+    m_discModel->AddDisc(gamePath);
 }
 
 void CGameClientDiscs::Deinitialize()
