@@ -26,20 +26,47 @@ CGameClientDiscModel CGameClientDiscMergeUtils::ReconcileModels(
   {
     const GameClientDiscEntry& coreDisc = coreDiscs.GetDiscs().at(discIndex);
 
-    // Some cores don't compact indexes when removing discs, they simply mark
-    // the index as an empty slot. In this case, check if the slot was
-    // previously removed.
-    if (frontendDiscs.Size() <= coreDiscs.Size() && coreDisc.path.empty())
+    std::string mergedPath = coreDisc.path;
+    std::string mergedLabel = coreDisc.cachedLabel;
+
+    //
+    // Anomalous reasons the path could be empty:
+    //
+    //   - The core doesn't support disc metadata and always returns empty
+    //     paths/labels
+    //   - The core can't report disc metadata immediately, but will report it
+    //     after a disc is added or replaced
+    //   - The core doesn't compact disc slots after removal, and the slot is
+    //     currently removed, so there's no real disc to report
+    //   - Some cores report the selected index before exposing disc path/label
+    //     metadata
+    //
+    if (mergedPath.empty())
     {
-      // Check if it's a removed disc in the frontend
-      if (frontendDiscs.IsRemovedSlotByIndex(discIndex))
+      // Some cores don't compact indexes when removing discs, they simply mark
+      // the index as an empty slot. In this case, check if the slot was
+      // previously removed.
+      if (frontendDiscs.Size() == coreDiscs.Size())
       {
-        mergedDiscs.AddRemovedSlot();
-        continue;
+        // Check if it's a removed disc in the frontend
+        if (frontendDiscs.IsRemovedSlotByIndex(discIndex))
+        {
+          mergedDiscs.AddRemovedSlot();
+          continue;
+        }
+      }
+
+      // If the core slot is empty but we already have frontend state for the
+      // same slot, keep the frontend identity until the core can report it.
+      if (frontendDiscs.IsSelectableSlotByIndex(discIndex))
+      {
+        mergedPath = frontendDiscs.GetPathByIndex(discIndex);
+        if (mergedLabel.empty())
+          mergedLabel = frontendDiscs.GetLabelByIndex(discIndex);
       }
     }
 
-    mergedDiscs.AddDisc(coreDisc.path, coreDisc.cachedLabel);
+    mergedDiscs.AddDisc(mergedPath, mergedLabel);
   }
 
   // Set selected

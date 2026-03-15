@@ -26,12 +26,18 @@ using namespace GAME;
 
 namespace
 {
+// Change this to "DialogConfirm.xml" to show a progress bar using the
+// CGUIDialogProgress dialog
+constexpr std::string_view DIALOG_XML = "DialogGameControllers.xml";
+
+// Duration to keep the disc change dialog open
 constexpr auto DISC_CHANGE_DURATION = std::chrono::milliseconds{1500};
 } // namespace
 
 CDialogGameDiscChanger::CDialogGameDiscChanger() : m_discGame(std::make_unique<CDiscManagerGame>())
 {
   // Initialize CGUIWindow via CGUIDialogProgress
+  SetProperty("xmlfile", CVariant{std::string{DIALOG_XML}});
   SetID(WINDOW_DIALOG_GAME_DISC_CHANGER);
   m_loadType = KEEP_IN_MEMORY;
 

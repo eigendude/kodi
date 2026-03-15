@@ -24,11 +24,13 @@ using namespace GAME;
 namespace
 {
 constexpr auto GAME_PATH = "/roms/my_game.m3u";
+constexpr auto GAME_PATH_A = "/roms/game_a.m3u";
+constexpr auto GAME_PATH_B = "/roms/game_b.m3u";
 
-void CleanupStateFile()
+void CleanupStateFile(const std::string& gamePath)
 {
-  const std::string xmlPath = CGameClientDiscXML::GetXMLPath(GAME_PATH);
-  const std::string m3uPath = CGameClientDiscM3U::GetM3UPath(GAME_PATH);
+  const std::string xmlPath = CGameClientDiscXML::GetXMLPath(gamePath);
+  const std::string m3uPath = CGameClientDiscM3U::GetM3UPath(gamePath);
 
   XFILE::CFile::Delete(xmlPath);
   XFILE::CFile::Delete(m3uPath);
@@ -41,16 +43,15 @@ void CleanupStateFile()
     XFILE::CDirectory::Remove(stateSubdirectory);
 }
 
-void EnsureStateSubdirectory()
+void EnsureStateSubdirectory(const std::string& gamePath)
 {
-  const std::string xmlDirectory =
-      URIUtils::GetDirectory(CGameClientDiscXML::GetXMLPath(GAME_PATH));
+  const std::string xmlDirectory = URIUtils::GetDirectory(CGameClientDiscXML::GetXMLPath(gamePath));
   ASSERT_TRUE(XFILE::CDirectory::Create(xmlDirectory));
 }
 
-std::string ReadStateXml()
+std::string ReadStateXml(const std::string& gamePath)
 {
-  const std::string xmlPath = CGameClientDiscXML::GetXMLPath(GAME_PATH);
+  const std::string xmlPath = CGameClientDiscXML::GetXMLPath(gamePath);
 
   XFILE::CFile file;
   if (!file.Open(xmlPath))
@@ -65,9 +66,9 @@ std::string ReadStateXml()
   return xml;
 }
 
-std::string ReadStateM3U()
+std::string ReadStateM3U(const std::string& gamePath)
 {
-  const std::string m3uPath = CGameClientDiscM3U::GetM3UPath(GAME_PATH);
+  const std::string m3uPath = CGameClientDiscM3U::GetM3UPath(gamePath);
 
   XFILE::CFile file;
   if (!file.Open(m3uPath))
@@ -80,6 +81,26 @@ std::string ReadStateM3U()
 
   file.Close();
   return m3u;
+}
+
+void CleanupStateFile()
+{
+  CleanupStateFile(GAME_PATH);
+}
+
+void EnsureStateSubdirectory()
+{
+  EnsureStateSubdirectory(GAME_PATH);
+}
+
+std::string ReadStateXml()
+{
+  return ReadStateXml(GAME_PATH);
+}
+
+std::string ReadStateM3U()
+{
+  return ReadStateM3U(GAME_PATH);
 }
 
 } // namespace
@@ -384,4 +405,71 @@ TEST(TestGameClientDiscXML, SaveCreatesPerGameStateFiles)
   EXPECT_TRUE(CFileUtils::Exists(CGameClientDiscM3U::GetM3UPath(GAME_PATH)));
 
   CleanupStateFile();
+}
+
+TEST(TestGameClientDiscXML, CrossGameLoadDoesNotInheritEjectedTrayState)
+{
+  CleanupStateFile(GAME_PATH_A);
+  CleanupStateFile(GAME_PATH_B);
+
+  CGameClientDiscModel gameAModel;
+  gameAModel.AddDisc("/roms/game_a_disc1.chd", "Game A Disc 1");
+  gameAModel.SetEjected(true);
+
+  CGameClientDiscXML discXml;
+  ASSERT_TRUE(discXml.Save(GAME_PATH_A, gameAModel));
+
+  CGameClientDiscModel gameBModel;
+  ASSERT_TRUE(discXml.Load(GAME_PATH_B, gameBModel));
+  EXPECT_TRUE(gameBModel.Empty());
+  EXPECT_FALSE(gameBModel.IsEjected());
+
+  CleanupStateFile(GAME_PATH_A);
+  CleanupStateFile(GAME_PATH_B);
+}
+
+TEST(TestGameClientDiscXML, CrossGameLoadDoesNotInheritSelectedDiscOrLabel)
+{
+  CleanupStateFile(GAME_PATH_A);
+  CleanupStateFile(GAME_PATH_B);
+
+  CGameClientDiscModel gameAModel;
+  gameAModel.AddDisc("/roms/game_a_disc1.chd", "Game A Disc 1");
+  gameAModel.AddDisc("/roms/game_a_disc2.chd", "Game A Disc 2");
+  ASSERT_TRUE(gameAModel.SetSelectedDiscByIndex(1));
+
+  CGameClientDiscXML discXml;
+  ASSERT_TRUE(discXml.Save(GAME_PATH_A, gameAModel));
+
+  CGameClientDiscModel gameBModel;
+  ASSERT_TRUE(discXml.Load(GAME_PATH_B, gameBModel));
+  EXPECT_TRUE(gameBModel.Empty());
+  EXPECT_FALSE(gameBModel.GetSelectedDiscIndex().has_value());
+
+  CleanupStateFile(GAME_PATH_A);
+  CleanupStateFile(GAME_PATH_B);
+}
+
+TEST(TestGameClientDiscXML, SameGamePersistenceRestoresStartupDiscState)
+{
+  CleanupStateFile(GAME_PATH_A);
+
+  CGameClientDiscModel savedModel;
+  savedModel.AddDisc("/roms/game_a_disc1.chd", "Game A Disc 1");
+  savedModel.AddDisc("/roms/game_a_disc2.chd", "Game A Disc 2");
+  savedModel.SetEjected(false);
+  ASSERT_TRUE(savedModel.SetSelectedDiscByIndex(1));
+
+  CGameClientDiscXML discXml;
+  ASSERT_TRUE(discXml.Save(GAME_PATH_A, savedModel));
+
+  CGameClientDiscModel loadedModel;
+  ASSERT_TRUE(discXml.Load(GAME_PATH_A, loadedModel));
+  ASSERT_EQ(loadedModel.Size(), 2U);
+  EXPECT_EQ(loadedModel.GetLabelByIndex(1), "Game A Disc 2");
+  ASSERT_TRUE(loadedModel.GetSelectedDiscIndex().has_value());
+  EXPECT_EQ(*loadedModel.GetSelectedDiscIndex(), 1U);
+  EXPECT_FALSE(loadedModel.IsEjected());
+
+  CleanupStateFile(GAME_PATH_A);
 }

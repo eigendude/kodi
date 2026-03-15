@@ -42,6 +42,10 @@ bool CGameClientDiscs::SupportsDiskControl() const
 
 void CGameClientDiscs::Initialize(const std::string& gamePath)
 {
+  // Disc state is per running game session. Always reset the in-memory model
+  // before loading persisted state for the game being started.
+  ResetSessionState();
+
   CGameClientDiscModel restoredModel;
   if (m_discXml->Load(gamePath, restoredModel) && !restoredModel.Empty())
   {
@@ -65,6 +69,13 @@ void CGameClientDiscs::Initialize(const std::string& gamePath)
   // Avoid launching with an empty disc list
   if (m_discModel->Empty())
     m_discModel->AddDisc(gamePath);
+}
+
+void CGameClientDiscs::Deinitialize()
+{
+  // Stopping a game must discard all live disc UI/model state. Persisted state
+  // remains keyed by game path and will be loaded explicitly for the next game.
+  ResetSessionState();
 }
 
 void CGameClientDiscs::RestoreDiscList()
@@ -299,6 +310,12 @@ bool CGameClientDiscs::InsertDiscByIndex(size_t index)
   RefreshDiscState();
 
   return true;
+}
+
+void CGameClientDiscs::ResetSessionState()
+{
+  m_discModel->Clear();
+  m_isEjected = false;
 }
 
 void CGameClientDiscs::LoadModelFromCore(CGameClientDiscModel& model) const
