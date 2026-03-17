@@ -3,6 +3,7 @@ set(SOURCES TestAutoSwitch.cpp
             TestCueDocument.cpp
             TestDateTime.cpp
             TestDateTimeSpan.cpp
+            TestDiscManagerDiscSortUtils.cpp
             TestFileItem.cpp
             TestMediaSource.cpp
             TestURL.cpp
