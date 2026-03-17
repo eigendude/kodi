@@ -216,6 +216,10 @@ bool CDiscManagerActions::BrowseForDiscImage(const std::string& startingPath, st
   if (extensions.empty())
     extensions = CGameUtils::GetGameExtensions();
 
+  // Disc Manager "Add disc" accepts concrete disc images only. .m3u is a
+  // playlist/container used for launch-time disc sets, not a single disc image.
+  extensions.erase(".m3u");
+
   const std::string strExtensions = StringUtils::Join(extensions, "|");
 
   return CGUIDialogFileBrowser::ShowAndGetFile(startingPath, strExtensions,
