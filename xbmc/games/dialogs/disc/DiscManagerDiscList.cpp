@@ -62,21 +62,34 @@ struct DiscListDisplayRow
 std::optional<std::pair<std::string, int>> GetNormalizedStemAndTrailingNumber(
     const std::string& label)
 {
-  static const std::regex stemWithNumberRegex(R"(^(.+\S)\s+(\d+)$)");
-  static const std::regex stemWithParenNumberRegex(R"(^(.+\S)\s+\((\d+)\)$)");
+  // Intentionally recognized real-world series suffixes:
+  //   <stem> (Disc N)
+  //   <stem> Disc N
+  //   <stem> [discNofM][...]
+  // If a label doesn't clearly match one of these explicit disc markers we
+  // keep the original model order to avoid mixing unrelated entries.
+  static const std::regex stemWithParenDiscNumberRegex(
+      R"(^(.+\S)\s*\(\s*disc\s*(\d+)\s*\)\s*$)", std::regex::icase);
+  static const std::regex stemWithDiscNumberRegex(R"(^(.+\S)\s+disc\s*(\d+)\s*$)",
+                                                   std::regex::icase);
+  static const std::regex stemWithDiscOfTotalBracketRegex(
+      R"(^(.+\S)\s*\[\s*disc\s*(\d+)\s*of\s*\d+\s*\](?:\s*\[[^\]]+\])*\s*$)",
+      std::regex::icase);
 
   std::string trimmedLabel = label;
   StringUtils::Trim(trimmedLabel);
 
   std::smatch matches;
-  if (!std::regex_match(trimmedLabel, matches, stemWithNumberRegex) &&
-      !std::regex_match(trimmedLabel, matches, stemWithParenNumberRegex))
+  if (!std::regex_match(trimmedLabel, matches, stemWithParenDiscNumberRegex) &&
+      !std::regex_match(trimmedLabel, matches, stemWithDiscNumberRegex) &&
+      !std::regex_match(trimmedLabel, matches, stemWithDiscOfTotalBracketRegex))
   {
     return std::nullopt;
   }
 
   std::string normalizedStem = matches[1].str();
   StringUtils::Trim(normalizedStem);
+  normalizedStem = std::regex_replace(normalizedStem, std::regex(R"(\s+)"), " ");
   StringUtils::ToLower(normalizedStem);
 
   if (normalizedStem.empty())
