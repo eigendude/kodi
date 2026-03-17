@@ -114,7 +114,7 @@ bool CDialogGameDiscManager::OnAction(const CAction& action)
     case ACTION_NAV_BACK:
     {
       // Check if the disc list is visible
-      if (GetProperty(std::string{PROPERTY_SHOW_DISC_LIST}).asBoolean())
+      if (GetProperty(std::string{WINDOW_PROPERTY_SHOW_DISC_LIST}).asBoolean())
       {
         // Select the appropriate item based on whether we're selecting or
         // deleting a disc
@@ -265,8 +265,8 @@ void CDialogGameDiscManager::ShowControl(int controlId)
 {
   if (controlId == CONTROL_DISC_MANAGER_MENU)
   {
-    SetProperty(std::string{PROPERTY_SHOW_MENU}, true);
-    SetProperty(std::string{PROPERTY_SHOW_DISC_LIST}, false);
+    SetProperty(std::string{WINDOW_PROPERTY_SHOW_MENU}, true);
+    SetProperty(std::string{WINDOW_PROPERTY_SHOW_DISC_LIST}, false);
 
     // Give focus to main menu
     FocusMainMenu();
@@ -277,8 +277,8 @@ void CDialogGameDiscManager::ShowControl(int controlId)
   }
   else if (controlId == CONTROL_DISC_MANAGER_DISC_LIST)
   {
-    SetProperty(std::string{PROPERTY_SHOW_MENU}, false);
-    SetProperty(std::string{PROPERTY_SHOW_DISC_LIST}, true);
+    SetProperty(std::string{WINDOW_PROPERTY_SHOW_MENU}, false);
+    SetProperty(std::string{WINDOW_PROPERTY_SHOW_DISC_LIST}, true);
 
     // Give focus to disc list
     CGUIMessage msgSetFocus(GUI_MSG_SETFOCUS, GetID(), CONTROL_DISC_MANAGER_DISC_LIST);
