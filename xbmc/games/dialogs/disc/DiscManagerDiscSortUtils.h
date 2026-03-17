@@ -23,4 +23,3 @@ std::optional<std::pair<std::string, int>> GetNormalizedStemAndTrailingNumber(
     const std::string& label);
 } // namespace GAME
 } // namespace KODI
-

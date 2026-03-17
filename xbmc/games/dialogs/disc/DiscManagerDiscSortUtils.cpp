@@ -21,8 +21,7 @@ namespace
 std::optional<int> ParseAsciiInteger(const std::string& value)
 {
   int parsedValue = 0;
-  const auto [ptr, ec] =
-      std::from_chars(value.data(), value.data() + value.size(), parsedValue);
+  const auto [ptr, ec] = std::from_chars(value.data(), value.data() + value.size(), parsedValue);
   if (ec != std::errc{} || ptr != value.data() + value.size())
     return std::nullopt;
 
@@ -109,13 +108,12 @@ std::optional<std::pair<std::string, int>> GetNormalizedStemAndTrailingNumber(
       R"(^(.+\S)\s*\(\s*(disc|cd|disk)\s*([0-9]+|[ivx]+)\s*(?:of\s*\d+)?\s*\)\s*$)",
       std::regex::icase);
   static const std::regex stemWithMarkerRegex(
-      R"(^(.+\S)\s+(disc|cd|disk)\s*([0-9]+|[ivx]+)\s*(?:of\s*\d+)?\s*$)",
-      std::regex::icase);
+      R"(^(.+\S)\s+(disc|cd|disk)\s*([0-9]+|[ivx]+)\s*(?:of\s*\d+)?\s*$)", std::regex::icase);
   static const std::regex stemWithBracketedMarkerRegex(
       R"(^(.+\S)\s*\[\s*(disc|cd|disk)\s*([0-9]+|[ivx]+)\s*(?:of\s*\d+)?\s*\](?:\s*\[[^\]]+\])*\s*$)",
       std::regex::icase);
-  static const std::regex stemWithCompactMarkerRegex(
-      R"(^(.+\S)\s*(disc|cd|disk)\s*([0-9]+)\s*$)", std::regex::icase);
+  static const std::regex stemWithCompactMarkerRegex(R"(^(.+\S)\s*(disc|cd|disk)\s*([0-9]+)\s*$)",
+                                                     std::regex::icase);
 
   std::string trimmedLabel = label;
   StringUtils::Trim(trimmedLabel);
