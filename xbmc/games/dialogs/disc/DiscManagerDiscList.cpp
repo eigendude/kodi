@@ -33,6 +33,13 @@
 
 namespace
 {
+/*!
+ * Transient display row used to build the visible list.
+ *
+ * This mirrors model data without changing it. The original disc index is
+ * always retained so UI selection continues to address the disc model even if
+ * the visible rows are reordered for display.
+ */
 struct DiscListDisplayRow
 {
   size_t discIndex{0};
@@ -43,6 +50,14 @@ struct DiscListDisplayRow
   std::optional<int> trailingNumber;
 };
 
+/*!
+ * Extract a lowercase stem plus trailing number from labels that clearly look
+ * like one numbered series.
+ *
+ * Only labels ending in a bare number or parenthesized number are considered.
+ * Mixed labels such as "Disc 1" and "MGS Disc 2" intentionally normalize to
+ * different stems so display order falls back to the model order.
+ */
 std::optional<std::pair<std::string, int>> GetNormalizedStemAndTrailingNumber(
     const std::string& label)
 {
@@ -74,6 +89,13 @@ std::optional<std::pair<std::string, int>> GetNormalizedStemAndTrailingNumber(
   return std::make_pair(normalizedStem, trailingNumber);
 }
 
+/*!
+ * Sort only when every visible disc unambiguously belongs to the same numbered
+ * series.
+ *
+ * The display order stays aligned with the model when labels are mixed,
+ * partially numbered, or otherwise ambiguous.
+ */
 bool CanSafelySortForDisplay(const std::vector<DiscListDisplayRow>& rows)
 {
   if (rows.size() < 2)
@@ -160,6 +182,8 @@ void CDiscManagerDiscList::UpdateItems()
   std::vector<DiscListDisplayRow> rows;
   rows.reserve(discList.Size());
 
+  // Build a display-only snapshot from the current model state. The original
+  // disc indices are preserved even if the visible rows are later reordered.
   for (size_t i = 0; i < discList.Size(); ++i)
   {
     // If disc has been removed from the list, this could be a zombie entry
@@ -181,6 +205,9 @@ void CDiscManagerDiscList::UpdateItems()
     rows.emplace_back(std::move(row));
   }
 
+  // Reorder only when the visible labels clearly describe one numbered series.
+  // Natural numeric ordering is display-only and must not be treated as a model
+  // reorder.
   if (CanSafelySortForDisplay(rows))
   {
     std::stable_sort(rows.begin(), rows.end(),
@@ -188,6 +215,8 @@ void CDiscManagerDiscList::UpdateItems()
                      { return *lhs.trailingNumber < *rhs.trailingNumber; });
   }
 
+  // Materialize the visible list from the display rows while keeping each
+  // item's discIndex bound to the original model slot for click handling.
   for (const DiscListDisplayRow& row : rows)
   {
     auto item = std::make_shared<CFileItem>(row.label);
@@ -203,6 +232,8 @@ void CDiscManagerDiscList::UpdateItems()
     m_items.emplace_back(std::move(item));
   }
 
+  // "No disc" is not part of the sortable model rows. Keep it appended after
+  // any visible discs so the synthetic action remains stable in the UI.
   if (m_discManager.AllowSelectNoDisc() || m_items.empty())
   {
     auto noDiscItem = std::make_shared<CFileItem>("No disc");
