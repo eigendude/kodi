@@ -8,6 +8,7 @@
 
 #include "DialogGameDiscManager.h"
 
+#include "FileItem.h"
 #include "ServiceBroker.h"
 #include "games/addons/GameClient.h"
 #include "games/dialogs/disc/DiscManagerActions.h"
@@ -19,6 +20,7 @@
 #include "guilib/GUIBaseContainer.h"
 #include "guilib/GUIMessage.h"
 #include "guilib/GUIMessageIDs.h"
+#include "guilib/guiinfo/GUIInfoLabels.h"
 #include "guilib/WindowIDs.h"
 #include "input/actions/Action.h"
 #include "input/actions/ActionIDs.h"
@@ -201,15 +203,36 @@ void CDialogGameDiscManager::SelectDiscToInsert(std::optional<size_t> selectedIn
 {
   m_insertCallback = callback;
 
+  const std::optional<std::string> selectedDiscPath = m_discGame->GetDiscPathByIndex(selectedIndex);
+
   // Clear the disc list
   ClearDiscList();
 
-  // Find the item index to focus/select
-  const unsigned int selectedItemIndex =
-      m_discGame->GetSelectedIndex(selectedIndex, AllowSelectNoDisc());
-
   // Show the disc list
   ShowControl(CONTROL_DISC_MANAGER_DISC_LIST);
+
+  // Find the item index to focus/select
+  unsigned int selectedItemIndex = m_discGame->GetSelectedIndex(selectedIndex, AllowSelectNoDisc());
+
+  if (selectedDiscPath.has_value())
+  {
+    if (const CGUIBaseContainer* discList = GetDiscList(); discList != nullptr)
+    {
+      for (int i = 0;; ++i)
+      {
+        auto listItem = discList->GetListItem(i, INFOFLAG_LISTITEM_ABSOLUTE);
+        if (!listItem)
+          break;
+
+        if (const auto fileItem = std::dynamic_pointer_cast<CFileItem>(listItem);
+            fileItem && fileItem->GetPath() == *selectedDiscPath)
+        {
+          selectedItemIndex = static_cast<unsigned int>(i);
+          break;
+        }
+      }
+    }
+  }
 
   // Select the current disc
   CGUIMessage msgSelectDisc(GUI_MSG_ITEM_SELECT, GetID(), CONTROL_DISC_MANAGER_DISC_LIST,
