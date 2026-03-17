@@ -8,6 +8,7 @@
 
 #include "DialogGameDiscManager.h"
 
+#include "FileItem.h"
 #include "ServiceBroker.h"
 #include "games/addons/GameClient.h"
 #include "games/dialogs/disc/DiscManagerActions.h"
@@ -20,6 +21,7 @@
 #include "guilib/GUIMessage.h"
 #include "guilib/GUIMessageIDs.h"
 #include "guilib/WindowIDs.h"
+#include "guilib/guiinfo/GUIInfoLabels.h"
 #include "input/actions/Action.h"
 #include "input/actions/ActionIDs.h"
 #include "utils/log.h"
@@ -114,7 +116,7 @@ bool CDialogGameDiscManager::OnAction(const CAction& action)
     case ACTION_NAV_BACK:
     {
       // Check if the disc list is visible
-      if (GetProperty(std::string{PROPERTY_SHOW_DISC_LIST}).asBoolean())
+      if (GetProperty(std::string{WINDOW_PROPERTY_SHOW_DISC_LIST}).asBoolean())
       {
         // Select the appropriate item based on whether we're selecting or
         // deleting a disc
@@ -201,15 +203,36 @@ void CDialogGameDiscManager::SelectDiscToInsert(std::optional<size_t> selectedIn
 {
   m_insertCallback = callback;
 
+  const std::optional<std::string> selectedDiscPath = m_discGame->GetDiscPathByIndex(selectedIndex);
+
   // Clear the disc list
   ClearDiscList();
 
-  // Find the item index to focus/select
-  const unsigned int selectedItemIndex =
-      m_discGame->GetSelectedIndex(selectedIndex, AllowSelectNoDisc());
-
   // Show the disc list
   ShowControl(CONTROL_DISC_MANAGER_DISC_LIST);
+
+  // Find the item index to focus/select
+  unsigned int selectedItemIndex = m_discGame->GetSelectedIndex(selectedIndex, AllowSelectNoDisc());
+
+  if (selectedDiscPath.has_value())
+  {
+    if (const CGUIBaseContainer* discList = GetDiscList(); discList != nullptr)
+    {
+      for (int i = 0;; ++i)
+      {
+        auto listItem = discList->GetListItem(i, INFOFLAG_LISTITEM_ABSOLUTE);
+        if (!listItem)
+          break;
+
+        if (const auto fileItem = std::dynamic_pointer_cast<CFileItem>(listItem);
+            fileItem && fileItem->GetPath() == *selectedDiscPath)
+        {
+          selectedItemIndex = static_cast<unsigned int>(i);
+          break;
+        }
+      }
+    }
+  }
 
   // Select the current disc
   CGUIMessage msgSelectDisc(GUI_MSG_ITEM_SELECT, GetID(), CONTROL_DISC_MANAGER_DISC_LIST,
@@ -265,8 +288,8 @@ void CDialogGameDiscManager::ShowControl(int controlId)
 {
   if (controlId == CONTROL_DISC_MANAGER_MENU)
   {
-    SetProperty(std::string{PROPERTY_SHOW_MENU}, true);
-    SetProperty(std::string{PROPERTY_SHOW_DISC_LIST}, false);
+    SetProperty(std::string{WINDOW_PROPERTY_SHOW_MENU}, true);
+    SetProperty(std::string{WINDOW_PROPERTY_SHOW_DISC_LIST}, false);
 
     // Give focus to main menu
     FocusMainMenu();
@@ -277,8 +300,8 @@ void CDialogGameDiscManager::ShowControl(int controlId)
   }
   else if (controlId == CONTROL_DISC_MANAGER_DISC_LIST)
   {
-    SetProperty(std::string{PROPERTY_SHOW_MENU}, false);
-    SetProperty(std::string{PROPERTY_SHOW_DISC_LIST}, true);
+    SetProperty(std::string{WINDOW_PROPERTY_SHOW_MENU}, false);
+    SetProperty(std::string{WINDOW_PROPERTY_SHOW_DISC_LIST}, true);
 
     // Give focus to disc list
     CGUIMessage msgSetFocus(GUI_MSG_SETFOCUS, GetID(), CONTROL_DISC_MANAGER_DISC_LIST);

@@ -4,15 +4,17 @@ set(SOURCES DialogGameDiscManager.cpp
             DiscManagerDiscList.cpp
             DiscManagerGame.cpp
             DiscManagerMenu.cpp
+            DiscManagerSortUtils.cpp
 )
 
 set(HEADERS DialogGameDiscManager.h
-            DiscManagerIDs.h
             DiscManagerActions.h
             DiscManagerButtons.h
             DiscManagerDiscList.h
             DiscManagerGame.h
+            DiscManagerIDs.h
             DiscManagerMenu.h
+            DiscManagerSortUtils.h
 )
 
 core_add_library(game_disc_dialog)
