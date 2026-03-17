@@ -19233,7 +19233,7 @@ msgstr ""
 #. Label for showing the disc that is inserted in the game's virtual CD drive
 #: addons/skin.estuary/xml/Includes_Games.xml
 msgctxt "#35273"
-msgid "Selected disc"
+msgid "Disc selection"
 msgstr ""
 
 #. Text shown when a disc is removed from the game's virtual CD drive

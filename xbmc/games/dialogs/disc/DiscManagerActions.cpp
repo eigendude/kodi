@@ -60,26 +60,34 @@ void CDiscManagerActions::OnSelectDisc()
   const CGameClientDiscModel& discList = discs.GetDiscs();
   const std::optional<size_t> selectedIndex = discList.GetSelectedDiscIndex();
 
-  m_discManager.SelectDiscToInsert(selectedIndex,
-                                   [this, selectedIndex](std::optional<size_t> discIndex)
-                                   {
-                                     // Do nothing if the selection didn't change
-                                     if (selectedIndex == discIndex)
-                                       return;
+  m_discManager.SelectDiscToInsert(
+      selectedIndex,
+      [this, selectedIndex](std::optional<size_t> discIndex)
+      {
+        // Returning from an explicit disc selection should land on Resume
+        if (selectedIndex == discIndex)
+        {
+          m_discManager.SetMenuFocusIndex(MENU_INDEX_RESUME_GAME);
+          return;
+        }
 
-                                     if (discIndex.has_value())
-                                     {
-                                       if (!m_gameClient->Discs().InsertDiscByIndex(*discIndex))
-                                         ShowInternalError();
-                                     }
-                                     else if (!m_gameClient->Discs().InsertDisc(""))
-                                     {
-                                       ShowInternalError();
-                                     }
+        bool success = false;
+        if (discIndex.has_value())
+        {
+          success = m_gameClient->Discs().InsertDiscByIndex(*discIndex);
+          if (!success)
+            ShowInternalError();
+        }
+        else
+        {
+          success = m_gameClient->Discs().InsertDisc("");
+          if (!success)
+            ShowInternalError();
+        }
 
-                                     m_discManager.UpdateMenu();
-                                     m_discManager.SetMenuFocusIndex(MENU_INDEX_SELECT_DISC);
-                                   });
+        m_discManager.UpdateMenu();
+        m_discManager.SetMenuFocusIndex(success ? MENU_INDEX_RESUME_GAME : MENU_INDEX_SELECT_DISC);
+      });
 }
 
 void CDiscManagerActions::OnEjectInsert()
