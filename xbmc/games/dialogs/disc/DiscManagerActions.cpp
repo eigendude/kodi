@@ -63,22 +63,30 @@ void CDiscManagerActions::OnSelectDisc()
   m_discManager.SelectDiscToInsert(selectedIndex,
                                    [this, selectedIndex](std::optional<size_t> discIndex)
                                    {
-                                     // Do nothing if the selection didn't change
+                                     // Returning from a confirmed disc choice should land on Resume
                                      if (selectedIndex == discIndex)
+                                     {
+                                       m_discManager.SetMenuFocusIndex(MENU_INDEX_RESUME_GAME);
                                        return;
+                                     }
 
+                                     bool success = false;
                                      if (discIndex.has_value())
                                      {
-                                       if (!m_gameClient->Discs().InsertDiscByIndex(*discIndex))
+                                       success = m_gameClient->Discs().InsertDiscByIndex(*discIndex);
+                                       if (!success)
                                          ShowInternalError();
                                      }
-                                     else if (!m_gameClient->Discs().InsertDisc(""))
+                                     else
                                      {
-                                       ShowInternalError();
+                                       success = m_gameClient->Discs().InsertDisc("");
+                                       if (!success)
+                                         ShowInternalError();
                                      }
 
                                      m_discManager.UpdateMenu();
-                                     m_discManager.SetMenuFocusIndex(MENU_INDEX_SELECT_DISC);
+                                     m_discManager.SetMenuFocusIndex(success ? MENU_INDEX_RESUME_GAME
+                                                                             : MENU_INDEX_SELECT_DISC);
                                    });
 }
 
