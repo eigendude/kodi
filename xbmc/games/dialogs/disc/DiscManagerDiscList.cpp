@@ -165,8 +165,9 @@ bool CDiscManagerDiscList::OnClick(const std::shared_ptr<CGUIListItem>& item)
   auto fileItem = std::dynamic_pointer_cast<CFileItem>(item);
   if (fileItem)
   {
-    const size_t discIndex = static_cast<size_t>(fileItem->GetProperty("discIndex").asInteger());
-    const bool isNoDisc = fileItem->GetProperty("isNoDisc").asBoolean();
+    const size_t discIndex = static_cast<size_t>(
+        fileItem->GetProperty(std::string{ITEM_PROPERTY_DISC_INDEX}).asInteger());
+    const bool isNoDisc = fileItem->GetProperty(std::string{ITEM_PROPERTY_IS_NO_DISC}).asBoolean();
     m_discManager.OnDiscSelect(discIndex, isNoDisc);
     return true;
   }
