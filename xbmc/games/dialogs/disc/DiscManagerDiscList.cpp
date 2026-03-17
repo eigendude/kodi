@@ -16,6 +16,7 @@
 #include "games/addons/disc/GameClientDiscModel.h"
 #include "games/addons/disc/GameClientDiscs.h"
 #include "games/dialogs/disc/DialogGameDiscManager.h"
+#include "games/dialogs/disc/DiscManagerIDs.h"
 #include "guilib/GUIListItem.h"
 #include "messaging/ApplicationMessenger.h"
 #include "messaging/helpers/DialogOKHelper.h"
@@ -34,7 +35,7 @@
 namespace
 {
 /*!
- * Transient display row used to build the visible list.
+ * \brief Transient display row used to build the visible list
  *
  * This mirrors model data without changing it. The original disc index is
  * always retained so UI selection continues to address the disc model even if
@@ -51,8 +52,8 @@ struct DiscListDisplayRow
 };
 
 /*!
- * Extract a lowercase stem plus trailing number from labels that clearly look
- * like one numbered series.
+ * \brief Extract a lowercase stem plus trailing number from labels that
+ * clearly look like one numbered series
  *
  * Only labels ending in a bare number or parenthesized number are considered.
  * Mixed labels such as "Disc 1" and "MGS Disc 2" intentionally normalize to
@@ -64,7 +65,8 @@ std::optional<std::pair<std::string, int>> GetNormalizedStemAndTrailingNumber(
   static const std::regex stemWithNumberRegex(R"(^(.+\S)\s+(\d+)$)");
   static const std::regex stemWithParenNumberRegex(R"(^(.+\S)\s+\((\d+)\)$)");
 
-  const std::string trimmedLabel = StringUtils::Trim(label);
+  std::string trimmedLabel = label;
+  StringUtils::Trim(trimmedLabel);
 
   std::smatch matches;
   if (!std::regex_match(trimmedLabel, matches, stemWithNumberRegex) &&
@@ -73,7 +75,8 @@ std::optional<std::pair<std::string, int>> GetNormalizedStemAndTrailingNumber(
     return std::nullopt;
   }
 
-  std::string normalizedStem = StringUtils::Trim(matches[1].str());
+  std::string normalizedStem = matches[1].str();
+  StringUtils::Trim(normalizedStem);
   StringUtils::ToLower(normalizedStem);
 
   if (normalizedStem.empty())
@@ -90,8 +93,8 @@ std::optional<std::pair<std::string, int>> GetNormalizedStemAndTrailingNumber(
 }
 
 /*!
- * Sort only when every visible disc unambiguously belongs to the same numbered
- * series.
+ * \brief Sort only when every visible disc unambiguously belongs to the same
+ * numbered series
  *
  * The display order stays aligned with the model when labels are mixed,
  * partially numbered, or otherwise ambiguous.
