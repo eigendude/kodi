@@ -31,8 +31,11 @@ constexpr unsigned int MENU_INDEX_DELETE_DISC = 3;
 constexpr unsigned int MENU_INDEX_RESUME_GAME = 4;
 constexpr unsigned int MENU_ITEM_COUNT = 5;
 
-constexpr std::string_view PROPERTY_SHOW_MENU = "GameDiscManager.ShowMenu";
-constexpr std::string_view PROPERTY_SHOW_DISC_LIST = "GameDiscManager.ShowDiscList";
+constexpr std::string_view WINDOW_PROPERTY_SHOW_MENU = "GameDiscManager.ShowMenu";
+constexpr std::string_view WINDOW_PROPERTY_SHOW_DISC_LIST = "GameDiscManager.ShowDiscList";
+
+constexpr std::string_view ITEM_PROPERTY_DISC_INDEX = "GameDiscManager.DiscIndex";
+constexpr std::string_view ITEM_PROPERTY_IS_NO_DISC = "GameDiscManager.IsNoDisc";
 
 } // namespace GAME
 } // namespace KODI

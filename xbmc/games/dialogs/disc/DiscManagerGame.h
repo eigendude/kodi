@@ -37,6 +37,7 @@ public:
   bool IsEjected() const;
   void GetState(bool& ejected, std::string& selectedDisc) const;
   unsigned int GetSelectedIndex(std::optional<size_t> selectedIndex, bool allowSelectNoDisc) const;
+  std::optional<std::string> GetDiscPathByIndex(std::optional<size_t> discIndex) const;
 
   // Static game interface
   static GameClientPtr GetGameClient();

@@ -134,6 +134,19 @@ unsigned int CDiscManagerGame::GetSelectedIndex(std::optional<size_t> selectedIn
   return 0;
 }
 
+std::optional<std::string> CDiscManagerGame::GetDiscPathByIndex(
+    std::optional<size_t> discIndex) const
+{
+  if (!m_gameClient || !discIndex.has_value())
+    return std::nullopt;
+
+  const CGameClientDiscModel& discList = m_gameClient->Discs().GetDiscs();
+  if (*discIndex >= discList.Size() || discList.IsRemovedSlotByIndex(*discIndex))
+    return std::nullopt;
+
+  return discList.GetPathByIndex(*discIndex);
+}
+
 GameClientPtr CDiscManagerGame::GetGameClient()
 {
   auto gameSettingsHandle = CServiceBroker::GetGameRenderManager().RegisterGameSettingsDialog();
