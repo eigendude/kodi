@@ -16,21 +16,18 @@
 #include "games/addons/disc/GameClientDiscModel.h"
 #include "games/addons/disc/GameClientDiscs.h"
 #include "games/dialogs/disc/DialogGameDiscManager.h"
+#include "games/dialogs/disc/DiscManagerDiscSortUtils.h"
 #include "games/dialogs/disc/DiscManagerIDs.h"
 #include "guilib/GUIListItem.h"
 #include "messaging/ApplicationMessenger.h"
 #include "messaging/helpers/DialogOKHelper.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"
-#include "utils/StringUtils.h"
 #include "utils/Variant.h"
 
 #include <algorithm>
 #include <assert.h>
-#include <charconv>
 #include <optional>
-#include <regex>
-#include <system_error>
 
 namespace
 {
@@ -50,60 +47,6 @@ struct DiscListDisplayRow
   std::optional<std::string> normalizedStem;
   std::optional<int> trailingNumber;
 };
-
-/*!
- * \brief Extract a lowercase stem plus trailing number from labels that
- * clearly look like one numbered series
- *
- * Only labels ending in a bare number or parenthesized number are considered.
- * Mixed labels such as "Disc 1" and "MGS Disc 2" intentionally normalize to
- * different stems so display order falls back to the model order.
- */
-std::optional<std::pair<std::string, int>> GetNormalizedStemAndTrailingNumber(
-    const std::string& label)
-{
-  // Intentionally recognized real-world series suffixes:
-  //   <stem> (Disc N)
-  //   <stem> Disc N
-  //   <stem> [discNofM][...]
-  // If a label doesn't clearly match one of these explicit disc markers we
-  // keep the original model order to avoid mixing unrelated entries.
-  static const std::regex stemWithParenDiscNumberRegex(
-      R"(^(.+\S)\s*\(\s*disc\s*(\d+)\s*\)\s*$)", std::regex::icase);
-  static const std::regex stemWithDiscNumberRegex(R"(^(.+\S)\s+disc\s*(\d+)\s*$)",
-                                                   std::regex::icase);
-  static const std::regex stemWithDiscOfTotalBracketRegex(
-      R"(^(.+\S)\s*\[\s*disc\s*(\d+)\s*of\s*\d+\s*\](?:\s*\[[^\]]+\])*\s*$)",
-      std::regex::icase);
-
-  std::string trimmedLabel = label;
-  StringUtils::Trim(trimmedLabel);
-
-  std::smatch matches;
-  if (!std::regex_match(trimmedLabel, matches, stemWithParenDiscNumberRegex) &&
-      !std::regex_match(trimmedLabel, matches, stemWithDiscNumberRegex) &&
-      !std::regex_match(trimmedLabel, matches, stemWithDiscOfTotalBracketRegex))
-  {
-    return std::nullopt;
-  }
-
-  std::string normalizedStem = matches[1].str();
-  StringUtils::Trim(normalizedStem);
-  normalizedStem = std::regex_replace(normalizedStem, std::regex(R"(\s+)"), " ");
-  StringUtils::ToLower(normalizedStem);
-
-  if (normalizedStem.empty())
-    return std::nullopt;
-
-  int trailingNumber = 0;
-  const std::string numberString = matches[2].str();
-  const auto [ptr, ec] = std::from_chars(numberString.data(),
-                                         numberString.data() + numberString.size(), trailingNumber);
-  if (ec != std::errc{} || ptr != numberString.data() + numberString.size())
-    return std::nullopt;
-
-  return std::make_pair(normalizedStem, trailingNumber);
-}
 
 /*!
  * \brief Sort only when every visible disc unambiguously belongs to the same
