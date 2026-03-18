@@ -343,6 +343,12 @@ constexpr uint32_t RETROPLAYER_SUPPORTS_EJECT        = 340;
 constexpr uint32_t RETROPLAYER_DISC_EJECTED          = 386;
 constexpr uint32_t RETROPLAYER_DISC_LABEL            = 387;
 constexpr uint32_t RETROPLAYER_EMPTY_TRAY            = 388;
+constexpr uint32_t RETROPLAYER_PLATFORM              = 759;
+constexpr uint32_t RETROPLAYER_GENRES                = 760;
+constexpr uint32_t RETROPLAYER_PUBLISHER             = 761;
+constexpr uint32_t RETROPLAYER_DEVELOPER             = 762;
+constexpr uint32_t RETROPLAYER_OVERVIEW              = 763;
+constexpr uint32_t RETROPLAYER_GAME_CLIENT           = 764;
 
 // More VideoPlayer infolabels
 constexpr uint32_t VIDEOPLAYER_CHANNEL_LOGO          = 333;

@@ -26,6 +26,17 @@ using namespace KODI::GUILIB::GUIINFO;
 using namespace KODI::GAME;
 using namespace KODI::RETRO;
 
+namespace
+{
+const CGameInfoTag* GetGameTag(const CFileItem* item)
+{
+  if (item && item->HasGameInfoTag())
+    return item->GetGameInfoTag();
+
+  return nullptr;
+}
+} // namespace
+
 //! @todo Savestates were removed from v18
 //#define FILEITEM_PROPERTY_SAVESTATE_DURATION  "duration"
 
@@ -60,6 +71,60 @@ bool CGamesGUIInfo::GetLabel(std::string& value,
     ///////////////////////////////////////////////////////////////////////////////////////////////
     // RETROPLAYER_*
     ///////////////////////////////////////////////////////////////////////////////////////////////
+    case RETROPLAYER_PLATFORM:
+    {
+      if (const auto* tag = GetGameTag(item); tag != nullptr)
+      {
+        value = tag->GetPlatform();
+        return true;
+      }
+      break;
+    }
+    case RETROPLAYER_GENRES:
+    {
+      if (const auto* tag = GetGameTag(item); tag != nullptr)
+      {
+        value = StringUtils::Join(tag->GetGenres(), ", ");
+        return true;
+      }
+      break;
+    }
+    case RETROPLAYER_PUBLISHER:
+    {
+      if (const auto* tag = GetGameTag(item); tag != nullptr)
+      {
+        value = tag->GetPublisher();
+        return true;
+      }
+      break;
+    }
+    case RETROPLAYER_DEVELOPER:
+    {
+      if (const auto* tag = GetGameTag(item); tag != nullptr)
+      {
+        value = tag->GetDeveloper();
+        return true;
+      }
+      break;
+    }
+    case RETROPLAYER_OVERVIEW:
+    {
+      if (const auto* tag = GetGameTag(item); tag != nullptr)
+      {
+        value = tag->GetOverview();
+        return true;
+      }
+      break;
+    }
+    case RETROPLAYER_GAME_CLIENT:
+    {
+      if (const auto* tag = GetGameTag(item); tag != nullptr)
+      {
+        value = tag->GetGameClient();
+        return true;
+      }
+      break;
+    }
     case RETROPLAYER_VIDEO_FILTER:
     {
       value = CMediaSettings::GetInstance().GetCurrentGameSettings().VideoFilter();
