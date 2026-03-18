@@ -104,12 +104,64 @@ public:
   ~CServiceManager();
 
   bool InitForTesting();
+
+  /**
+   * \brief Initialize the stage 1 boot services.
+   *
+   * Stage 1 sets up the platform bootstrap layer and the earliest core
+   * services that do not depend on the GUI or user profiles.
+   *
+   * Subsystems initialized in stage 1 include:
+   * - platform startup glue via \ref CPlatform::InitStageOne
+   * - Python script registration when Python support is enabled
+   * - playlist playback coordination
+   * - slideshow delegation
+   * - network backend discovery
+   */
   bool InitStageOne();
+
+  /**
+   * \brief Initialize the stage 2 boot services.
+   *
+   * Stage 2 brings up the main shared subsystems used by the GUI and
+   * runtime services after stage 1 has completed.
+   *
+   * Subsystems initialized in stage 2 include:
+   * - addon, repository, VFS, and binary addon infrastructure
+   * - PVR, favourites, context menu, and data cache services
+   * - input, game controller, peripheral, and retro player support
+   * - file extension, power, weather, media, and locale helpers
+   * - optional optical media detection and SMB discovery backends
+   * - platform stage 2 initialization
+   */
   bool InitStageTwo(const std::string& profilesUserDataFolder);
+
+  /**
+   * \brief Initialize the stage 3 boot services.
+   *
+   * Stage 3 runs after the WindowManager has initialized, so the GUI is
+   * already available when these late services start.
+   *
+   * Subsystems initialized in stage 3 include:
+   * - optical media detection thread startup when supported
+   * - peripheral activation after localized strings are loaded
+   * - game services and retro engine service wiring
+   * - context menu activation
+   * - PVR startup after profile login when not using the login screen
+   * - player core factory creation
+   * - platform stage 3 initialization
+   */
   bool InitStageThree(const std::shared_ptr<CProfileManager>& profileManager);
+
   void DeinitTesting();
+
+  /** \brief Shut down the stage 3 services in reverse startup order. */
   void DeinitStageThree();
+
+  /** \brief Shut down the stage 2 services in reverse startup order. */
   void DeinitStageTwo();
+
+  /** \brief Shut down the stage 1 services in reverse startup order. */
   void DeinitStageOne();
 
   ADDON::CAddonMgr& GetAddonMgr();
@@ -129,7 +181,10 @@ public:
   PVR::CPVRManager& GetPVRManager();
   CContextMenuManager& GetContextMenuManager();
   CDataCacheCore& GetDataCacheCore();
-  /**\brief Get the platform object. This is save to be called after Init1() was called
+  /**
+   * \brief Get the platform object.
+   *
+   * This is safe to call after InitStageOne() has completed.
    */
   CPlatform& GetPlatform();
   KODI::GAME::CControllerManager& GetGameControllerManager();
