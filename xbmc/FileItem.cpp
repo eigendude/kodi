@@ -2078,6 +2078,15 @@ bool CFileItem::LoadGameTag()
   //! @todo
   GetGameInfoTag();
 
+  if (m_gameInfoTag->GetTitle().empty())
+  {
+    // Fall back to the path so game UI/logging still shows a readable title when
+    // the game tag doesn't provide metadata.
+    std::string title{CUtil::GetTitleFromPath(GetPath(), IsFolder())};
+    URIUtils::RemoveExtension(title);
+    m_gameInfoTag->SetTitle(title);
+  }
+
   m_gameInfoTag->SetLoaded(true);
 
   return false;

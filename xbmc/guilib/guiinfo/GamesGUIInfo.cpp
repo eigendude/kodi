@@ -19,6 +19,7 @@
 #include "guilib/guiinfo/GUIInfoLabels.h"
 #include "settings/MediaSettings.h"
 #include "utils/StringUtils.h"
+#include "utils/URIUtils.h"
 #include "utils/Variant.h"
 #include "utils/log.h"
 
@@ -41,8 +42,10 @@ bool CGamesGUIInfo::InitCurrentItem(CFileItem* item)
 
     if (tag->GetTitle().empty())
     {
-      // No title in tag, show filename only
-      tag->SetTitle(CUtil::GetTitleFromPath(item->GetPath()));
+      // No title in tag, show filename without the extension
+      std::string title{CUtil::GetTitleFromPath(item->GetPath(), item->IsFolder())};
+      URIUtils::RemoveExtension(title);
+      tag->SetTitle(title);
     }
     return true;
   }
