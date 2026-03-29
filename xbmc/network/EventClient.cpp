@@ -12,7 +12,7 @@
 #include "ServiceBroker.h"
 #include "dialogs/GUIDialogKaiToast.h"
 #include "filesystem/File.h"
-#include "input/keyboard/KeyIDs.h"
+#include "input/keymaps/keyboard/KeyIDs.h"
 #include "input/keymaps/ButtonTranslator.h"
 #include "input/keymaps/joysticks/GamepadTranslator.h"
 #include "input/keymaps/keyboard/KeyboardTranslator.h"

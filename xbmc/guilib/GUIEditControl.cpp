@@ -17,7 +17,7 @@
 #include "dialogs/GUIDialogNumeric.h"
 #include "input/actions/Action.h"
 #include "input/actions/ActionIDs.h"
-#include "input/keyboard/KeyIDs.h"
+#include "input/keymaps/keyboard/KeyIDs.h"
 #include "input/keyboard/XBMC_vkeys.h"
 #include "resources/LocalizeStrings.h"
 #include "resources/ResourcesComponent.h"

@@ -15,7 +15,7 @@
 #include "guilib/GUIWindowManager.h"
 #include "input/actions/Action.h"
 #include "input/actions/ActionIDs.h"
-#include "input/keyboard/KeyIDs.h"
+#include "input/keymaps/keyboard/KeyIDs.h"
 #include "input/keyboard/XBMC_vkeys.h"
 #include "interfaces/AnnouncementManager.h"
 #include "messaging/helpers/DialogOKHelper.h"
