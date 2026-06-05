@@ -15,6 +15,7 @@ import xbmcgui  # pylint: disable=import-error
 from oasis.utils.weather_utils import WeatherUtils
 from oasis.windows.camera_view import CameraView
 from oasis.windows.swellpatrol_hud import SwellPatrolHUD
+from oasis.windows.ventura_hud import VenturaHUD
 
 
 # Window IDs
@@ -68,7 +69,7 @@ class OasisService:
                 "TrainHUD.xml", addon_path, "default", "1080i", False
             )
         elif hostname == "patio":
-            window = SwellPatrolHUD(
+            window = VenturaHUD(
                 "PatioHUD.xml", addon_path, "default", "1080i", False
             )
         else:
