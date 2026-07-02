@@ -257,11 +257,8 @@
     </include>
     <include name="OasisTrainCameraContent">
         <item>
-            <label/>
-        </item>
-        <item>
             <property name="smarthome.isactive">$VAR[SmartHomeSystemStationIsActive]</property>
-            <property name="smarthome.cameratopic">/oasis/station/sd/calibration_image</property>
+            <property name="smarthome.cameratopic">/oasis/station/sd/checkerboard_image</property>
         </item>
         <!--
         <item>
