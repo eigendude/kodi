@@ -149,7 +149,7 @@ set(CC_FOR_BUILD "@CC_FOR_BUILD@")
 set(CXX_FOR_BUILD "@CXX_FOR_BUILD@")
 set(LD_FOR_BUILD "@LD_FOR_BUILD@")
 set(CC_BINARY_FOR_BUILD "@CC_FOR_BUILD@")
-set(CXX_BINARY_FOR_BUILD "@CXX_FOR_BUILD@")
+set(CXX_BINARY_FOR_BUILD "@CC_FOR_BUILD@")
 set(AR_FOR_BUILD "@AR_FOR_BUILD@")
 set(RANLIB_FOR_BUILD "@RANLIB_FOR_BUILD@")
 set(AS_FOR_BUILD "@AS_FOR_BUILD@")
@@ -229,7 +229,21 @@ set(PROJECT_BUILDENV CC_FOR_BUILD=${CC_FOR_BUILD}
                      )
 
 # variable to easily set host/target env for non cmake internal dep builds
-set(DEP_BUILDENV ${CMAKE_COMMAND} -E env ${PROJECT_TARGETENV} ${PROJECT_BUILDENV})
+set(DEP_BUILDENV ${CMAKE_COMMAND} -E env)
+
+# Xcode exports deployment targets for multiple Apple platforms into Run Script
+# build phases. Clang treats multiple deployment target environment variables as
+# conflicting. Dependency builds already specify their target platform and
+# minimum version explicitly in the compiler flags, so don't propagate these.
+if(CMAKE_SYSTEM_NAME STREQUAL Darwin)
+  list(APPEND DEP_BUILDENV --unset=DRIVERKIT_DEPLOYMENT_TARGET
+                           --unset=IPHONEOS_DEPLOYMENT_TARGET
+                           --unset=MACOSX_DEPLOYMENT_TARGET
+                           --unset=TVOS_DEPLOYMENT_TARGET
+                           --unset=WATCHOS_DEPLOYMENT_TARGET
+                           --unset=XROS_DEPLOYMENT_TARGET)
+endif()
+list(APPEND DEP_BUILDENV ${PROJECT_TARGETENV} ${PROJECT_BUILDENV})
 
 # version populated from tools/depends/target/python3/PYTHON3-VERSION file
 set(PYTHON_VER @target_py_version@)
